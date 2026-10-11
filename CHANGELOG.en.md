@@ -6,7 +6,15 @@ This document records the changes that the ARTEX Korean edition (this fork) adds
 
 The upstream ARTEX project's per-version release history (0.3.x and earlier) and contributor list are preserved verbatim in Chinese in [`CHANGELOG.zh.md`](CHANGELOG.zh.md). As with `README.zh.md`, the original text is kept unchanged so that it stays easy to compare against upstream changes. The detailed content and rationale for each change can be found in the repository's commit history.
 
-## [Unreleased] · Korean edition changes
+## [Unreleased]
+
+## [0.3.15-ko.1] · 2026-10-12 · First Korean-edition release
+
+The first release of the Korean edition, based on upstream ARTEX 0.3.15.
+
+### Distribution
+
+- **The Korean-edition Docker image is now published.** Upstream's `autumn27/artex` image was taken down from Docker Hub, which broke the `docker compose up -d` quick start. Each release tag now pushes a multi-architecture (amd64/arm64) image to `ghcr.io/jiwoochris/artex-ko`, and `docker-compose.yml` pulls that image.
 
 ### Security
 

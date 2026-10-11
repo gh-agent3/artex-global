@@ -6,7 +6,15 @@
 
 상류 ARTEX 프로젝트의 버전별 릴리스 이력(0.3.x 이하)과 기여자 목록은 원본 중국어 그대로 [`CHANGELOG.zh.md`](CHANGELOG.zh.md) 에 보존했습니다. 상류 변경과 대조하기 쉽도록 `README.zh.md` 와 같은 방식으로 원문을 그대로 남깁니다. 각 변경의 자세한 내용과 근거는 저장소 커밋 이력에서 확인할 수 있습니다.
 
-## [Unreleased] · 한국어판 변경
+## [Unreleased]
+
+## [0.3.15-ko.1] · 2026-10-12 · 한국어판 첫 릴리스
+
+상류 ARTEX 0.3.15 를 바탕으로 한 한국어판의 첫 릴리스입니다.
+
+### 배포
+
+- **한국어판 Docker 이미지를 발행합니다.** 상류 이미지 `autumn27/artex` 가 Docker Hub 에서 내려가 `docker compose up -d` 빠른 시작이 실패하던 문제를 고쳤습니다. 릴리스 태그마다 `ghcr.io/jiwoochris/artex-ko` 에 멀티아키텍처(amd64·arm64) 이미지를 올리고, `docker-compose.yml` 이 이 이미지를 받습니다.
 
 ### 보안
 
