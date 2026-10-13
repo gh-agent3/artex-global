@@ -8,11 +8,26 @@
 
 ## [Unreleased]
 
+## [0.3.15-global.1] · 2026-10-14 · ARTEX-global 전환 릴리스
+
+한국어판(`0.3.15-ko.1`)을 전 세계 방어자·연구자용 다국어판 ARTEX-global 로 전환한 릴리스입니다. 상류 ARTEX 0.3.15 를 바탕으로 하며, 에이전트 기능은 바꾸지 않았습니다.
+
 ### 정체성 · 다국어 (ARTEX-global 전환)
 
 - **ARTEX 한국어판을 ARTEX 글로벌판으로 전환했습니다.** 정체성을 특정 지역판이 아니라 전 세계 방어자·연구자가 접근하는 다국어판으로 바꿉니다. 에이전트의 기능은 바꾸지 않고 다국어화·문서 범위만 손댔습니다.
   - **기본 언어를 한국어에서 영어로 바꿨습니다.** 사용자에게 보이는 출력의 기본값을 영어로 두고(설정 계층 `config.DefaultLanguage`, 웹 `DEFAULT_LOCALE`, `config.example.json`, `.env.example` 주석), 한국어·중국어·스페인어는 설정 화면에서 전환합니다. 에이전트 패키지 단독 테스트의 폴백(`agent.defaultOutputLang`)과 한국어 골든 테스트는 그대로 두어 회귀를 막았습니다.
-  - **정체성 문구를 글로벌판으로 다시 썼습니다.** README(한국어·영어·중국어)·CONTRIBUTING·SECURITY·메인테이너 런북·이슈/PR 템플릿의 "한국어판" 표기를 "글로벌판"으로 바꾸고, 영어 README 의 "왜 한국어판인가" 절과 그 앵커(`#why-a-korean-edition` → `#why-a-global-edition`)를 함께 고쳤습니다. 저장소 슬러그(`jiwoochris/artex-global`)와 이미지 경로(`ghcr.io/jiwoochris/artex-global`)는 인프라라서 그대로 둡니다.
+  - **정체성 문구를 글로벌판으로 다시 썼습니다.** README(한국어·영어·중국어)·CONTRIBUTING·SECURITY·메인테이너 런북·이슈/PR 템플릿의 "한국어판" 표기를 "글로벌판"으로 바꾸고, 영어 README 의 "왜 한국어판인가" 절과 그 앵커(`#why-a-korean-edition` → `#why-a-global-edition`)를 함께 고쳤습니다. 저장소 슬러그와 이미지 경로는 이 릴리스의 아래 '저장소 리네임' 항목에서 함께 `artex-global` 로 바꿨습니다.
+
+### 첫 화면·스크린샷 영어화
+
+- **GitHub 기본 README 를 영어로 올렸습니다.** 영어 문서를 `README.md`(저장소 첫 화면)로, 한국어 본문을 `README.ko.md` 로 옮기고, 루트 문서들이 최상위 README 를 가리키는 링크·앵커를 영어=`README.md`·한국어=`README.ko.md` 로 재배선했습니다. 탐지 규칙 폴더 안의 README 링크는 그대로 둡니다.
+- **미리 보기 스크린샷을 영어로 교체했습니다.** 목 UI 를 기본 영어로 다시 캡처해 `screenshots/en/`(dashboard·findings·chat)으로 넣고, 구버전 한국어 캡처(`screenshots/ko/`)는 제거했습니다.
+- **화면 날짜를 앱 언어에 맞췄습니다.** 하드코딩된 `ko-KR` 로케일 18곳을 `web/src/i18n/datetime.ts` 의 `getDateLocale()`(표시 언어→BCP47)로 바꿔, 기본 영어에서 날짜가 영어로 나옵니다.
+- **데모 데이터를 영어로 옮겼습니다.** 목 데이터(`web/src/lib/mock/{data,handler}.ts`)의 사용자 노출 한국어 약 220개를 영어로 바꾸고, 명령·페이로드·URL·식별자는 원문을 보존했습니다.
+
+### 저장소 리네임 (artex-ko → artex-global)
+
+- **저장소 이름을 `artex-global` 로 바꿨습니다.** GitHub 슬러그를 `jiwoochris/artex-global` 로(옛 URL 은 GitHub 리다이렉트로 유지), 컨테이너 이미지 경로를 `ghcr.io/jiwoochris/artex-global` 로 바꿨습니다. 배지·클론 URL·`docker-compose.yml`·`release.yml`·`install.sh`·문서·판본 표기·탐지 규칙 author·MISP 이벤트 이름 등 저장소 안 126곳(37개 파일)을 일괄 치환했습니다. 상류 Go 모듈(`github.com/Autumn-27/artex`)과 과거 버전 태그(`0.3.15-ko.1`)는 그대로 둡니다.
 
 ### 현지화 (i18n)
 
