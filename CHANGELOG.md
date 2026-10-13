@@ -12,7 +12,7 @@
 
 - **ARTEX 한국어판을 ARTEX 글로벌판으로 전환했습니다.** 정체성을 특정 지역판이 아니라 전 세계 방어자·연구자가 접근하는 다국어판으로 바꿉니다. 에이전트의 기능은 바꾸지 않고 다국어화·문서 범위만 손댔습니다.
   - **기본 언어를 한국어에서 영어로 바꿨습니다.** 사용자에게 보이는 출력의 기본값을 영어로 두고(설정 계층 `config.DefaultLanguage`, 웹 `DEFAULT_LOCALE`, `config.example.json`, `.env.example` 주석), 한국어·중국어·스페인어는 설정 화면에서 전환합니다. 에이전트 패키지 단독 테스트의 폴백(`agent.defaultOutputLang`)과 한국어 골든 테스트는 그대로 두어 회귀를 막았습니다.
-  - **정체성 문구를 글로벌판으로 다시 썼습니다.** README(한국어·영어·중국어)·CONTRIBUTING·SECURITY·메인테이너 런북·이슈/PR 템플릿의 "한국어판" 표기를 "글로벌판"으로 바꾸고, 영어 README 의 "왜 한국어판인가" 절과 그 앵커(`#why-a-korean-edition` → `#why-a-global-edition`)를 함께 고쳤습니다. 저장소 슬러그(`jiwoochris/artex-ko`)와 이미지 경로(`ghcr.io/jiwoochris/artex-ko`)는 인프라라서 그대로 둡니다.
+  - **정체성 문구를 글로벌판으로 다시 썼습니다.** README(한국어·영어·중국어)·CONTRIBUTING·SECURITY·메인테이너 런북·이슈/PR 템플릿의 "한국어판" 표기를 "글로벌판"으로 바꾸고, 영어 README 의 "왜 한국어판인가" 절과 그 앵커(`#why-a-korean-edition` → `#why-a-global-edition`)를 함께 고쳤습니다. 저장소 슬러그(`jiwoochris/artex-global`)와 이미지 경로(`ghcr.io/jiwoochris/artex-global`)는 인프라라서 그대로 둡니다.
 
 ### 현지화 (i18n)
 
@@ -24,7 +24,7 @@
 
 ### 배포
 
-- **한국어판 Docker 이미지를 발행합니다.** 상류 이미지 `autumn27/artex` 가 Docker Hub 에서 내려가 `docker compose up -d` 빠른 시작이 실패하던 문제를 고쳤습니다. 릴리스 태그마다 `ghcr.io/jiwoochris/artex-ko` 에 멀티아키텍처(amd64·arm64) 이미지를 올리고, `docker-compose.yml` 이 이 이미지를 받습니다.
+- **한국어판 Docker 이미지를 발행합니다.** 상류 이미지 `autumn27/artex` 가 Docker Hub 에서 내려가 `docker compose up -d` 빠른 시작이 실패하던 문제를 고쳤습니다. 릴리스 태그마다 `ghcr.io/jiwoochris/artex-global` 에 멀티아키텍처(amd64·arm64) 이미지를 올리고, `docker-compose.yml` 이 이 이미지를 받습니다.
 
 ### 보안
 
