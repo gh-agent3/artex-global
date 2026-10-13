@@ -2,7 +2,7 @@
 
 [한국어](CONTRIBUTING.md) · English
 
-Thank you for your interest in the Korean edition of ARTEX (`artex-ko`). This document
+Thank you for your interest in the global edition of ARTEX (`artex-ko`). This document
 gathers the scope, policies, and procedures you should know before you start contributing.
 Before you send a contribution, please read [Authorized use and legal responsibility](#authorized-use-and-legal-responsibility)
 and [Localization policy](#localization-policy) first.
@@ -46,7 +46,7 @@ this policy can degrade performance, so we do not accept them.
   The behavior benchmarked in the original language (Chinese) must be preserved. This body
   lives in `agent/promptcatalog.go` and the DB seed (`agent_prompts`). Translating it causes
   drift in the agent's judgment.
-- **Only user-facing output is forced into Korean.** This covers detection findings
+- **Only user-facing output is forced into the selected language (English by default).** This covers detection findings
   (`report_finding`), fact summaries (`record_fact`), the final report, and chat responses.
   The enforcement is a code-fixed tail called `langDirective()` in `agent/prompt.go`, appended
   to the end of each role's system prompt. To change the output language, modify this function.

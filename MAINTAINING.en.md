@@ -4,12 +4,12 @@
 
 This document lays out the procedure a **maintainer** follows to keep up with changes in the
 upstream repository [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX) (currently unreachable, checked 2026-10) while maintaining the
-Korean localization. Contribution scope, legal responsibility, and the localization policy live in
+the global (multilingual) edition. Contribution scope, legal responsibility, and the localization policy live in
 [CONTRIBUTING.en.md](CONTRIBUTING.en.md); user-facing guidance lives in [README.en.md](README.en.md).
 This document therefore focuses solely on **how that policy is actually enforced**.
 
 The core goal of the localization can be summed up in one sentence: **preserve the original's
-judgment performance exactly, while translating only the user-facing output into Korean**. That
+judgment performance exactly, while translating only the user-facing output into the selected language (English by default)**. That
 boundary is easy to blur every time upstream updates, so the procedures and checks below prevent
 translation drift.
 
@@ -17,7 +17,7 @@ translation drift.
 
 ## 1. The localization structure at a glance
 
-This repository **forks** upstream ARTEX and stacks Korean localization commits on top of its
+This repository **forks** upstream ARTEX and stacks multilingual-localization commits on top of its
 history. Every commit on upstream `main` is contained in this repository's history, with the
 localization commits added above them. Bringing in an upstream change therefore becomes a matter of
 "inspecting the difference against upstream `main`, then separating what to preserve from what to
@@ -28,8 +28,8 @@ The deliverables fall into three groups.
 - **Assets kept in the original language** (section 2). Translating them breaks performance or the
   ability to diff against upstream.
 - **Output-language enforcement fixed in code.** `langDirective()` in `agent/prompt.go` appends to
-  the end of each role's system prompt the instruction "write user-facing output in Korean."
-- **User-facing strings that are translated into Korean.** The UI lives in `web/messages/ko.json`;
+  the end of each role's system prompt the instruction "write user-facing output in the selected language."
+- **User-facing strings translated for each display language.** The UI strings live in `web/messages/{en,ko,zh,es}.json`;
   the server's user-facing response strings live in named constants in each Go file.
 
 ---

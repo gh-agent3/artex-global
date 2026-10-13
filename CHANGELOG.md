@@ -2,11 +2,17 @@
 
 한국어 · [English](CHANGELOG.en.md) · [中文(원본·상류)](CHANGELOG.zh.md)
 
-이 문서는 ARTEX 한국어판(이 포크)이 상류 저장소에 더한 변경을 기록합니다. 형식은 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 를 참고합니다.
+이 문서는 ARTEX 글로벌판(이 포크)이 상류 저장소에 더한 변경을 기록합니다. 형식은 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 를 참고합니다.
 
 상류 ARTEX 프로젝트의 버전별 릴리스 이력(0.3.x 이하)과 기여자 목록은 원본 중국어 그대로 [`CHANGELOG.zh.md`](CHANGELOG.zh.md) 에 보존했습니다. 상류 변경과 대조하기 쉽도록 `README.zh.md` 와 같은 방식으로 원문을 그대로 남깁니다. 각 변경의 자세한 내용과 근거는 저장소 커밋 이력에서 확인할 수 있습니다.
 
 ## [Unreleased]
+
+### 정체성 · 다국어 (ARTEX-global 전환)
+
+- **ARTEX 한국어판을 ARTEX 글로벌판으로 전환했습니다.** 정체성을 특정 지역판이 아니라 전 세계 방어자·연구자가 접근하는 다국어판으로 바꿉니다. 에이전트의 기능은 바꾸지 않고 다국어화·문서 범위만 손댔습니다.
+  - **기본 언어를 한국어에서 영어로 바꿨습니다.** 사용자에게 보이는 출력의 기본값을 영어로 두고(설정 계층 `config.DefaultLanguage`, 웹 `DEFAULT_LOCALE`, `config.example.json`, `.env.example` 주석), 한국어·중국어·스페인어는 설정 화면에서 전환합니다. 에이전트 패키지 단독 테스트의 폴백(`agent.defaultOutputLang`)과 한국어 골든 테스트는 그대로 두어 회귀를 막았습니다.
+  - **정체성 문구를 글로벌판으로 다시 썼습니다.** README(한국어·영어·중국어)·CONTRIBUTING·SECURITY·메인테이너 런북·이슈/PR 템플릿의 "한국어판" 표기를 "글로벌판"으로 바꾸고, 영어 README 의 "왜 한국어판인가" 절과 그 앵커(`#why-a-korean-edition` → `#why-a-global-edition`)를 함께 고쳤습니다. 저장소 슬러그(`jiwoochris/artex-ko`)와 이미지 경로(`ghcr.io/jiwoochris/artex-ko`)는 인프라라서 그대로 둡니다.
 
 ### 현지화 (i18n)
 
