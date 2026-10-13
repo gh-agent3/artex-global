@@ -5,7 +5,7 @@
 This document lays out the procedure a **maintainer** follows to keep up with changes in the
 upstream repository [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX) (currently unreachable, checked 2026-10) while maintaining the
 the global (multilingual) edition. Contribution scope, legal responsibility, and the localization policy live in
-[CONTRIBUTING.en.md](CONTRIBUTING.en.md); user-facing guidance lives in [README.en.md](README.en.md).
+[CONTRIBUTING.en.md](CONTRIBUTING.en.md); user-facing guidance lives in [README.md](README.md).
 This document therefore focuses solely on **how that policy is actually enforced**.
 
 The core goal of the localization can be summed up in one sentence: **preserve the original's
