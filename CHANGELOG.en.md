@@ -8,6 +8,10 @@ The upstream ARTEX project's per-version release history (0.3.x and earlier) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Distinguish task report loading failures from empty reports and offer a retry button. Late responses from a previous task cannot replace the current task report.
+
 ## [0.3.15-global.1] · 2026-10-14 · ARTEX-global transition release
 
 The release that turns the Korean edition (`0.3.15-ko.1`) into ARTEX-global, a multilingual edition for defenders and researchers worldwide. Based on upstream ARTEX 0.3.15; no agent features were changed.
