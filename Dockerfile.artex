@@ -1,0 +1,73 @@
+# syntax=docker/dockerfile:1
+#
+# ARTEX image built from source, not from a prebuilt binary.
+#
+# The upstream Dockerfile copies dist/<arch>/artex, a binary that is not in the
+# repository, so the shipped image cannot be tied to a commit. This file builds
+# the frontend and the Go binary inside the build, then assembles the same
+# runtime (python + recon tooling + playwright) on top of pinned base images.
+#
+#   docker build -f Dockerfile.artex -t artex-local:<tag> .
+#
+# Build args:
+#   ARTEX_GIT_SHA   commit the source tree came from, recorded in the label
+#   ARTEX_VERSION   version string embedded in the binary (git describe from build.sh)
+#   TARGETARCH      amd64 (default) or arm64, set by buildx/buildkit
+
+ARG NODE_IMAGE=node:22-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da
+ARG GO_IMAGE=golang:1.26-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb
+ARG RUNTIME_IMAGE=python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337
+
+# 1. frontend: static export, the same command CI uses
+FROM ${NODE_IMAGE} AS web
+WORKDIR /src/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY web/ ./
+RUN NEXT_EXPORT=1 npm run build:static
+
+# 2. backend: embed the exported UI into the binary
+FROM ${GO_IMAGE} AS build
+ARG TARGETARCH=amd64
+ARG ARTEX_VERSION=dev
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+COPY --from=web /src/web/out ./server/webui/dist
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -tags embedui -trimpath \
+      -ldflags "-s -w -buildid= -X main.version=${ARTEX_VERSION}" -o /out/artex ./cmd/artex
+
+# browser cache source: upstream image, same Chromium revision as playwright 1.64.0
+FROM ghcr.io/jiwoochris/artex-global@sha256:6cb89efb439b725e2a1b57012b932bba006c1cd2364a70274176f9772e75ecec AS browsers
+
+# 3. runtime: their toolset, our binary
+FROM ${RUNTIME_IMAGE}
+ARG ARTEX_GIT_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/jiwoochris/artex-global" \
+      org.opencontainers.image.revision="${ARTEX_GIT_SHA}" \
+      org.opencontainers.image.title="artex-local"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates ripgrep curl wget vim git jq unzip \
+      dnsutils iputils-ping netcat-openbsd inetutils-telnet whois nmap \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+# Playwright is pinned to the browser build copied below: the Chromium CDN is
+# unreliable from this network, so the browser cache comes from the upstream
+# image (same revision 1248) and only the apt system deps are installed here.
+RUN npm install -g @playwright/mcp@latest @playwright/cli@latest playwright@1.64.0 \
+    && playwright-cli --help \
+    && playwright install-deps chromium \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=browsers /root/.cache/ms-playwright /root/.cache/ms-playwright
+
+WORKDIR /app
+COPY --from=build /out/artex /app/artex
+COPY start.sh /app/start.sh
+RUN chmod +x /app/artex /app/start.sh
+COPY skills/ /app/skills/
+VOLUME ["/app/data"]
+EXPOSE 8787 8788
+ENTRYPOINT ["/app/start.sh"]
+CMD ["-addr", ":8787", "-proxy", ":8788"]
