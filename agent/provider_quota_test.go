@@ -29,6 +29,7 @@ func TestIsQuotaExhaustedMessage(t *testing.T) {
 		// explicitly names the exhausted credits.
 		`openai: status 403: {"error":{"message":"litellm.APIError: APIError: XaiException - {\"code\":\"personal-team-blocked:spending-limit\",\"error\":\"You have run out of credits or need a Grok subscription. Add credits at https://grok.com/?_s=usage or upgrade at https://grok.com/supergrok.\"}"}}`,
 		`HTTP 403: billing_hard_limit_reached`,
+		`anthropic: status 429: {"error":{"type":"rate_limit_error","message":"You've reached your 5-hour usage limit. Your quota will reset when the current 5-hour window ends. To continue now, purchase extra usage or upgrade your plan"}}`,
 	}
 	for _, message := range positive {
 		if !IsQuotaExhaustedMessage(message) {
@@ -44,6 +45,7 @@ func TestIsQuotaExhaustedMessage(t *testing.T) {
 		`RESOURCE_EXHAUSTED: TPM quota exceeded`,
 		`tokens per minute quota exceeded`,
 		`rate_limit_exceeded: requests per second`,
+		`status 429: {"error":{"type":"rate_limit_error","message":"Rate limit reached for requests per minute"}}`,
 		`status 401: invalid api key`,
 		`status 401: insufficient_quota`,
 		`status 403: invalid api key`,

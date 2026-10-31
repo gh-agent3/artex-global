@@ -855,6 +855,15 @@ var logCatalog = map[string]map[string]string{
 		"ru": "Триггер инструмента · %s · task#%d",
 		"zh": "工具触发 · %s · task#%d",
 	},
+	"LLM failover chain: no usable profile available": {
+		"ru": "Цепь отказоустойчивости LLM: нет доступных профилей",
+		"zh": "LLM 轮询链：没有可用的配置",
+		"ko": "LLM 폴백 체인: 사용 가능한 설정이 없습니다",
+	},
+	"facts=%d assets=%d findings=%d": {
+		"ru": "факты=%d активы=%d находки=%d",
+		"zh": "事实%d 资产%d 漏洞%d",
+	},
 }
 
 // trCfg translates a startup/operator message to the configured default language

@@ -302,13 +302,29 @@ var quotaExhaustedMarkers = []string{
 	"余额不足", "额度不足", "额度已用尽", "欠费",
 }
 
-func containsQuotaMarker(message string) bool {
-	for _, marker := range quotaExhaustedMarkers {
+// subscriptionQuotaMarkers name an exhausted PLAN WINDOW (a 5-hour/day/month
+// allowance that resets later) rather than a per-minute throttle. Providers
+// send these on 429 next to ordinary rate-limit wording such as
+// rate_limit_error, so they override the transient-rate-limit veto below —
+// otherwise the profile is retried until the whole task dies instead of
+// failing over to the next provider.
+var subscriptionQuotaMarkers = []string{
+	"5-hour usage limit", "5 hour usage limit", "5-hour limit",
+	"reached your usage limit", "usage limit will reset", "quota will reset",
+	"purchase extra usage", "upgrade your plan to continue",
+}
+
+func containsMarker(markers []string, message string) bool {
+	for _, marker := range markers {
 		if strings.Contains(message, marker) {
 			return true
 		}
 	}
 	return false
+}
+
+func containsQuotaMarker(message string) bool {
+	return containsMarker(quotaExhaustedMarkers, message)
 }
 
 func IsQuotaExhaustedMessage(message string) bool {
@@ -318,20 +334,22 @@ func IsQuotaExhaustedMessage(message string) bool {
 	if nonFailoverHTTPStatus.MatchString(message) {
 		return false
 	}
+	exhausted := containsQuotaMarker(message) || containsMarker(subscriptionQuotaMarkers, message)
 	// 403 normally signals authorization. xAI's exhausted-subscription error
 	// (personal-team-blocked:spending-limit) also rides on 403, but its body
 	// explicitly names the exhausted credits, so an explicit exhaustion marker
 	// overrides the 403 veto. A bare 403 stays non-failover.
-	if forbiddenHTTP403.MatchString(message) && !containsQuotaMarker(message) {
+	if forbiddenHTTP403.MatchString(message) && !exhausted {
 		return false
 	}
 	// Provider APIs frequently describe an ordinary rate limit as "quota
 	// exceeded", especially Google-style responses containing a quota metric.
 	// These limits recover with time and must stay on the current provider.
-	if transientQuotaLimit.MatchString(message) {
+	// A named plan-window exhaustion wins over that wording.
+	if transientQuotaLimit.MatchString(message) && !containsMarker(subscriptionQuotaMarkers, message) {
 		return false
 	}
-	if containsQuotaMarker(message) {
+	if exhausted {
 		return true
 	}
 	// gRPC RESOURCE_EXHAUSTED is overloaded for both account quota and ordinary
