@@ -77,9 +77,11 @@ function QuotaLine({ id }: { id: string }) {
             window:
               q.key === "5h"
                 ? "5h"
-                : q.key === "month_total"
-                  ? t("card.quotaMonthTotal")
-                  : t("card.quotaMonthCode"),
+                : q.key === "week"
+                  ? t("card.quotaWeek")
+                  : q.key === "month_total"
+                    ? t("card.quotaMonthTotal")
+                    : t("card.quotaMonthCode"),
             pct: Math.round(q.remaining_ratio * 100),
           })}
         </span>

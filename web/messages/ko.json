@@ -3264,7 +3264,8 @@
       "quotaLeft": "{window}: {pct}% 남음",
       "quotaReset": "초기화 {time}",
       "quotaMonthTotal": "월간",
-      "quotaMonthCode": "월간(code)"
+      "quotaMonthCode": "월간(code)",
+      "quotaWeek": "주간"
     },
     "health": {
       "noKey": {

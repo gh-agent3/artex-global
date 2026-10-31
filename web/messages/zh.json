@@ -3264,7 +3264,8 @@
       "quotaLeft": "{window}：剩余 {pct}%",
       "quotaReset": "重置 {time}",
       "quotaMonthTotal": "月度",
-      "quotaMonthCode": "月度（code）"
+      "quotaMonthCode": "月度（code）",
+      "quotaWeek": "每周"
     },
     "health": {
       "noKey": {

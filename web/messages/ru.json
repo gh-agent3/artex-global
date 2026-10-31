@@ -803,7 +803,8 @@
       "quotaLeft": "{window}: осталось {pct}%",
       "quotaReset": "сброс {time}",
       "quotaMonthTotal": "месяц",
-      "quotaMonthCode": "месяц (code)"
+      "quotaMonthCode": "месяц (code)",
+      "quotaWeek": "неделя"
     },
     "health": {
       "noKey": {

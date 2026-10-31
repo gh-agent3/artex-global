@@ -3264,7 +3264,8 @@
       "quotaLeft": "{window}: 残り {pct}%",
       "quotaReset": "リセット {time}",
       "quotaMonthTotal": "月間",
-      "quotaMonthCode": "月間(code)"
+      "quotaMonthCode": "月間(code)",
+      "quotaWeek": "週間"
     },
     "health": {
       "noKey": {

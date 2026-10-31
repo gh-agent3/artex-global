@@ -3264,7 +3264,8 @@
       "quotaLeft": "{window}: {pct}% left",
       "quotaReset": "reset {time}",
       "quotaMonthTotal": "month",
-      "quotaMonthCode": "month (code)"
+      "quotaMonthCode": "month (code)",
+      "quotaWeek": "week"
     },
     "health": {
       "noKey": {
