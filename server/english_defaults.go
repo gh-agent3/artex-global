@@ -39,8 +39,17 @@ func (s *Server) seedEnglishDefaults() {
 	}
 	defer func() { _ = s.m.pg.SetSetting(flag, "true") }()
 
-	switchedPrompts := 0
+	prompts := map[string]string{}
 	for key, tmpl := range agent.BuiltinPromptSeeds() {
+		prompts[key] = tmpl
+	}
+	// reporter and retester are seeded by their own one-off migrations, not by
+	// BuiltinPromptSeeds, but their bodies are code-owned defaults too.
+	prompts["reporter"] = agent.ReporterDefaultPrompt
+	prompts["retester"] = agent.RetesterDefaultPrompt
+
+	switchedPrompts := 0
+	for key, tmpl := range prompts {
 		a, err := s.m.pg.GetAgentByKey(key)
 		if err != nil || a == nil || tmpl == "" {
 			continue
