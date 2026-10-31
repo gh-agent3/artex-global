@@ -2430,7 +2430,8 @@
       "runningWorker": "실행 중 Worker",
       "created": "생성 시각",
       "duration": "실행 시간",
-      "actions": "동작"
+      "actions": "동작",
+      "resizeColumn": "열 너비 조절"
     },
     "delete": {
       "detailAssets": "자산 {n}건 삭제",

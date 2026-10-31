@@ -461,7 +461,8 @@
       "runningWorker": "Работающие воркеры",
       "created": "Создано",
       "duration": "Длительность",
-      "actions": "Действия"
+      "actions": "Действия",
+      "resizeColumn": "Изменить ширину столбца"
     },
     "delete": {
       "detailAssets": "Удалено активов: {n}",

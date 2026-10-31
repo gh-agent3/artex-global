@@ -2430,7 +2430,8 @@
       "runningWorker": "Workers en ejecución",
       "created": "Creado",
       "duration": "Duración",
-      "actions": "Acciones"
+      "actions": "Acciones",
+      "resizeColumn": "Ajustar el ancho de la columna"
     },
     "delete": {
       "detailAssets": "{n} activos eliminados",

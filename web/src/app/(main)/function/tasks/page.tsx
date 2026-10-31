@@ -257,6 +257,7 @@ type TaskSortField = "id" | "created" | "duration" | "status";
 const TASK_SORT_FIELDS: readonly TaskSortField[] = ["id", "created", "duration", "status"];
 const TASK_SORT_PREFERENCE_KEY = "artex_task_list_sort";
 const TASK_FILTER_PREFERENCE_KEY = "artex_task_list_filters";
+const TASK_COLUMN_WIDTHS_PREFERENCE_KEY = "artex_task_list_column_widths";
 
 const TASK_STATUS_RANK = new Map(STATUS_OPTIONS.map((status, index) => [status, index]));
 
@@ -940,7 +941,11 @@ export default function TasksPage() {
                  (설명·목표 진행도·Worker·생성/실행 시각·Token)부터 숨겨, 고정된 「동작」
                  열이 다른 열 위에 겹치지 않게 한다. */
               <div className="@container">
-                <Table className="**:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4">
+                <Table
+                  className="**:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4"
+                  resizeStorageKey={TASK_COLUMN_WIDTHS_PREFERENCE_KEY}
+                  resizeLabel={t("table.resizeColumn")}
+                >
                   <TableHeader className="[&_tr]:border-t">
                     <TableRow>
                       <TableHead className="w-10">

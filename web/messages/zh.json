@@ -2430,7 +2430,8 @@
       "runningWorker": "运行中 Worker",
       "created": "创建时间",
       "duration": "运行时长",
-      "actions": "操作"
+      "actions": "操作",
+      "resizeColumn": "调整列宽"
     },
     "delete": {
       "detailAssets": "删除资产 {n} 条",

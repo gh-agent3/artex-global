@@ -2430,7 +2430,8 @@
       "runningWorker": "実行中の Worker",
       "created": "作成日時",
       "duration": "実行時間",
-      "actions": "操作"
+      "actions": "操作",
+      "resizeColumn": "列の幅を調整"
     },
     "delete": {
       "detailAssets": "資産 {n}件を削除",

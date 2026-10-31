@@ -2430,7 +2430,8 @@
       "runningWorker": "Running workers",
       "created": "Created",
       "duration": "Duration",
-      "actions": "Actions"
+      "actions": "Actions",
+      "resizeColumn": "Resize column"
     },
     "delete": {
       "detailAssets": "{n} assets deleted",
