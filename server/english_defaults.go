@@ -6,6 +6,7 @@ import (
 	"unicode"
 
 	"github.com/Autumn-27/artex/agent"
+	actool "github.com/Autumn-27/norma/tool"
 )
 
 // hasHan reports whether s still carries Chinese (Han) characters. It is the gate for
@@ -33,7 +34,7 @@ func hasHan(s string) bool {
 // Settings-flag guarded, so it runs once. A fresh database needs nothing: SeedPromptIfEmpty
 // and SeedTool already write the English defaults.
 func (s *Server) seedEnglishDefaults() {
-	const flag = "english_defaults_v2"
+	const flag = "english_defaults_v3"
 	if v, _, _ := s.m.pg.GetSetting(flag); v == "true" {
 		return
 	}
@@ -76,6 +77,13 @@ func (s *Server) seedEnglishDefaults() {
 		defaults[sd.Key] = toolDefault{desc: sd.Desc, schema: sd.Schema}
 	}
 	for _, t := range append(s.orchestrationTools(), s.platformTools()...) {
+		defaults[t.Name()] = toolDefault{desc: t.Description(), schema: t.InputSchema()}
+	}
+	// The finding-workflow, finding-traffic, retest and captured-traffic tools are seeded
+	// from their own server/traffic constructors, so pull their defaults in the same way.
+	extra := append([]actool.CoreTool{s.toolBindFindingTraffic(), s.toolGetFindingTraffic()}, s.findingRetestTools()...)
+	extra = append(extra, s.m.traffic.Tools()...)
+	for _, t := range extra {
 		defaults[t.Name()] = toolDefault{desc: t.Description(), schema: t.InputSchema()}
 	}
 	tools, err := s.m.pg.ListTools()
