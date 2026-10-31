@@ -146,6 +146,18 @@ function Table({ className, style, resizeStorageKey, resizeLabel, ...props }: Ta
     [columnWidths, onKeyDown, onPointerDown, onPointerMove, onPointerUp, resizable, resizeLabel, resized],
   )
 
+  // table-layout:fixed honours the <th> widths we set, but ONLY when the table
+  // width itself is explicit: with width:max-content the browser sizes the table
+  // to the sum of the headers' content widths and redistributes the slack, so a
+  // dragged column snaps back to the width of its label text. Pinning the table
+  // to the sum of the measured column widths makes the drag stick.
+  const tableWidth = React.useMemo(() => {
+    if (!resized) return undefined
+    let total = 0
+    for (const w of Object.values(columnWidths)) total += w
+    return total > 0 ? total : undefined
+  }, [columnWidths, resized])
+
   return (
     <div
       data-slot="table-container"
@@ -155,7 +167,7 @@ function Table({ className, style, resizeStorageKey, resizeLabel, ...props }: Ta
         <table
           data-slot="table"
           className={cn("w-full caption-bottom text-sm", className)}
-          style={resized ? { ...style, tableLayout: "fixed", width: "max-content" } : style}
+          style={resized ? { ...style, tableLayout: "fixed", width: tableWidth, minWidth: "100%" } : style}
           {...props}
         />
       </TableResizeContext.Provider>
