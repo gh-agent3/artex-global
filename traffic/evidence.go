@@ -37,7 +37,7 @@ func (t *Traffic) ReadEvidence(ctx context.Context, ids []string, consume func(E
 			return err
 		}
 		if err := t.readEvidence(id, consume); err != nil {
-			return fmt.Errorf("流量 %s: %w", id, err)
+			return fmt.Errorf("traffic %s: %w", id, err)
 		}
 	}
 	return nil

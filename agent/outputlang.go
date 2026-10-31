@@ -42,20 +42,20 @@ func resolveOutputLang() string {
 // langPhrase 는 (중국어로 쓰인) 지시문 안에서 "이 언어로 써라"라고 지목할 때 쓰는 표기다.
 // 괄호 안에 자국어 표기를 함께 둬서 모델이 어떤 언어인지 혼동하지 않게 한다.
 var langPhrase = map[string]string{
-	"ko": "韩语（한국어）",
-	"en": "英语（English）",
-	"zh": "中文（简体中文）",
-	"es": "西班牙语（Español）",
-	"ja": "日语（日本語）",
-	"ru": "俄语（Русский）",
+	"ko": "Korean (한국어)",
+	"en": "English",
+	"zh": "Chinese (简体中文)",
+	"es": "Spanish (Español)",
+	"ja": "Japanese (日本語)",
+	"ru": "Russian (Русский)",
 }
 
 // langBare 는 지시문 안에서 반복 지목할 때 쓰는 짧은 언어명이다.
 var langBare = map[string]string{
-	"ko": "韩语",
-	"en": "英语",
-	"zh": "中文",
-	"es": "西班牙语",
-	"ja": "日语",
-	"ru": "俄语",
+	"ko": "Korean",
+	"en": "English",
+	"zh": "Chinese",
+	"es": "Spanish",
+	"ja": "Japanese",
+	"ru": "Russian",
 }

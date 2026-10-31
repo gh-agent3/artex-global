@@ -52,7 +52,7 @@ func verifyFile(path, hash string, length int64) error {
 		return err
 	}
 	if n != length || hex.EncodeToString(h.Sum(nil)) != hash {
-		return fmt.Errorf("证据正文校验失败: %s", hash)
+		return fmt.Errorf("evidence body failed verification: %s", hash)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (s *Store) writeBody(r io.Reader, expectedLength int64, expectedHash string
 	}
 	hash = hex.EncodeToString(h.Sum(nil))
 	if n != expectedLength {
-		return "", fmt.Errorf("正文不完整: 预期 %d 字节，读取 %d 字节", expectedLength, n)
+		return "", fmt.Errorf("incomplete body: expected %d bytes, read %d", expectedLength, n)
 	}
 	if expectedHash != "" && expectedHash != hash {
 		return "", errors.New("raw traffic body hash mismatch")

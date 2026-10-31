@@ -56,23 +56,22 @@ func TestSideQuestionBudgetSentinelPreserved(t *testing.T) {
 }
 
 // TestSideQuestionBrainPreserved: the agent-brain prompts (the answering
-// instruction and the summary instruction) must stay in their benchmarked
-// Chinese. BRIEF 현지화 방침은 두뇌 본문을 번역하지 말고 출력 언어만 한국어로
-// 강제하라는 것이라, 이 두 프롬프트가 한국어로 바뀌면 벤치마크 동작이 드리프트한다.
+// instruction and the summary instruction) are fixed English text. Any Han
+// ideograph here means a Chinese original leaked back in, and an empty prompt
+// means the wording was dropped; both drift the benchmarked behaviour.
 func TestSideQuestionBrainPreserved(t *testing.T) {
 	for _, c := range []struct{ label, text string }{
 		{"instruction", instruction},
 		{"summaryInstruction", summaryInstruction},
 	} {
-		han := false
+		if c.text == "" {
+			t.Errorf("%s: brain prompt is empty", c.label)
+		}
 		for _, r := range c.text {
 			if unicode.Is(unicode.Han, r) {
-				han = true
+				t.Errorf("%s: brain prompt still carries a Han ideograph: %q", c.label, r)
 				break
 			}
-		}
-		if !han {
-			t.Errorf("%s: 두뇌 프롬프트가 더 이상 중국어가 아닙니다(벤치마크 드리프트 위험)", c.label)
 		}
 	}
 }

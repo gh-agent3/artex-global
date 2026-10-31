@@ -31,17 +31,17 @@ func (t *runTrace) done(id string) {
 }
 
 var reasonHint = map[harness.TerminalReason]string{
-	harness.ReasonCompleted:         "模型正常结束了本轮，但没有留下文字总结；事实和资产以本轮工具调用记录为准",
-	harness.ReasonMaxTurns:          "达到步数上限(MaxTurns)：SDK 已执行收尾并写回事实和资产，意图会标记为 exhausted，供规划者换方向继续，而不是作为失败处理",
-	harness.ReasonTimeout:           "达到单次运行的墙钟预算(MaxDuration)：到点会打断在跑的工具并就地进收尾，把已识别的事实和资产写回，意图会标记为 exhausted",
-	harness.ReasonModelError:        "模型或 API 调用失败（网络、鉴权、限流、供应商 5xx 等），重试用尽后意图标记为 blocked——传输层故障导致这条意图基本没真正探成；查其执行过程（get_worker_trace）后再决定重派或换法",
-	harness.ReasonBlockingLimit:     "上下文长度达到硬上限，请求在发出前被拦截；应收窄意图粒度或压缩工具返回",
-	harness.ReasonPromptTooLong:     "提示词过长且上下文压缩重试已经用尽，无法继续执行",
-	harness.ReasonImageError:        "当前模型不支持本轮多模态内容；请切换支持视觉的模型或避免工具返回图片",
-	harness.ReasonStopHookPrevented: "Stop 钩子阻止本轮结束，随后未能继续；请检查任务 Guard 规则是否过严",
-	harness.ReasonHookStopped:       "工具或钩子主动停止继续执行，例如越界目标或禁用命令；请检查最后一条 tool_result 的拦截说明",
-	harness.ReasonAbortedStreaming:  "运行在模型输出流式生成阶段被取消",
-	harness.ReasonAbortedTools:      "运行在工具执行阶段被取消",
+	harness.ReasonCompleted:         "the model ended the turn normally but left no text summary; the facts and assets are taken from the tool calls of this round",
+	harness.ReasonMaxTurns:          "hit the step cap (MaxTurns): the SDK settled and wrote back facts and assets, and the intent is marked exhausted so the planner can continue in another direction instead of treating it as a failure",
+	harness.ReasonTimeout:           "hit the wall-clock budget of a single run (MaxDuration): the running tool is interrupted at the deadline and the run settles in place, writing back the facts and assets identified so far; the intent is marked exhausted",
+	harness.ReasonModelError:        "the model or API call failed (network, auth, rate limit, provider 5xx and so on); once the retries ran out the intent is marked blocked - a transport fault means this intent barely got tested, so read its trace (get_worker_trace) before redispatching or changing approach",
+	harness.ReasonBlockingLimit:     "the context reached its hard length limit and the request was blocked before it was sent; narrow the intent granularity or compact the tool output",
+	harness.ReasonPromptTooLong:     "the prompt was too long and the context-compaction retries are exhausted, so the run cannot continue",
+	harness.ReasonImageError:        "the current model does not accept multimodal content in this round; switch to a vision-capable model or cap the images in tool results",
+	harness.ReasonStopHookPrevented: "a Stop hook prevented this turn from ending and the run could not continue; check whether the task Guard rules are too strict",
+	harness.ReasonHookStopped:       "a tool or hook stopped further execution on purpose, e.g. an out-of-scope target or a forbidden command; check the block note in the last tool_result",
+	harness.ReasonAbortedStreaming:  "the run was cancelled while the model was streaming its output",
+	harness.ReasonAbortedTools:      "the run was cancelled during tool execution",
 }
 
 // terminalText renders a terminal event with no final text into a compact summary
@@ -133,9 +133,9 @@ func terminalReasonHint(reason harness.TerminalReason) string {
 		return hint
 	}
 	if reason == "" {
-		return "运行的 context 已取消，但底层没有产生 Terminal 事件"
+		return "the context of this run was cancelled but no Terminal event was produced underneath"
 	}
-	return "未知终态；harness 可能新增了 TerminalReason，请补充 reasonHint"
+	return "unknown terminal state; the harness may have added a TerminalReason - extend reasonHint"
 }
 
 func progressSuffix(lang string, term *harness.Terminal, tr *runTrace) string {

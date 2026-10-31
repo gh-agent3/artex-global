@@ -12,62 +12,76 @@ import (
 	"github.com/Autumn-27/artex/notify"
 )
 
-// 全局设置键（存在 settings 键值表里，无需建表）。
+// Global settings keys (kept in the settings key/value table, no table of their own).
 const (
-	// settingNotifyEnabled 是推送总开关。默认开：它用于维护期一键止血，
-	// 而不是功能的启用条件——真正的启用条件是「有没有配渠道」。
+	// settingNotifyEnabled is the master push switch. On by default: it exists to stop
+	// everything with one switch during maintenance,
+	// not as the feature's enable condition — the real condition is whether any channel is
+	// configured.
 	settingNotifyEnabled = "notify_enabled"
-	// settingNotifyPublicBaseURL 是生成漏洞详情回链的外部访问地址
-	// （如 https://artex.example.com）。留空则消息里不带回链按钮。
-	// 项目里没有可复用的外部地址配置，所以这里新增一项。
+	// settingNotifyPublicBaseURL is the externally reachable address used to build finding
+	// detail backlinks
+	// (e.g. https://artex.example.com). When empty, messages carry no backlink button.
+	// The project had no reusable external-address setting, so this one is new.
 	settingNotifyPublicBaseURL = "notify_public_base_url"
-	// settingNotifyDigestMinutes 是汇总模式的周期（分钟）。
+	// settingNotifyDigestMinutes is the digest mode interval in minutes.
 	settingNotifyDigestMinutes = "notify_digest_interval_min"
 )
 
 const (
-	// notifyTick 是投递引擎的轮询间隔。3 秒是该引擎实时性的上限，
-	// 也是「漏洞落库」到「消息到达 IM」之间的主要延迟来源。
+	// notifyTick is the delivery engine's poll interval. 3 seconds is the engine's realtime
+	// ceiling
+	// and the main source of latency between a finding being stored and the message reaching IM.
 	notifyTick = 3 * time.Second
-	// notifyBackgroundDisabledEnv 가 설정되면 서버가 백그라운드 투递 루프
+	// notifyBackgroundDisabledEnv 가 설정되면 서버가 백그라운드 전달 루프
 	// (newNotifier(s).Run)를 띄우지 않는다. 통합 테스트는 stepRealtime·stepDigest 를
 	// 직접 호출해 분배 결과를 결정론적으로 검증하는데, 3 초 주기의 백그라운드 루프가
 	// 같은 채널을 동시에 처리하면 집계가 타이밍에 따라 흔들린다. 이를 막기 위한
 	// 테스트 전용 스위치이며, 변수가 없으면 평소대로 기동한다(프로덕션 동작 불변).
 	notifyBackgroundDisabledEnv = "ARTEX_NOTIFY_BACKGROUND_DISABLED"
-	// notifyLease 是领取投递时的租约时长。必须显著大于单次投递的最坏耗时
-	// （notify 包的 HTTP 客户端超时 15 秒），否则会出现同一行被两个
-	// dispatcher 同时投递。
+	// notifyLease is the lease taken when claiming a delivery. It must be clearly longer than
+	// a single delivery's worst case
+	// (the notify package's HTTP client timeout is 15s), otherwise the same row is delivered
+	// by two
+	// dispatchers at once.
 	notifyLease = 3 * time.Minute
-	// notifyFanOutPerTick 限制每轮分派的事件数，避免首次启用渠道时
-	// 一次性把历史积压全部展开成投递任务。
+	// notifyFanOutPerTick caps how many events are dispatched per round, so that first
+	// enabling a channel
+	// does not expand the whole historical backlog into deliveries at once.
 	notifyFanOutPerTick = 200
-	// notifyDefaultDigestMinutes 是汇总周期的默认值。
+	// notifyDefaultDigestMinutes is the default digest interval.
 	notifyDefaultDigestMinutes = 30
-	// notifyUnlimitedBurstPerTick 是渠道未设限流时的每轮投递上限。
-	// 存在的意义是防止「一个渠道配成不限流 + 一次扫出上千条漏洞」把
-	// 单轮循环拖成长时间阻塞。
+	// notifyUnlimitedBurstPerTick is the per-round delivery cap for a channel with no rate limit.
+	// It exists so that "one unlimited channel plus a scan that turns up thousands of
+	// findings"
+	// cannot stretch a single round into a long block.
 	notifyUnlimitedBurstPerTick = 50
-	// notifyMaxSendsPerChannelPerTick 是单渠道每轮最多投递几条。
+	// notifyMaxSendsPerChannelPerTick is how many deliveries one channel may send per round.
 	//
-	// 这个上限由**租约时长**倒推：领取时给行打的是租约（notifyLease = 3 分钟），
-	// 若一轮里串行投递的条数多到最坏耗时超过租约，后几条还没发完租约就过期了。
-	// 单进程内无所谓（Run 是单个 goroutine 串行跑，tick 不会重入），但**两个
-	// 进程连同一个库**时，对端会把租约过期的行重新领走并重复发送，还会把
-	// attempts 双份递增、在原进程仍在投递时就判成失败。
+	// The cap is derived backwards from the **lease duration**: claiming stamps the row with a
+	// lease (notifyLease = 3 minutes),
+	// so if a round delivers enough rows serially that the worst case exceeds the lease, the
+	// later rows expire mid-send.
+	// Within one process it does not matter (Run is a single serial goroutine, ticks never
+	// re-enter), but with **two
+	// processes on one database** the other side re-claims lease-expired rows and sends them
+	// again, and also
+	// double-increments attempts, marking failures while the original process is still delivering.
 	//
-	// 取值：3 分钟租约 / 30 秒单次超时 = 6 是**刚好用满租约**、零余量，
-	// 不能取；取 5 让最坏耗时 150 秒留出 30 秒余量。这个关系由
-	// TestNotifyTickBudgetFitsWithinLease 钉死——改 notifyLease、
-	// notifySendTimeout 或本值中的任意一个都会让那条断言失败。
+	// Value: 3-minute lease / 30-second send timeout = 6 fills the lease exactly with zero
+	// margin and must not be used;
+	// 5 leaves 30 seconds of margin on a 150-second worst case. This relation is pinned by
+	// TestNotifyTickBudgetFitsWithinLease — changing notifyLease,
+	// notifySendTimeout or this value makes that assertion fail.
 	notifyMaxSendsPerChannelPerTick = 5
-	// notifySendTimeout 是单次投递的超时。它同时决定上一条常量的取值，
-	// 两者相乘不能超过 notifyLease，见 TestNotifyTickBudgetFitsWithinLease。
+	// notifySendTimeout is the timeout of a single delivery. It also determines the constant
+	// above:
+	// their product must not exceed notifyLease, see TestNotifyTickBudgetFitsWithinLease.
 	notifySendTimeout = 30 * time.Second
 )
 
-// notifyBackoff 是失败重试的退避序列，下标为已尝试次数。
-// 3 次机会（含首次）与 db.MaxNotifyAttempts 对应，两者必须一起改。
+// notifyBackoff is the retry backoff sequence, indexed by attempts already made.
+// 3 chances (including the first) match db.MaxNotifyAttempts; both must change together.
 var notifyBackoff = []time.Duration{
 	time.Second,
 	5 * time.Second,
@@ -88,26 +102,30 @@ const (
 	errDeliveryBatchAllUnparseable     = "요약 배치의 전달 %d건을 모두 해석하지 못했습니다"
 )
 
-// Notifier 是漏洞推送的投递引擎。
+// Notifier is the vulnerability push delivery engine.
 //
-// 与 Scheduler 并列，作为独立 goroutine 运行（见 server.New）。刻意不复用
-// Scheduler 的 tick：推送的实时性要求（3 秒）与触发器的业务节奏不同，
-// 且两者的失败互不牵连——推送卡住不该影响 agent 触发。
+// It runs as its own goroutine alongside the Scheduler (see server.New). It deliberately
+// does not reuse
+// the Scheduler's tick: pushes need realtime latency (3 seconds), a different cadence from
+// triggers,
+// and neither's failure may affect the other — a stuck push must not block agent triggers.
 type Notifier struct {
 	s  *Server
 	pg *db.DB
 
-	// mu 保护 buckets。渠道数量少、竞争低，一把互斥锁足够，
-	// 不值得为它引入更细粒度的结构。
+	// mu guards buckets. Channels are few and contention is low, so one mutex is enough;
+	// a finer-grained structure is not worth it.
 	mu      sync.Mutex
 	buckets map[int64]*notifyBucket
 }
 
-// notifyBucket 是单渠道的令牌桶。
+// notifyBucket is the per-channel token bucket.
 //
-// 用令牌桶而不是「每分钟计数后清零」的滑动窗口，是因为后者的边界效应很糟：
-// 在窗口末尾发满 20 条、下一瞬间再发 20 条，对平台来说是一秒内 40 条，
-// 会被限流；令牌桶以恒定速率补充，天然避免这种突发。
+// A token bucket rather than a "count per minute, then reset" sliding window: the latter
+// has terrible boundary effects —
+// 20 sends at the end of a window plus 20 right after look like 40 in one second to the
+// platform and get rate-limited;
+// a bucket refills at a constant rate and naturally avoids such bursts.
 type notifyBucket struct {
 	tokens   float64
 	lastFill time.Time
@@ -117,7 +135,7 @@ func newNotifier(s *Server) *Notifier {
 	return &Notifier{s: s, pg: s.m.pg, buckets: map[int64]*notifyBucket{}}
 }
 
-// Run 循环直到 ctx 结束。由 server.New 启动一次。
+// Run loops until ctx ends. Started once by server.New.
 func (n *Notifier) Run(ctx context.Context) {
 	if n.pg == nil {
 		return
@@ -134,10 +152,11 @@ func (n *Notifier) Run(ctx context.Context) {
 	}
 }
 
-// step 跑一轮：先分派新事件，再投递到期的任务。
+// step runs one round: dispatch new events first, then deliver the due tasks.
 //
-// 任何一步失败都只记日志、不中断循环——通知系统的故障绝不能升级成进程级问题。
-// 每个 tick 都是独立的，下一轮会自然重试。
+// Any step failure is only logged and never breaks the loop — a notification system fault
+// must never escalate to a process-level problem.
+// Each tick is independent, so the next round retries naturally.
 func (n *Notifier) step(ctx context.Context) {
 	if !n.enabled() {
 		return
@@ -156,12 +175,13 @@ func (n *Notifier) step(ctx context.Context) {
 		if !ch.IsEnabled() {
 			continue
 		}
-		// 令牌桶的计量单位是**消息条数**（等价于 HTTP 请求数），不是漏洞条数。
-		// 实时模式下两者相同（一条漏洞一条消息）；汇总模式下一整批漏洞合成
-		// 一条消息，所以只消耗一个令牌。
+		// The token bucket counts **messages** (equivalent to HTTP requests), not findings.
+		// In realtime mode they are the same (one finding, one message); a digest batch collapses
+		// into one message, so it consumes a single token.
 		//
-		// 两种模式都先问令牌桶、再按额度去领——顺序不能反，否则被限流挡下的
-		// 投递已经消耗过重试次数。
+		// Both modes ask the bucket first and claim by budget second — the order cannot be
+		// reversed, or a delivery stopped by the rate limit
+		// would already have burned a retry attempt.
 		now := time.Now()
 		if ch.Mode == db.NotifyModeDigest {
 			tokens, claimLimit := digestTickPlan()
@@ -179,28 +199,37 @@ func (n *Notifier) step(ctx context.Context) {
 	}
 }
 
-// digestTickPlan 返回汇总渠道本轮的令牌消耗与批次大小上界。
+// digestTickPlan returns a digest channel's token cost and batch-size upper bound for this
+// round.
 //
-// 两个返回值是**两个不同的量纲**，这正是独立成函数的理由：
+// The two return values have **two different units**, which is exactly why this is its own
+// function:
 //
-//   - tokens 是消息条数。一批漏洞合成一条消息、发一次 HTTP 请求，所以恒为 1。
-//     rate_per_min 因此仍然对 digest 生效（每分钟最多这么多条汇总消息）。
-//   - claimLimit 是这一批最多装几条漏洞。它只受内存上界约束，与请求预算无关。
+//   - tokens counts messages. A batch of findings becomes one message and one HTTP request,
+//     so it is always 1.
+//     rate_per_min therefore still applies to digest (at most that many digest messages per
+//     minute).
+//   - claimLimit is how many findings one batch may hold. It is bounded only by memory,
+//     independent of the request budget.
 //
-// 曾经为了让 rate_per_min 对 digest 生效，把每轮请求预算
-// （notifyMaxSendsPerChannelPerTick，由租约倒推而来）直接当批次大小传下去。
-// 后果是 rate_per_min=20 的渠道在 3 秒的 tick 里只补到 1 个令牌，于是每条汇总
-// 消息只装 1 个漏洞——digest 退化成「带汇总文案的实时推送」，读者收到的是一串
-// 「近 30 分钟新增 1 个漏洞」，而 db.MaxDigestBatchSize 永不可达。
+// It once passed the per-round request budget
+// (notifyMaxSendsPerChannelPerTick, derived from the lease) down as the batch size, just to
+// make rate_per_min apply to digest.
+// The result: a channel with rate_per_min=20 refilled only 1 token per 3-second tick, so
+// every digest
+// message held exactly 1 finding — digest degenerated into "realtime push with digest
+// wording" and readers got a stream of
+// "1 new finding in the last 30 minutes", while db.MaxDigestBatchSize stayed unreachable.
 //
-// 这个症状在端到端测试里不容易发现（现有用例都手动传一个够大的 limit 给
-// stepDigest，绕过了 step 里的额度计算），所以把决策收在这里由
-// TestDigestTickPlanDecouplesBatchSizeFromSendBudget 直接钉住。
+// That symptom is hard to catch in End-To-End tests (existing cases pass a large enough
+// limit into
+// stepDigest by hand, bypassing step's budget calculation), so the decision is pinned here by
+// TestDigestTickPlanDecouplesBatchSizeFromSendBudget.
 func digestTickPlan() (tokens, claimLimit int) {
 	return 1, db.MaxDigestBatchSize
 }
 
-// stepRealtime 领取并投递某渠道的实时任务，一条漏洞一条消息。
+// stepRealtime claims and delivers one channel's realtime tasks, one finding per message.
 func (n *Notifier) stepRealtime(ctx context.Context, ch *db.NotificationChannel, allow int, baseURL string) {
 	deliveries, err := n.pg.ClaimRealtimeDeliveries(ctx, ch.ID, allow, notifyLease)
 	if err != nil {
@@ -218,7 +247,7 @@ func (n *Notifier) stepRealtime(ctx context.Context, ch *db.NotificationChannel,
 	for _, dl := range deliveries {
 		msg, err := n.renderSingle(ctx, dl, baseURL)
 		if err != nil {
-			// 渲染失败是本地数据问题，重试不会变好。
+			// A render failure is a local data problem; retrying will not fix it.
 			_ = n.pg.FailDeliveries(ctx, []int64{dl.ID}, err.Error())
 			continue
 		}
@@ -226,7 +255,7 @@ func (n *Notifier) stepRealtime(ctx context.Context, ch *db.NotificationChannel,
 	}
 }
 
-// stepDigest 在批次到期时把某渠道的待发投递聚合成一条消息发出。
+// stepDigest aggregates a channel's pending deliveries into one message once the batch is due.
 func (n *Notifier) stepDigest(ctx context.Context, ch *db.NotificationChannel, allow int, baseURL string) {
 	window := n.digestInterval()
 	due, err := n.pg.DigestBatchDue(ctx, ch.ID, window)
@@ -255,9 +284,12 @@ func (n *Notifier) stepDigest(ctx context.Context, ch *db.NotificationChannel, a
 		_ = n.pg.FailDeliveries(ctx, deliveryIDs(deliveries), err.Error())
 		return
 	}
-	// 快照坏掉、没能进消息的那些投递要显式判失败。不这么做的话它们会留在
-	// included 之外、既不进消息也不进失败列表——发送成功时它们的状态会被
-	// 之后的批量标记漏掉，永远停在 sending 直到租约过期被反复领取。
+	// Deliveries whose snapshot broke and never made it into the message must be failed
+	// explicitly. Otherwise they stay
+	// outside included, in neither the message nor the failed list — on a successful send their
+	// status is
+	// skipped by the batch marking and they sit in sending until the lease expires, claimed over
+	// and over.
 	if skipped := excludeDeliveries(deliveries, included); len(skipped) > 0 {
 		reason := errDeliverySnapshotUnrenderable
 		if fErr := n.pg.FailDeliveries(ctx, deliveryIDs(skipped), reason); fErr != nil {
@@ -265,28 +297,35 @@ func (n *Notifier) stepDigest(ctx context.Context, ch *db.NotificationChannel, a
 		}
 		log.Printf(logA("[notify] skipping %d deliveries whose snapshot cannot be parsed channel=%d"), len(skipped), ch.ID)
 	}
-	// 只把进了消息的那些交给 send：included[i] 与 msg.Items[i] 严格对应，
-	// send 依赖这个对应关系把「渠道回报装下了前 K 条」落到正确的投递行上。
+	// Only the ones that made it into the message go to send: included[i] and msg.Items[i]
+	// correspond strictly,
+	// and send relies on that to land "the channel took the first K" on the right delivery rows.
 	n.send(ctx, channel, cfg, msg, included)
 }
 
-// send 投递并按结果流转状态。
+// send delivers and moves state according to the result.
 //
-// 同一批投递（汇总模式下可能几十条）共享一个发送结果：要么送达、要么整批重试。
-// 不做逐条重试——汇总消息是一条，重发其中一部分会让批次语义错乱。
+// A whole batch (dozens of rows in digest mode) shares one send result: either delivered or
+// the batch retries as a whole.
+// There is no per-row retry — a digest message is one unit, and resending part of it would
+// corrupt the batch semantics.
 //
-// 唯一的例外是**渠道长度上限导致的分段**：渠道回报实际只装下了前 K 条，
-// 那么第 K+1 条起必须留到下一批，而不是跟着一起被标记成功。否则被截掉的
-// 那些漏洞既不在消息里、也不在失败列表里，彻底消失。
+// The one exception is **segmentation by the channel's length limit**: when the channel
+// reports it only took the first K,
+// row K+1 onward must wait for the next batch rather than being marked delivered with the
+// rest. Otherwise the truncated
+// findings end up in neither the message nor the failed list and vanish entirely.
 func (n *Notifier) send(ctx context.Context, channel notify.Channel, cfg map[string]any, msg notify.Message, deliveries []*db.NotificationDelivery) {
-	// 单次投递设上限，避免某个渠道卡住把这一轮剩余渠道全部拖住。
+	// Cap a single delivery so one stuck channel cannot hold up every remaining channel this
+	// round.
 	sendCtx, cancel := context.WithTimeout(ctx, notifySendTimeout)
 	defer cancel()
 	delivered, err := channel.Send(sendCtx, cfg, msg)
 	if err == nil && delivered > 0 {
 		if delivered > len(deliveries) {
-			// 渠道回报的条数不可能超过投递数；真发生了说明渲染层算错了，
-			// 按全部送达处理并把问题记下来，总好过把记录写乱。
+			// The reported count cannot exceed the number of deliveries; if it does, the render layer
+			// computed wrong —
+			// treat everything as delivered and log it, which beats corrupting the records.
 			log.Printf(logA("[notify] channel reported %d delivered of %d deliveries channel=%s, treating all as delivered"),
 				delivered, len(deliveries), channel.Kind())
 			delivered = len(deliveries)
@@ -296,9 +335,11 @@ func (n *Notifier) send(ctx context.Context, channel notify.Channel, cfg map[str
 			log.Printf(logA("[notify] failed to mark deliveries as delivered channel=%s ids=%v: %v"), channel.Kind(), deliveryIDs(sent), err)
 		}
 		if len(rest) > 0 {
-			// 本条消息已达渠道长度上限：剩下的立刻回队，由下一个 tick 续发。
-			// 用 DeferDeliveries 而非 RescheduleDeliveries —— 这不是失败，
-			// 不该消耗重试预算（领取时已经乐观 +1 了，那里会减回去）。
+			// This message hit the channel's length limit: the rest go straight back to the queue and
+			// the next tick continues.
+			// DeferDeliveries, not RescheduleDeliveries — this is not a failure
+			// and must not burn retry budget (claiming already incremented it optimistically and that
+			// is undone there).
 			if err := n.pg.DeferDeliveries(ctx, deliveryIDs(rest),
 				fmt.Sprintf(trMsg(errDeliveryChannelLengthCapped), delivered)); err != nil {
 				log.Printf(logA("[notify] failed to requeue segmented continuation channel=%s ids=%v: %v"), channel.Kind(), deliveryIDs(rest), err)
@@ -307,17 +348,20 @@ func (n *Notifier) send(ctx context.Context, channel notify.Channel, cfg map[str
 		return
 	}
 	if err == nil {
-		// 渠道既没报错也没说送达了多少条。按失败处理（走退避），
-		// 免得这条投递被反复领取却永远标记不掉。
+		// The channel neither errored nor said how many it delivered. Treat it as a failure (with
+		// backoff),
+		// so the delivery is not claimed over and over while never being marked.
 		err = fmt.Errorf(trMsg(errDeliveryNoDeliveredCount), delivered)
 	}
 
-	// 失败处置**逐条**决定，而不是拿整批的最大尝试次数做判断。
+	// Failure handling is decided **per row**, not by the batch's max attempt count.
 	//
-	// 曾经是 `if maxAttempts(deliveries) >= MaxNotifyAttempts` 整批判死，但批次里
-	// 各条的尝试次数并不相同：一个已经重试两次的老投递（attempts=2）会把同一批里
-	// 全新的投递（attempts=1）一起拖进 failed——新漏洞一条重试都没用上就永久丢了，
-	// 与「不让老行拖新行下水」的初衷正好相反。
+	// It used to be `if maxAttempts(deliveries) >= MaxNotifyAttempts` failing the whole batch,
+	// but within a batch
+	// attempts differ: an old delivery already retried twice (attempts=2) dragged fresh ones in
+	// the same batch
+	// (attempts=1) into failed — a new finding was lost permanently without a single retry,
+	// the exact opposite of "don't let old rows sink new ones".
 	permanent := notify.IsPermanent(err)
 	var failIDs, exhaustedIDs []int64
 	byDelay := map[time.Duration][]int64{}
@@ -344,8 +388,9 @@ func (n *Notifier) send(ctx context.Context, channel notify.Channel, cfg map[str
 			log.Printf(logA("[notify] failed to mark delivery failure state channel=%s ids=%v: %v"), channel.Kind(), exhaustedIDs, fErr)
 		}
 	}
-	// 按延迟分组重排：只有 3 档退避，分组数天然很小，不必为每条单独发一次
-	// UPDATE（那会让一个 500 条的批次产生 500 次往返）。
+	// Regroup by delay: there are only 3 backoff steps, so the groups are naturally few and
+	// there is no need to send one
+	// UPDATE per row (which would turn a 500-row batch into 500 round trips).
 	for delay, group := range byDelay {
 		if rErr := n.pg.RescheduleDeliveries(ctx, group, delay, err.Error()); rErr != nil {
 			log.Printf(logA("[notify] failed to reorder deliveries channel=%s ids=%v: %v"), channel.Kind(), group, rErr)
@@ -357,8 +402,10 @@ func (n *Notifier) send(ctx context.Context, channel notify.Channel, cfg map[str
 	}
 }
 
-// excludeDeliveries 返回 all 中不在 keep 里的那些（按指针身份比较）。
-// 用于找出「没能进消息」的投递——它们必须被显式处置，不能留在灰色地带。
+// excludeDeliveries returns the entries of all that are not in keep (compared by pointer
+// identity).
+// It finds the deliveries that never made it into a message — they must be handled
+// explicitly, not left in limbo.
 func excludeDeliveries(all, keep []*db.NotificationDelivery) []*db.NotificationDelivery {
 	inKeep := make(map[*db.NotificationDelivery]bool, len(keep))
 	for _, dl := range keep {
@@ -373,8 +420,9 @@ func excludeDeliveries(all, keep []*db.NotificationDelivery) []*db.NotificationD
 	return out
 }
 
-// adapt 取渠道实现并解析其配置。
-// 返回 ok=false 表示类型未注册，投递应直接判失败而不是无限重试。
+// adapt fetches the channel implementation and parses its config.
+// ok=false means the type is not registered; the delivery must fail outright rather than
+// retry forever.
 func (n *Notifier) adapt(ch *db.NotificationChannel) (notify.Channel, map[string]any, bool) {
 	channel, ok := notify.Get(ch.Kind)
 	if !ok {
@@ -382,8 +430,9 @@ func (n *Notifier) adapt(ch *db.NotificationChannel) (notify.Channel, map[string
 	}
 	var cfg map[string]any
 	if len(ch.Config) > 0 {
-		// 配置解析失败时给一个空 map：渠道自身的 Validate 会报出「缺哪个字段」，
-		// 那个错误比 JSON 解析错误更能指导用户修复。
+		// On a config parse failure pass an empty map: the channel's own Validate reports which
+		// field is missing,
+		// and that error guides the user's fix better than a JSON parse error.
 		_ = json.Unmarshal(ch.Config, &cfg)
 	}
 	if cfg == nil {
@@ -392,7 +441,7 @@ func (n *Notifier) adapt(ch *db.NotificationChannel) (notify.Channel, map[string
 	return channel, cfg, true
 }
 
-// renderSingle 渲染单条漏洞消息。
+// renderSingle renders a single-finding message.
 func (n *Notifier) renderSingle(ctx context.Context, dl *db.NotificationDelivery, baseURL string) (notify.Message, error) {
 	snap, err := parseSnapshot(dl)
 	if err != nil {
@@ -405,22 +454,26 @@ func (n *Notifier) renderSingle(ctx context.Context, dl *db.NotificationDelivery
 	return notify.Message{Items: []notify.Item{item}, HomeURL: baseURL}, nil
 }
 
-// renderBatch 渲染汇总消息。逐条解析快照——单条坏了只跳过那一条，
-// 不让它把整批汇总拖没。
+// renderBatch renders a digest message. Snapshots are parsed one by one — a single broken
+// one only drops that entry,
+// never the whole batch.
 //
-// 返回值 included 与 msg.Items **严格一一对应**（第 i 个投递 ↔ 第 i 个条目）。
-// 这个对应关系是硬要求：调用方按「渠道回报装下了前 K 条」来决定前 K 个投递
-// 标记已送达。若这里跳过了坏快照却不把跳过的投递从 included 里剔除，
-// 下标就会错位——本该失败的坏条目会被标成已送达，而好条目被误判为未送达。
-// 坏掉的那些由调用方显式标记失败，见 stepDigest。
+// The returned included corresponds **strictly one-to-one** with msg.Items (i-th delivery ↔
+// i-th entry).
+// That is a hard requirement: the caller marks the first K deliveries delivered based on
+// "the channel took the first K".
+// If a broken snapshot were skipped without removing its delivery from included,
+// the indexes would shift — a bad entry that should fail would be marked delivered and a
+// good one treated as undelivered.
+// The caller fails the broken ones explicitly, see stepDigest.
 func (n *Notifier) renderBatch(ctx context.Context, deliveries []*db.NotificationDelivery, baseURL string, windowMinutes int) (notify.Message, []*db.NotificationDelivery, error) {
 	items := make([]notify.Item, 0, len(deliveries))
 	included := make([]*db.NotificationDelivery, 0, len(deliveries))
 	for _, dl := range deliveries {
 		snap, err := parseSnapshot(dl)
 		if err != nil {
-			// 坏快照不进消息，也不进 included——它的处置由调用方负责
-			// （显式标记失败，而不是混在「已送达」里蒙混过关）。
+			// A broken snapshot goes into neither the message nor included — the caller handles it
+			// (explicit failure, not smuggled in as delivered).
 			log.Printf(logA("[notify] skipped unparseable snapshot in digest batch delivery=%d: %v"), dl.ID, err)
 			continue
 		}
@@ -442,12 +495,14 @@ func (n *Notifier) renderBatch(ctx context.Context, deliveries []*db.Notificatio
 	}, included, nil
 }
 
-// itemFor 把事件快照渲染成待推送条目，顺带解析资产名与详情回链。
+// itemFor renders an event snapshot into a push item, resolving the asset name and detail
+// backlink along the way.
 func (n *Notifier) itemFor(ctx context.Context, snap notify.Snapshot, baseURL string) (notify.Item, error) {
 	assets, err := n.pg.NotificationAssetNames(ctx, snap.AssetIDs)
 	if err != nil {
-		// 资产名解析失败不该阻止推送：读不到名字比收不到通知轻得多，
-		// 消息里少一行资产而已。
+		// Failing to resolve the asset name must not block the push: a missing name is far cheaper
+		// than a missing notification,
+		// the message just has one row less.
 		log.Printf(logA("[notify] failed to parse asset name finding=%d: %v"), snap.FindingID, err)
 	}
 	item := notify.Item{
@@ -461,24 +516,28 @@ func (n *Notifier) itemFor(ctx context.Context, snap notify.Snapshot, baseURL st
 		ToStatus:   snap.ToStatus,
 	}
 	if baseURL != "" {
-		// 详情页路由见 web/src/app/(main)/function/findings/detail/page.tsx，
-		// 它从 query 参数 id 读取漏洞 id。
+		// Detail page route: web/src/app/(main)/function/findings/detail/page.tsx;
+		// it reads the finding id from the id query param.
 		item.DetailURL = fmt.Sprintf("%s/function/findings/detail?id=%d", baseURL, snap.FindingID)
 	}
 	return item, nil
 }
 
-// takeTokens 从渠道令牌桶里取走**最多 want 个**令牌，返回实际取到的数量。
+// takeTokens removes **up to want** tokens from a channel's bucket and returns how many it
+// got.
 //
-// 一个令牌 = 一条消息（一次 HTTP 请求）。实时模式下调用方要几条就传几条；
-// 汇总模式下一整批漏洞只发一条消息，传 1。
+// One token = one message (one HTTP request). Realtime callers pass the number of findings;
+// a whole digest batch is one message, so pass 1.
 //
-// 桶容量为该渠道每分钟上限，按恒定速率补充。ratePerMin<=0 表示不限流，
-// 返回一个有限但足够大的值，防止单轮循环被无限积压拖住。
+// The bucket holds the channel's per-minute limit and refills at a constant rate.
+// ratePerMin<=0 means unlimited:
+// return a finite but large value so one round cannot be blocked by an unbounded backlog.
 //
-// want 这个上限是必需的：没有它就只能把桶整个抽空，而调用方自己还有每轮上限，
-// 多取的令牌既用不上、又在下次补充前凭空消失——攒下来的突发容量永远不可达，
-// 连「这一轮没有任何待发投递」都会照扣一笔。
+// The want cap is required: without it the bucket is drained entirely while the caller still
+// has its own per-round cap,
+// so the extra tokens are unusable and vanish before the next refill — accumulated burst
+// capacity stays unreachable
+// and even a round with nothing to send is charged.
 func (n *Notifier) takeTokens(channelID int64, ratePerMin, want int, now time.Time) int {
 	if want <= 0 {
 		return 0
@@ -493,14 +552,15 @@ func (n *Notifier) takeTokens(channelID int64, ratePerMin, want int, now time.Ti
 		b = &notifyBucket{tokens: float64(ratePerMin), lastFill: now}
 		n.buckets[channelID] = b
 	}
-	// 按经过的真实时间补充，速率是 ratePerMin/60 每秒。
+	// Refill by real elapsed time at ratePerMin/60 per second.
 	if elapsed := now.Sub(b.lastFill).Seconds(); elapsed > 0 {
 		b.tokens = minF(float64(ratePerMin), b.tokens+elapsed*float64(ratePerMin)/60)
 		b.lastFill = now
 	}
-	// 加一个极小 epsilon 再取整：令牌数是浮点累加出来的，分两次补满时
-	// 0.5 + 0.5 可能得到 0.9999999999，直接 int() 会被截成 0——
-	// 数学上已满的桶却取不出令牌。1e-9 远小于一个令牌，不会放过真正的欠额。
+	// Add a tiny epsilon before truncating: tokens accumulate as floats, so two half-refills
+	// can produce 0.9999999999 from 0.5 + 0.5, which int() truncates to 0 —
+	// a mathematically full bucket that yields no token. 1e-9 is far below one token and never
+	// forgives a real shortfall.
 	take := min(int(b.tokens+1e-9), want)
 	if take <= 0 {
 		return 0
@@ -509,12 +569,12 @@ func (n *Notifier) takeTokens(channelID int64, ratePerMin, want int, now time.Ti
 	return take
 }
 
-// enabled 读取总开关。
+// enabled reads the master switch.
 func (n *Notifier) enabled() bool {
 	return n.pg.GetBool(settingNotifyEnabled, true)
 }
 
-// publicBaseURL 返回回链用的外部地址，去掉尾部斜杠。
+// publicBaseURL returns the external address used for backlinks, trailing slash removed.
 func (n *Notifier) publicBaseURL() string {
 	v, ok, err := n.pg.GetSetting(settingNotifyPublicBaseURL)
 	if err != nil || !ok {
@@ -523,7 +583,8 @@ func (n *Notifier) publicBaseURL() string {
 	return trimTrailingSlash(v)
 }
 
-// digestInterval 返回汇总周期，非法或未配置时回落到默认值。
+// digestInterval returns the digest interval, falling back to the default when invalid or
+// unset.
 func (n *Notifier) digestInterval() time.Duration {
 	v, ok, err := n.pg.GetSetting(settingNotifyDigestMinutes)
 	if err != nil || !ok {
@@ -536,7 +597,7 @@ func (n *Notifier) digestInterval() time.Duration {
 	return time.Duration(m) * time.Minute
 }
 
-// parseSnapshot 解析投递对应事件的快照。
+// parseSnapshot parses the snapshot of the event a delivery belongs to.
 func parseSnapshot(dl *db.NotificationDelivery) (notify.Snapshot, error) {
 	var snap notify.Snapshot
 	if len(dl.Snapshot) == 0 {
@@ -546,7 +607,8 @@ func parseSnapshot(dl *db.NotificationDelivery) (notify.Snapshot, error) {
 		return snap, fmt.Errorf(trMsg(errDeliverySnapshotParse), dl.ID, err)
 	}
 	if snap.Kind == "" {
-		// 事件类型以事件行为准，快照里那份可能由旧版本写过。
+		// The event type comes from the event row; the copy in the snapshot may be from an older
+		// version.
 		snap.Kind = dl.EventKind
 	}
 	return snap, nil
