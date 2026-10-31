@@ -119,6 +119,9 @@ func TestIsQuotaExhaustedError(t *testing.T) {
 		`HTTP status 402 Payment Required`,
 		`账户余额不足，请充值`,
 		`credit balance is too low`,
+		// xAI's exhausted-subscription error rides on 403 with explicit credits text.
+		`openai: status 403: {"error":{"message":"litellm.APIError: APIError: XaiException - {\"code\":\"personal-team-blocked:spending-limit\",\"error\":\"You have run out of credits or need a Grok subscription.\"}"}}`,
+		`HTTP status 403: billing_hard_limit_reached`,
 	}
 	for _, message := range positive {
 		if !isQuotaExhaustedError(errors.New(message)) {
@@ -134,7 +137,7 @@ func TestIsQuotaExhaustedError(t *testing.T) {
 		`HTTP status 401: invalid api key`,
 		`HTTP status 401: insufficient_quota`,
 		`HTTP status 403: forbidden`,
-		`HTTP status 403: billing_hard_limit_reached`,
+		`HTTP status 403: your account is not authorized for this model`,
 		`HTTP status 500: internal server error`,
 		`HTTP status 503: quota_exceeded`,
 		`dial tcp: network is unreachable`,

@@ -286,14 +286,42 @@ func (c Config) NewProvider() (llm.Provider, error) {
 // IsQuotaExhaustedMessage deliberately recognizes only explicit balance,
 // billing, credit, or quota-exhaustion signals. Generic 429/rate-limit text,
 // authentication failures, network errors, and server failures are excluded.
-var nonFailoverHTTPStatus = regexp.MustCompile(`(?:status(?:\s+code)?|http(?:\s+status)?)\s*[=:]?\s*(?:401|403|5\d\d)\b`)
+var nonFailoverHTTPStatus = regexp.MustCompile(`(?:status(?:\s+code)?|http(?:\s+status)?)\s*[=:]?\s*(?:401|5\d\d)\b`)
+var forbiddenHTTP403 = regexp.MustCompile(`(?:status(?:\s+code)?|http(?:\s+status)?)\s*[=:]?\s*403\b`)
 var transientQuotaLimit = regexp.MustCompile(`(?i)(?:\b(?:rpm|tpm|rpd|qps)\b|quota[_\s-]*metric|rate[_\s-]*limit|too many requests|(?:requests?|tokens?)\s+(?:per|/)\s*(?:second|minute)|(?:per|/)\s*(?:second|minute)\s+(?:requests?|tokens?)|generate[_\s-]*requests[_\s-]*per[_\s-]*(?:minute|second)|tokens?[_\s-]*per[_\s-]*(?:minute|second))`)
+
+// quotaExhaustedMarkers lists explicit exhaustion phrases. Package-level so the
+// 403 classification check below can consult the same list.
+var quotaExhaustedMarkers = []string{
+	"insufficient_quota", "quota_exceeded", "quota exceeded", "quota exhausted",
+	"exceeded your current quota", "billing_hard_limit_reached",
+	"billing hard limit", "billing_not_active", "credit balance", "insufficient credit",
+	"insufficient balance", "balance is too low", "payment required", "status 402",
+	"run out of credits", "out of credits", "spending-limit",
+	"余额不足", "额度不足", "额度已用尽", "欠费",
+}
+
+func containsQuotaMarker(message string) bool {
+	for _, marker := range quotaExhaustedMarkers {
+		if strings.Contains(message, marker) {
+			return true
+		}
+	}
+	return false
+}
 
 func IsQuotaExhaustedMessage(message string) bool {
 	message = strings.ToLower(message)
-	// Authentication/authorization and provider-side 5xx failures never rotate,
+	// Authentication and provider-side 5xx failures never rotate,
 	// even when a gateway happens to echo a quota-looking phrase in the body.
 	if nonFailoverHTTPStatus.MatchString(message) {
+		return false
+	}
+	// 403 normally signals authorization. xAI's exhausted-subscription error
+	// (personal-team-blocked:spending-limit) also rides on 403, but its body
+	// explicitly names the exhausted credits, so an explicit exhaustion marker
+	// overrides the 403 veto. A bare 403 stays non-failover.
+	if forbiddenHTTP403.MatchString(message) && !containsQuotaMarker(message) {
 		return false
 	}
 	// Provider APIs frequently describe an ordinary rate limit as "quota
@@ -302,17 +330,8 @@ func IsQuotaExhaustedMessage(message string) bool {
 	if transientQuotaLimit.MatchString(message) {
 		return false
 	}
-	markers := []string{
-		"insufficient_quota", "quota_exceeded", "quota exceeded", "quota exhausted",
-		"exceeded your current quota", "billing_hard_limit_reached",
-		"billing hard limit", "billing_not_active", "credit balance", "insufficient credit",
-		"insufficient balance", "balance is too low", "payment required", "status 402",
-		"余额不足", "额度不足", "额度已用尽", "欠费",
-	}
-	for _, marker := range markers {
-		if strings.Contains(message, marker) {
-			return true
-		}
+	if containsQuotaMarker(message) {
+		return true
 	}
 	// gRPC RESOURCE_EXHAUSTED is overloaded for both account quota and ordinary
 	// request-rate limiting. Preserve it as an explicit exhaustion signal only
