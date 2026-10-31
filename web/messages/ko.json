@@ -3265,7 +3265,18 @@
       "quotaReset": "초기화 {time}",
       "quotaMonthTotal": "월간",
       "quotaMonthCode": "월간(code)",
-      "quotaWeek": "주간"
+      "quotaWeek": "주간",
+      "quota5h": "5시간",
+      "quotaCodeReview": "코드 리뷰",
+      "quotaRenews": "{time} 갱신",
+      "quotaUnavailable": "할당량을 읽지 못했습니다: {error}",
+      "usageTokens": "입력 {input} / 출력 {output}",
+      "usageCalls": "호출 {count}회",
+      "usageCached": "캐시 {pct}%",
+      "usageToday": "오늘 {tokens}",
+      "usageErrors": "오류 {count}회",
+      "usageLast": "마지막 호출 {time}",
+      "balance": "잔액 {amount} {currency}"
     },
     "health": {
       "noKey": {

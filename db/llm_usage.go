@@ -182,6 +182,39 @@ ORDER BY SUM(input_tokens) + SUM(output_tokens) DESC`)
 	return out, nil
 }
 
+// ProfileUsageStats is the all-time ledger row for ONE configuration, shown on
+// its LLM card next to the provider's own quota windows. Only what the ledger
+// actually stores is reported: calls, errors, tokens, cache hits, last call.
+type ProfileUsageStats struct {
+	Calls            int    `json:"calls"`
+	Errors           int    `json:"errors"`
+	InputTokens      int    `json:"input_tokens"`
+	OutputTokens     int    `json:"output_tokens"`
+	CacheReadTokens  int    `json:"cache_read_tokens"`
+	CacheWriteTokens int    `json:"cache_write_tokens"`
+	TodayTokens      int    `json:"today_tokens"`
+	LastUsedAt       string `json:"last_used_at,omitempty"`
+}
+
+// ProfileUsageStats aggregates the metering ledger for one profile name.
+func (d *DB) ProfileUsageStats(profileName string) (ProfileUsageStats, error) {
+	var s ProfileUsageStats
+	err := d.QueryRow(`
+SELECT COUNT(*),
+       COALESCE(SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END),0),
+       COALESCE(SUM(input_tokens),0), COALESCE(SUM(output_tokens),0),
+       COALESCE(SUM(cache_read),0), COALESCE(SUM(cache_write),0),
+       COALESCE(SUM(CASE WHEN ts >= date_trunc('day', now()) THEN input_tokens + output_tokens ELSE 0 END),0),
+       COALESCE(to_char(MAX(ts) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
+FROM llm_usage
+WHERE profile_name = $1`, profileName).Scan(&s.Calls, &s.Errors, &s.InputTokens,
+		&s.OutputTokens, &s.CacheReadTokens, &s.CacheWriteTokens, &s.TodayTokens, &s.LastUsedAt)
+	if err != nil {
+		return ProfileUsageStats{}, err
+	}
+	return s, nil
+}
+
 // ProfileDayUsage is one (profile, UTC calendar day) token bucket for the daily
 // chart. Unlike the activity-based chart, ts is the real call time, so this is
 // actual per-day consumption rather than tokens bucketed by task creation date.

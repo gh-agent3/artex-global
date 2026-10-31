@@ -804,7 +804,18 @@
       "quotaReset": "сброс {time}",
       "quotaMonthTotal": "месяц",
       "quotaMonthCode": "месяц (code)",
-      "quotaWeek": "неделя"
+      "quotaWeek": "неделя",
+      "quota5h": "5ч",
+      "quotaCodeReview": "код-ревью",
+      "quotaRenews": "продление {time}",
+      "quotaUnavailable": "квота недоступна: {error}",
+      "usageTokens": "{input} вход / {output} выход",
+      "usageCalls": "вызовов: {count}",
+      "usageCached": "{pct}% из кэша",
+      "usageToday": "сегодня {tokens}",
+      "usageErrors": "ошибок: {count}",
+      "usageLast": "последний вызов {time}",
+      "balance": "баланс {amount} {currency}"
     },
     "health": {
       "noKey": {

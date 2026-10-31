@@ -1028,15 +1028,43 @@ export interface NotificationDelivery {
 // ---- LLM config ----
 // Provider-published subscription quota (GET /api/llm/profiles/{id}/quota).
 export interface LLMQuotaWindow {
-  key: string; // 5h | month_total | month_code
+  key: string; // 5h | week | month_total | month_code | code_review
   used_ratio: number;
   remaining_ratio: number;
+  used?: string;
+  limit?: string;
+  remaining?: string;
   reset_time?: string;
+  start_time?: string;
+}
+
+export interface LLMBalanceItem {
+  currency: string; // USD | CNY
+  total: string;
+  granted?: string;
+  topped_up?: string;
+}
+
+// What ARTEX itself metered for this profile (llm_usage ledger).
+export interface LLMProfileUsage {
+  calls: number;
+  errors: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  cache_write_tokens: number;
+  today_tokens: number;
+  last_used_at?: string;
 }
 
 export interface LLMProfileQuota {
   supported: boolean;
+  plan?: string;
+  account?: string;
+  renews_at?: string;
   quotas?: LLMQuotaWindow[];
+  balances?: LLMBalanceItem[];
+  usage?: LLMProfileUsage;
   fetched_at?: string;
   error?: string;
 }

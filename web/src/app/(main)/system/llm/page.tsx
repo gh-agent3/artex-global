@@ -47,9 +47,24 @@ function cooldownText(secs: number) {
   return `${Math.ceil(secs / 60)}min`;
 }
 
-// Provider-published subscription limits (Kimi Code /usages): the 5-hour and
-// monthly windows. Rendered only where the backend reports supported; other
-// cards are unchanged. The backend caches responses for 60s.
+// Provider-published limits and account balance (Kimi Code /usages, SuperGrok
+// billing, ChatGPT Codex, DeepSeek balance) plus the tokens ARTEX metered for
+// this profile. Rendered only where the backend reports something; cards with
+// nothing to show are unchanged. The backend caches provider calls for 60s.
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
+  return String(n);
+}
+
+const QUOTA_WINDOW_KEYS: Record<string, string> = {
+  "5h": "card.quota5h",
+  week: "card.quotaWeek",
+  month_total: "card.quotaMonthTotal",
+  month_code: "card.quotaMonthCode",
+  code_review: "card.quotaCodeReview",
+};
+
 function QuotaLine({ id }: { id: string }) {
   const t = useTranslations("llmPage");
   const [quota, setQuota] = React.useState<LLMProfileQuota | null>(null);
@@ -60,32 +75,75 @@ function QuotaLine({ id }: { id: string }) {
       .then((q) => {
         if (alive) setQuota(q);
       })
-      .catch(() => {});
+      .catch(() => {
+        // A failed fetch leaves the card without the extra lines.
+      });
     return () => {
       alive = false;
     };
   }, [id]);
-  if (!quota?.supported || !quota.quotas?.length) return null;
+  if (!quota) return null;
+  const windows = quota.supported ? (quota.quotas ?? []) : [];
+  const usage = quota.usage;
+  const balances = quota.balances ?? [];
+  const hasUsage = !!usage && (usage.calls > 0 || usage.today_tokens > 0);
+  const hasQuotaData = windows.length > 0 || balances.length > 0;
+  if (!hasQuotaData && !hasUsage && !quota.plan) return null;
+  const cachedPct =
+    usage && usage.input_tokens + usage.cache_read_tokens > 0
+      ? Math.round((usage.cache_read_tokens / (usage.input_tokens + usage.cache_read_tokens)) * 100)
+      : 0;
   return (
-    <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-6 text-muted-foreground text-xs">
-      {quota.quotas.map((q) => (
-        <span
-          key={q.key}
-          title={q.reset_time ? t("card.quotaReset", { time: new Date(q.reset_time).toLocaleString() }) : undefined}
-        >
-          {t("card.quotaLeft", {
-            window:
-              q.key === "5h"
-                ? "5h"
-                : q.key === "week"
-                  ? t("card.quotaWeek")
-                  : q.key === "month_total"
-                    ? t("card.quotaMonthTotal")
-                    : t("card.quotaMonthCode"),
-            pct: Math.round(q.remaining_ratio * 100),
-          })}
+    <div className="flex flex-col gap-y-0.5 pl-6 text-muted-foreground text-xs">
+      {quota.plan || quota.account ? (
+        <span title={quota.renews_at ? t("card.quotaRenews", { time: new Date(quota.renews_at).toLocaleString() }) : undefined}>
+          {[quota.plan, quota.account].filter(Boolean).join(" · ")}
         </span>
-      ))}
+      ) : null}
+      {windows.length ? (
+        <div className="flex flex-wrap gap-x-3">
+          {windows.map((q) => (
+            <span
+              key={q.key}
+              title={q.reset_time ? t("card.quotaReset", { time: new Date(q.reset_time).toLocaleString() }) : undefined}
+            >
+              {t("card.quotaLeft", {
+                window: QUOTA_WINDOW_KEYS[q.key] ? t(QUOTA_WINDOW_KEYS[q.key]) : q.key,
+                pct: Math.round(q.remaining_ratio * 100),
+              })}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {hasUsage ? (
+        <div
+          className="flex flex-wrap gap-x-3"
+          title={usage.last_used_at ? t("card.usageLast", { time: new Date(usage.last_used_at).toLocaleString() }) : undefined}
+        >
+          <span>
+            {t("card.usageTokens", {
+              input: formatTokens(usage.input_tokens),
+              output: formatTokens(usage.output_tokens),
+            })}
+          </span>
+          {usage.calls > 0 ? <span>{t("card.usageCalls", { count: usage.calls })}</span> : null}
+          {cachedPct > 0 ? <span>{t("card.usageCached", { pct: cachedPct })}</span> : null}
+          {usage.today_tokens > 0 ? <span>{t("card.usageToday", { tokens: formatTokens(usage.today_tokens) })}</span> : null}
+          {usage.errors > 0 ? <span>{t("card.usageErrors", { count: usage.errors })}</span> : null}
+        </div>
+      ) : null}
+      {balances.length ? (
+        <div className="flex flex-wrap gap-x-3">
+          {balances.map((b) => (
+            <span key={`${b.currency}:${b.total}`}>{t("card.balance", { amount: b.total, currency: b.currency })}</span>
+          ))}
+        </div>
+      ) : null}
+      {!hasQuotaData && quota.error ? (
+        <span className="text-amber-600 dark:text-amber-500">
+          {t("card.quotaUnavailable", { error: quota.error })}
+        </span>
+      ) : null}
     </div>
   );
 }

@@ -3265,7 +3265,18 @@
       "quotaReset": "重置 {time}",
       "quotaMonthTotal": "月度",
       "quotaMonthCode": "月度（code）",
-      "quotaWeek": "每周"
+      "quotaWeek": "每周",
+      "quota5h": "5 小时",
+      "quotaCodeReview": "代码评审",
+      "quotaRenews": "{time} 续费",
+      "quotaUnavailable": "额度不可用：{error}",
+      "usageTokens": "输入 {input} / 输出 {output}",
+      "usageCalls": "{count} 次调用",
+      "usageCached": "缓存命中 {pct}%",
+      "usageToday": "今日 {tokens}",
+      "usageErrors": "{count} 次错误",
+      "usageLast": "最近调用 {time}",
+      "balance": "余额 {amount} {currency}"
     },
     "health": {
       "noKey": {

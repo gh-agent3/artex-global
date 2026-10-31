@@ -3265,7 +3265,18 @@
       "quotaReset": "reinicio {time}",
       "quotaMonthTotal": "mes",
       "quotaMonthCode": "mes (code)",
-      "quotaWeek": "semana"
+      "quotaWeek": "semana",
+      "quota5h": "5 h",
+      "quotaCodeReview": "revisión de código",
+      "quotaRenews": "renueva {time}",
+      "quotaUnavailable": "cuota no disponible: {error}",
+      "usageTokens": "{input} entrada / {output} salida",
+      "usageCalls": "{count} llamadas",
+      "usageCached": "{pct}% en caché",
+      "usageToday": "hoy {tokens}",
+      "usageErrors": "{count} errores",
+      "usageLast": "última llamada {time}",
+      "balance": "saldo {amount} {currency}"
     },
     "health": {
       "noKey": {

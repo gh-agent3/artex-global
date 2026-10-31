@@ -3265,7 +3265,18 @@
       "quotaReset": "リセット {time}",
       "quotaMonthTotal": "月間",
       "quotaMonthCode": "月間(code)",
-      "quotaWeek": "週間"
+      "quotaWeek": "週間",
+      "quota5h": "5時間",
+      "quotaCodeReview": "コードレビュー",
+      "quotaRenews": "{time} 更新",
+      "quotaUnavailable": "クォータを取得できません: {error}",
+      "usageTokens": "入力 {input} / 出力 {output}",
+      "usageCalls": "{count} 回",
+      "usageCached": "キャッシュ {pct}%",
+      "usageToday": "今日 {tokens}",
+      "usageErrors": "エラー {count} 回",
+      "usageLast": "最終呼び出し {time}",
+      "balance": "残高 {amount} {currency}"
     },
     "health": {
       "noKey": {
