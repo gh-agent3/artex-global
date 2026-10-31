@@ -33,7 +33,7 @@ func hasHan(s string) bool {
 // Settings-flag guarded, so it runs once. A fresh database needs nothing: SeedPromptIfEmpty
 // and SeedTool already write the English defaults.
 func (s *Server) seedEnglishDefaults() {
-	const flag = "english_defaults_v1"
+	const flag = "english_defaults_v2"
 	if v, _, _ := s.m.pg.GetSetting(flag); v == "true" {
 		return
 	}
@@ -65,9 +65,18 @@ func (s *Server) seedEnglishDefaults() {
 		switchedPrompts++
 	}
 
-	seeds := make(map[string]agent.ToolSeed, len(agent.BuiltinToolSeeds()))
+	// Code-owned defaults for every built-in tool: the domain tools that seed the catalogue
+	// plus the orchestration and platform host tools, which are seeded from the live registry.
+	type toolDefault struct {
+		desc   string
+		schema map[string]any
+	}
+	defaults := make(map[string]toolDefault, len(agent.BuiltinToolSeeds()))
 	for _, sd := range agent.BuiltinToolSeeds() {
-		seeds[sd.Key] = sd
+		defaults[sd.Key] = toolDefault{desc: sd.Desc, schema: sd.Schema}
+	}
+	for _, t := range append(s.orchestrationTools(), s.platformTools()...) {
+		defaults[t.Name()] = toolDefault{desc: t.Description(), schema: t.InputSchema()}
 	}
 	tools, err := s.m.pg.ListTools()
 	if err != nil {
@@ -76,15 +85,15 @@ func (s *Server) seedEnglishDefaults() {
 	}
 	switchedTools := 0
 	for _, t := range tools {
-		sd, ok := seeds[t.Key]
-		if !ok || sd.Desc == "" || !hasHan(t.Description) {
+		def, ok := defaults[t.Key]
+		if !ok || def.desc == "" || !hasHan(t.Description) {
 			continue
 		}
-		schema, err := json.Marshal(sd.Schema)
+		schema, err := json.Marshal(def.schema)
 		if err != nil {
 			continue
 		}
-		if err := s.m.pg.RefreshToolDefaults(t.Key, sd.Desc, schema); err != nil {
+		if err := s.m.pg.RefreshToolDefaults(t.Key, def.desc, schema); err != nil {
 			log.Printf("[tools] failed to refresh %s to the English default: %v", t.Key, err)
 			continue
 		}
