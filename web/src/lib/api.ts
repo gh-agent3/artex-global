@@ -56,6 +56,7 @@ import type {
   JudgeUsage,
   LLMPoolStatus,
   LLMProfile,
+  LLMProfileQuota,
   LLMRecordDetail,
   LLMRecordItem,
   LLMRetryOverride,
@@ -973,6 +974,8 @@ export const api = {
       session_header_key,
     }),
   llmProfiles: () => get<{ profiles: LLMProfile[] }>("/llm/profiles").then((r) => arr(r.profiles)),
+  // Subscription quota windows published by the provider (Kimi Code /usages).
+  llmProfileQuota: (id: string) => get<LLMProfileQuota>(`/llm/profiles/${id}/quota`),
   saveLLMProfile: (p: {
     id?: number; // omit/0 = create; set = update that profile
     name: string;

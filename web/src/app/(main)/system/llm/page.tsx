@@ -28,7 +28,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
-import type { LLMPoolMember, LLMPoolStatus, LLMProfile, LLMRetryOverride } from "@/lib/types";
+import type { LLMPoolMember, LLMPoolStatus, LLMProfile, LLMProfileQuota, LLMRetryOverride } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { ProfileRetryFields, RetryPolicyPanel, ZERO_OVERRIDE } from "./_components/retry";
@@ -45,6 +45,47 @@ function cooldownText(secs: number) {
   if (secs <= 0) return "";
   if (secs < 60) return `${secs}s`;
   return `${Math.ceil(secs / 60)}min`;
+}
+
+// Provider-published subscription limits (Kimi Code /usages): the 5-hour and
+// monthly windows. Rendered only where the backend reports supported; other
+// cards are unchanged. The backend caches responses for 60s.
+function QuotaLine({ id }: { id: string }) {
+  const t = useTranslations("llmPage");
+  const [quota, setQuota] = React.useState<LLMProfileQuota | null>(null);
+  React.useEffect(() => {
+    let alive = true;
+    api
+      .llmProfileQuota(id)
+      .then((q) => {
+        if (alive) setQuota(q);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+  if (!quota?.supported || !quota.quotas?.length) return null;
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-6 text-muted-foreground text-xs">
+      {quota.quotas.map((q) => (
+        <span
+          key={q.key}
+          title={q.reset_time ? t("card.quotaReset", { time: new Date(q.reset_time).toLocaleString() }) : undefined}
+        >
+          {t("card.quotaLeft", {
+            window:
+              q.key === "5h"
+                ? "5h"
+                : q.key === "month_total"
+                  ? t("card.quotaMonthTotal")
+                  : t("card.quotaMonthCode"),
+            pct: Math.round(q.remaining_ratio * 100),
+          })}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 // 一个配置在卡片上显示的「是否正常」。没填 Key 的配置根本发不出请求，比熔断更该先说；
@@ -916,6 +957,8 @@ export default function LLMPage() {
                           <span>{t("card.priority", { priority: p.priority ?? 0 })}</span>
                         ))}
                     </div>
+
+                    <QuotaLine id={p.id} />
 
                     <div className="mt-1 flex gap-2">
                       <Button

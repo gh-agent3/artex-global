@@ -1026,9 +1026,23 @@ export interface NotificationDelivery {
 }
 
 // ---- LLM config ----
+// Provider-published subscription quota (GET /api/llm/profiles/{id}/quota).
+export interface LLMQuotaWindow {
+  key: string; // 5h | month_total | month_code
+  used_ratio: number;
+  remaining_ratio: number;
+  reset_time?: string;
+}
+
+export interface LLMProfileQuota {
+  supported: boolean;
+  quotas?: LLMQuotaWindow[];
+  fetched_at?: string;
+  error?: string;
+}
+
 export interface LLMProfile {
-  id: string;
-  name: string;
+  id: string;  name: string;
   format: "openai" | "anthropic" | "openai-responses";
   base_url?: string;
   proxy?: string;

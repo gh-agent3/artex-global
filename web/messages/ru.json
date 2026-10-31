@@ -798,7 +798,11 @@
       "priority": "Приоритет {priority}",
       "active": "Активный",
       "activate": "Сделать активным",
-      "deleteAria": "Удалить профиль"
+      "deleteAria": "Удалить профиль",
+      "quotaLeft": "{window}: осталось {pct}%",
+      "quotaReset": "сброс {time}",
+      "quotaMonthTotal": "месяц",
+      "quotaMonthCode": "месяц (code)"
     },
     "health": {
       "noKey": {

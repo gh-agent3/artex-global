@@ -3259,7 +3259,11 @@
       "priority": "Prioridad {priority}",
       "active": "Activo",
       "activate": "Establecer como activo",
-      "deleteAria": "Eliminar perfil"
+      "deleteAria": "Eliminar perfil",
+      "quotaLeft": "{window}: {pct}% restante",
+      "quotaReset": "reinicio {time}",
+      "quotaMonthTotal": "mes",
+      "quotaMonthCode": "mes (code)"
     },
     "health": {
       "noKey": {

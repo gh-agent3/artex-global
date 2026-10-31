@@ -3259,7 +3259,11 @@
       "priority": "优先级 {priority}",
       "active": "已激活",
       "activate": "设为激活",
-      "deleteAria": "删除配置"
+      "deleteAria": "删除配置",
+      "quotaLeft": "{window}：剩余 {pct}%",
+      "quotaReset": "重置 {time}",
+      "quotaMonthTotal": "月度",
+      "quotaMonthCode": "月度（code）"
     },
     "health": {
       "noKey": {

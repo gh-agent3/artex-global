@@ -3259,7 +3259,11 @@
       "priority": "우선순위 {priority}",
       "active": "활성됨",
       "activate": "활성으로 설정",
-      "deleteAria": "설정 삭제"
+      "deleteAria": "설정 삭제",
+      "quotaLeft": "{window}: {pct}% 남음",
+      "quotaReset": "초기화 {time}",
+      "quotaMonthTotal": "월간",
+      "quotaMonthCode": "월간(code)"
     },
     "health": {
       "noKey": {
