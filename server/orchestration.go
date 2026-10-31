@@ -502,6 +502,7 @@ func (s *Server) seedOrchestrationTools() {
 	s.seedWorkerReadbackRebind()  // repair an old migration's over-removal: re-bind search_all_worker_traces/get_worker_trace/node_detail to worker (one-off)
 	s.seedAutoReportFindingBinding()
 	s.unbindGoalMetDefault()
+	s.seedEnglishDefaults()           // switch built-in prompts and tool descriptions that still hold the Chinese source to the English defaults (one-off, CJK-gated)
 	s.reseedGoalsPrompt()             // goals prompt gains an extract-operation-constraints step → append a new default version to old DBs (one-off)
 	s.reseedMainAgentPrompt()         // mainagent prompt gains "after a goal is met, add_intent asks whether to register one" (one-off)
 	s.reseedPlannerPrompt()           // planner prompt: rewrite the "0 intents" justification + add a quantified acceptance check (one-off)
