@@ -7,6 +7,7 @@ import (
 	"testing"
 	"unicode"
 
+	"github.com/Autumn-27/artex/config"
 	"github.com/Autumn-27/norma/llm"
 )
 
@@ -76,6 +77,27 @@ func TestExhaustedErrorLocalized(t *testing.T) {
 	}, NewRegistry(nil, nil))
 	_, _, _, cerr := completeChain.Complete(context.Background(), llm.CompletionRequest{})
 	assertSurfacedExhaustion(t, "Complete", cerr)
+}
+
+// Once the server wires the operator language (production always does), the
+// sentinel must follow it: English by default, Russian for a ru deployment, and
+// never the Korean source text.
+func TestExhaustedErrorFollowsActiveLanguage(t *testing.T) {
+	prev := config.CurrentLanguage
+	t.Cleanup(func() { config.CurrentLanguage = prev })
+
+	config.CurrentLanguage = func() string { return "en" }
+	if got := ErrExhausted.Error(); got != "LLM failover chain: no usable profile available" {
+		t.Errorf("en: got %q", got)
+	}
+	config.CurrentLanguage = func() string { return "ru" }
+	got := ErrExhausted.Error()
+	if hasHangul(got) || hasHanzi(got) {
+		t.Errorf("ru: still non-Latin script: %q", got)
+	}
+	if !strings.Contains(got, "LLM") {
+		t.Errorf("ru: lost the LLM token: %q", got)
+	}
 }
 
 // assertKoreanErrText fails unless s contains Hangul and no Han character.
