@@ -102,7 +102,7 @@ func (s *Server) resolveTaskRoleLLM(t *Task, agentKey string) (taskLLMResolution
 	s.cfgMu.Unlock()
 	if on {
 		if name == "" {
-			name = sourceNameGlobalConfig
+			name = sourceNameGlobalConfigText()
 		}
 		return taskLLMResolution{
 			Name: name, Format: cfg.Provider(), Model: cfg.Model,

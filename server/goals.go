@@ -65,7 +65,7 @@ func (s *Server) startTaskEngine(t *Task) {
 		return
 	}
 	s.engine.emitActivity(t, db.Activity{Worker: "planner", Kind: "round",
-		Summary: goalBreakdownRound0Summary})
+		Summary: goalBreakdownRound0Text()})
 	goals := s.createGoals(ctx, t, func(r db.Activity) {
 		s.engine.emitActivity(t, r)
 	})

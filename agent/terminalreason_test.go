@@ -123,6 +123,57 @@ func TestTerminalTextCompletedToolNotBlamed(t *testing.T) {
 	}
 }
 
+func TestTerminalTextEnglishPauseDoesNotLeakChinese(t *testing.T) {
+	prev := OutputLanguage
+	t.Cleanup(func() { OutputLanguage = prev })
+	OutputLanguage = func() string { return "en" }
+	ctx, cancel := context.WithCancelCause(context.Background())
+	cancel(AbortChatPausedWithTask)
+	trace := &runTrace{startedAt: time.Now()}
+	trace.start("tu", "Bash", `{"command":"true"}`)
+	trace.done("tu")
+	summary, detail := terminalText(ctx, &harness.Terminal{
+		Reason: harness.ReasonAbortedTools,
+		Err:    context.Canceled,
+		Turns:  18,
+	}, trace)
+	blob := summary + "\n" + detail
+	for _, leak := range []string{"运行被中断", "终态", "中断原因", "전역 설정"} {
+		if strings.Contains(blob, leak) {
+			t.Fatalf("english render leaked %q:\n%s", leak, blob)
+		}
+	}
+	for _, want := range []string{"run interrupted", "chat_paused_with_task", "aborted_tools", "Bash", "returned normally"} {
+		if !strings.Contains(blob, want) {
+			t.Errorf("missing %q:\n%s", want, blob)
+		}
+	}
+}
+
+func TestTerminalTextRussianPauseDoesNotLeakChinese(t *testing.T) {
+	prev := OutputLanguage
+	t.Cleanup(func() { OutputLanguage = prev })
+	OutputLanguage = func() string { return "ru" }
+	ctx, cancel := context.WithCancelCause(context.Background())
+	cancel(AbortChatPausedWithTask)
+	trace := &runTrace{startedAt: time.Now().Add(-6*time.Minute - 33*time.Second)}
+	trace.start("tu", "Bash", `{"command":"true"}`)
+	trace.done("tu")
+	summary, detail := terminalText(ctx, &harness.Terminal{
+		Reason: harness.ReasonAbortedTools,
+		Err:    context.Canceled,
+		Turns:  18,
+	}, trace)
+	if strings.Contains(summary, "运行被中断") || strings.Contains(detail, "终态") || strings.Contains(detail, "中断原因") {
+		t.Fatalf("russian render leaked Chinese:\n%s\n%s", summary, detail)
+	}
+	for _, want := range []string{"прерван", "chat_paused_with_task", "aborted_tools", "Bash", "завершился нормально"} {
+		if !strings.Contains(summary+detail, want) {
+			t.Errorf("missing %q:\n%s\n%s", want, summary, detail)
+		}
+	}
+}
+
 func TestTerminalTextNonAbortReasons(t *testing.T) {
 	trace := &runTrace{startedAt: time.Now()}
 	summary, _ := terminalText(context.Background(), &harness.Terminal{Reason: harness.ReasonMaxTurns}, trace)

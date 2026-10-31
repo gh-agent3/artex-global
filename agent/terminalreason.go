@@ -55,65 +55,68 @@ func terminalText(ctx context.Context, term *harness.Terminal, tr *runTrace) (st
 		aborted = true
 	}
 
+	lang := terminalDisplayLang()
+	p := termPhraseOf(lang)
+	code, short, why, hasCause := AbortReason(ctx)
+	if hasCause {
+		short, why = localizeAbort(lang, code, short, why)
+	}
+
 	var sum string
 	if aborted {
-		_, short, _, ok := AbortReason(ctx)
-		if !ok {
-			short = "未能取得取消原因"
+		if !hasCause {
+			short = p.noCauseShort
 		}
-		stage := "执行过程中"
+		stage := p.stageDuring
 		switch reason {
 		case harness.ReasonAbortedStreaming:
-			stage = "模型输出阶段"
+			stage = p.stageStreaming
 		case harness.ReasonAbortedTools:
-			stage = "工具执行阶段"
+			stage = p.stageTools
 		}
-		sum = "（运行被中断：" + short + "；停在" + stage + progressSuffix(term, tr) + "，未完成）"
+		sum = fmt.Sprintf(p.sumAbort, short, stage, progressSuffix(lang, term, tr))
 	} else if reason == harness.ReasonMaxTurns || reason == harness.ReasonTimeout {
-		sum = "（达到运行预算上限(" + string(reason) + ")，已收尾写回事实" + progressSuffix(term, tr) + "；本次无文字总结）"
+		sum = fmt.Sprintf(p.sumBudget, string(reason), progressSuffix(lang, term, tr))
 	} else {
-		hint := terminalReasonHint(reason)
-		sum = "（无文字总结，终态 " + terminalReasonLabel(reason) + "：" + firstLine(hint, 80) + "）"
+		hint := localizeHint(lang, reason)
+		sum = fmt.Sprintf(p.sumOther, terminalReasonLabel(reason), firstLine(hint, 80))
 	}
 
 	var b strings.Builder
 	b.WriteString(sum)
 	b.WriteString("\n\n")
 	displayReason := terminalReasonLabel(reason)
-	fmt.Fprintf(&b, "- **终态**: `%s` - %s\n", displayReason, terminalReasonHint(reason))
+	fmt.Fprintf(&b, "- **%s**: `%s` - %s\n", p.labelState, displayReason, localizeHint(lang, reason))
 	if aborted {
-		code, _, why, ok := AbortReason(ctx)
-		if ok {
-			fmt.Fprintf(&b, "- **中断原因** (`%s`): %s\n", code, why)
+		if hasCause {
+			fmt.Fprintf(&b, "- **%s** (`%s`): %s\n", p.labelCause, code, why)
 		} else {
-			b.WriteString("- **中断原因**: 无法取得；取消方可能没有通过 context.WithCancelCause 附加具名原因\n")
+			fmt.Fprintf(&b, "- **%s**: %s\n", p.labelCause, p.noCauseDetail)
 		}
 	}
 	if term.Err != nil {
-		fmt.Fprintf(&b, "- **底层错误**: `%v`\n", term.Err)
+		fmt.Fprintf(&b, "- **%s**: `%v`\n", p.labelErr, term.Err)
 	}
 	if aborted && strings.TrimSpace(term.Text) != "" {
-		b.WriteString("- **取消前已生成的部分输出**:\n\n")
+		fmt.Fprintf(&b, "- **%s**:\n\n", p.partialOut)
 		b.WriteString(term.Text)
 		b.WriteString("\n\n")
 	}
 	if term.Turns > 0 {
-		fmt.Fprintf(&b, "- **已执行**: %d 轮模型回合\n", term.Turns)
+		fmt.Fprintf(&b, p.executed, term.Turns)
 	}
 	if !tr.startedAt.IsZero() {
-		fmt.Fprintf(&b, "- **本次运行耗时**: %s\n", roundDur(time.Since(tr.startedAt)))
+		fmt.Fprintf(&b, p.elapsed, roundDur(time.Since(tr.startedAt)))
 	}
 	if u := term.Usage; u.InputTokens+u.OutputTokens+u.CacheReadTokens+u.CacheWriteTokens > 0 {
-		fmt.Fprintf(&b, "- **累计 token**: 输入 %d / 输出 %d / 缓存读 %d / 缓存写 %d\n",
-			u.InputTokens, u.OutputTokens, u.CacheReadTokens, u.CacheWriteTokens)
+		fmt.Fprintf(&b, p.tokens, u.InputTokens, u.OutputTokens, u.CacheReadTokens, u.CacheWriteTokens)
 	}
 	if tr.name == "" {
-		b.WriteString("- **工具调用**: 本次运行还没有发出工具调用就结束了\n")
+		b.WriteString(p.noTools)
 	} else if tr.pending {
-		fmt.Fprintf(&b, "- **中断时正在执行的工具**: `%s`（已运行 %s，**未返回结果**）\n\n  ```json\n  %s\n  ```\n",
-			tr.name, roundDur(time.Since(tr.at)), firstLine(tr.input, 300))
+		fmt.Fprintf(&b, p.hangingTool, tr.name, roundDur(time.Since(tr.at)), firstLine(tr.input, 300))
 	} else {
-		fmt.Fprintf(&b, "- **中断前最后一个工具**: `%s`（已正常返回）\n", tr.name)
+		fmt.Fprintf(&b, p.lastTool, tr.name)
 	}
 	return sum, b.String()
 }
@@ -135,10 +138,11 @@ func terminalReasonHint(reason harness.TerminalReason) string {
 	return "未知终态；harness 可能新增了 TerminalReason，请补充 reasonHint"
 }
 
-func progressSuffix(term *harness.Terminal, tr *runTrace) string {
+func progressSuffix(lang string, term *harness.Terminal, tr *runTrace) string {
+	p := termPhraseOf(lang)
 	var parts []string
 	if term.Turns > 0 {
-		parts = append(parts, fmt.Sprintf("%d 轮", term.Turns))
+		parts = append(parts, fmt.Sprintf(p.turns, term.Turns))
 	}
 	if !tr.startedAt.IsZero() {
 		parts = append(parts, roundDur(time.Since(tr.startedAt)))
@@ -146,7 +150,7 @@ func progressSuffix(term *harness.Terminal, tr *runTrace) string {
 	if len(parts) == 0 {
 		return ""
 	}
-	return "，已运行 " + strings.Join(parts, " / ")
+	return p.progressPrefix + strings.Join(parts, " / ")
 }
 
 func roundDur(d time.Duration) string {

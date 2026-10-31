@@ -36,11 +36,12 @@ type Config struct {
 
 // SupportedLanguages lists the user-facing output languages artex-global can
 // switch between. Agent output, UI strings and backend messages all key off these.
-var SupportedLanguages = []string{"en", "ko", "zh", "es", "ja"}
+var SupportedLanguages = []string{"en", "ko", "zh", "es", "ja", "ru"}
 
 // DefaultLanguage is the out-of-box user-facing language when nothing is
-// configured. artex-global defaults to English; Korean, Chinese, Spanish and
-// Japanese are selectable at runtime via the language setting (and ARTEX_LANG).
+// configured. artex-global defaults to English; Korean, Chinese, Spanish,
+// Japanese and Russian are selectable at runtime via the language setting
+// (and ARTEX_LANG).
 const DefaultLanguage = "en"
 
 // NormalizeLanguage lower-cases and validates a language code, returning "" when
@@ -51,6 +52,19 @@ func NormalizeLanguage(code string) string {
 		if c == code {
 			return c
 		}
+	}
+	return ""
+}
+
+// Pick returns the catalog string for lang. A Russian selection that has no
+// Russian entry yet uses the English string, so the UI does not fall through to
+// the Korean source text.
+func Pick(m map[string]string, lang string) string {
+	if v := m[lang]; v != "" {
+		return v
+	}
+	if lang == "ru" {
+		return m["en"]
 	}
 	return ""
 }
