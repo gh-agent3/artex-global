@@ -18,7 +18,7 @@ import "github.com/Autumn-27/artex/config"
 // 반영하므로, 사용자가 고른 언어가 즉시 적용된다.
 func trMsg(ko string) string {
 	if m, ok := errCatalog[ko]; ok {
-		if v, ok2 := m[config.ActiveLanguage()]; ok2 && v != "" {
+		if v := config.Pick(m, config.ActiveLanguage()); v != "" {
 			return v
 		}
 	}
@@ -28,6 +28,10 @@ func trMsg(ko string) string {
 // logT translates an operator-facing console log template (config.T) so server
 // log.Printf sites can wrap a template without each file importing config.
 func logT(ko string) string { return config.T(ko) }
+
+// logA translates a log template selected by the runtime active language
+// (config.TA) — the same resolution backend display strings use.
+func logA(template string) string { return config.TA(template) }
 
 // loadOutputLanguage resolves the user-facing output language from the source of
 // truth: the runtime setting (settings table) over config.Language() (ARTEX_LANG >

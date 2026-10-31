@@ -11,8 +11,8 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrSideBusy = errors.New("当前会话已有旁路问题正在回答")
-var ErrSideParentGone = errors.New("旁路父会话已删除或归档")
+var ErrSideBusy = errors.New("this conversation already has a side question being answered")
+var ErrSideParentGone = errors.New("the side-question parent conversation was deleted or archived")
 
 // Lock the real parent before the side session, also covering soft task/intent
 // deletion. A delayed checkpoint cannot recreate data after archive cleanup.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Autumn-27/artex/config"
 	"log"
 	"strconv"
 	"strings"
@@ -150,7 +151,7 @@ func (sc *Scheduler) fireIntervals(triggers []*db.AgentTrigger) {
 		// title 인자(`定时触发 · …` 등)는 ca.Chat 에 안 가는 표시 전용이나, 본문이 중국어로
 		// 고정되어 제목만 바꾸면 대화 안에서 언어가 섞이므로(F7·F8·F12) 함께 보존한다.
 		ctx := "\n\n【本次为定时触发】" + now.Format(" 2006-01-02 15:04:05 MST")
-		sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf("定时触发 · %s", now.Format("15:04")), tr.IntervalMessage+ctx, 0, false, "", "")
+		sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf(config.TA("Scheduled trigger · %s"), now.Format("15:04")), tr.IntervalMessage+ctx, 0, false, "", "")
 	}
 }
 
@@ -182,7 +183,7 @@ func (sc *Scheduler) fireFindings(triggers []*db.AgentTrigger) {
 		msgCtx := fmt.Sprintf("\n\n【本次由任务发现 finding 触发】\n发现: [%s/%s] %s",
 			e.VulnClass, e.Severity, e.Summary)
 		for _, tr := range want {
-			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf("finding 触发 · task#%d", e.TaskID), tr.FindingMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
+			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf(config.TA("finding trigger · task#%d"), e.TaskID), tr.FindingMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
 		}
 	}
 	_ = sc.pg.SetSchedState(schedKeyLastFinding, strconv.FormatInt(maxID, 10))
@@ -215,7 +216,7 @@ func (sc *Scheduler) fireGoals(triggers []*db.AgentTrigger) {
 		}
 		msgCtx := fmt.Sprintf("\n\n【本次由任务完成目标触发】\n达成目标: %s", e.Summary)
 		for _, tr := range want {
-			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf("目标触发 · task#%d", e.TaskID), tr.GoalMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
+			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf(config.TA("goal trigger · task#%d"), e.TaskID), tr.GoalMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
 		}
 	}
 	if changed {
@@ -248,7 +249,7 @@ func (sc *Scheduler) fireTaskTimeouts(triggers []*db.AgentTrigger) {
 		}
 		msgCtx := "\n\n【本次由任务超时触发】"
 		for _, tr := range want {
-			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf("超时触发 · task#%d", e.TaskID), tr.TaskTimeoutMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
+			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf(config.TA("timeout trigger · task#%d"), e.TaskID), tr.TaskTimeoutMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
 		}
 	}
 	_ = sc.pg.SetSchedState(schedKeyLastTimeout, strconv.FormatInt(maxID, 10))
@@ -324,7 +325,7 @@ func (sc *Scheduler) fireToolCalls(triggers []*db.AgentTrigger) {
 			if !containsFold(tr.ToolNames, e.Tool) {
 				continue
 			}
-			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf("工具触发 · %s · task#%d", e.Tool, e.TaskID), tr.ToolCallMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
+			sc.s.StartTriggeredRun(tr.AgentKey, fmt.Sprintf(config.TA("Tool trigger · %s · task#%d"), e.Tool, e.TaskID), tr.ToolCallMessage+msgCtx, e.TaskID, true, e.TaskDesc, e.TaskGoal)
 		}
 	}
 	_ = sc.pg.SetSchedState(schedKeyLastToolCall, strconv.FormatInt(maxID, 10))

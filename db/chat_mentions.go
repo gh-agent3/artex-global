@@ -22,7 +22,7 @@ type ChatMentionPage struct {
 	NextCursor string        `json:"next_cursor,omitempty"`
 }
 
-var ErrInvalidChatMentionCursor = errors.New("分页位置无效，请重新搜索")
+var ErrInvalidChatMentionCursor = errors.New("invalid pagination cursor, search again")
 
 type chatMentionCursor struct {
 	ID    int64  `json:"id"`

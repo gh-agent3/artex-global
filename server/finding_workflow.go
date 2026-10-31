@@ -135,7 +135,7 @@ func objectProperty(parent map[string]any, key string) map[string]any {
 
 func (s *Server) agentFindingTrafficAccess(ctx context.Context, id int64, write bool) error {
 	if id <= 0 {
-		return errors.New("finding_id 必须为独立漏洞记录 ID；不是探索节点 ID")
+		return errors.New("finding_id must be a standalone finding record ID, not an exploration node ID")
 	}
 	f, err := s.m.pg.GetFinding(id)
 	if err != nil {
@@ -147,14 +147,14 @@ func (s *Server) agentFindingTrafficAccess(ctx context.Context, id int64, write 
 	if ri := agent.RunInfoFrom(ctx); ri.TaskID > 0 {
 		task := s.m.ResolveTask(strconv.FormatInt(ri.TaskID, 10))
 		if task == nil {
-			return errors.New("任务不存在")
+			return errors.New("task does not exist")
 		}
 		_, inherited, allowed := findingProvenanceInTask(task, f.TaskID)
 		if !allowed {
-			return errors.New("当前任务不可读取该漏洞")
+			return errors.New("the current task cannot read this finding")
 		}
 		if write && inherited {
-			return errors.New("继承漏洞的流量证据只读，请到来源任务修改")
+			return errors.New("inherited findings have read-only traffic evidence, edit it in the source task")
 		}
 	}
 	return nil

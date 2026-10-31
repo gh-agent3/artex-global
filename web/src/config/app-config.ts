@@ -14,6 +14,10 @@ const META_BY_LOCALE: Record<Locale, { title: string; description: string }> = {
     title: "ARTEX: Autonomous Penetration Testing Console",
     description: "An LLM-driven system console for autonomous penetration testing",
   },
+  ru: {
+    title: "ARTEX: Консоль автономного пентеста",
+    description: "Консоль автономного пентеста на основе LLM",
+  },
   ko: {
     title: "ARTEX: 자율 침투 테스트 콘솔",
     description: "LLM 기반으로 자율 침투 테스트를 수행하는 시스템 콘솔",

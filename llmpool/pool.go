@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/Autumn-27/artex/config"
 	"github.com/Autumn-27/norma/llm"
 )
 
@@ -106,18 +107,18 @@ func (p *Pool) Stream(ctx context.Context, req llm.CompletionRequest) iter.Seq2[
 			lastErr = failed
 			hard := isHardFailure(failed)
 			if p.health.Trip(m.ID, trimErr(failed), hard) {
-				log.Printf("[llmpool] 配置 %q(%s) 已熔断：%s", m.Name, m.Model, trimErr(failed))
+				log.Printf(config.TA("[llmpool] profile %q(%s) breaker tripped: %s"), m.Name, m.Model, trimErr(failed))
 			}
 			if i+1 < len(order) {
 				n := order[i+1]
-				log.Printf("[llmpool] LLM 故障转移：%q(%s) → %q(%s)，原因：%s",
+				log.Printf(config.TA("[llmpool] LLM failover: %q(%s) -> %q(%s), cause: %s"),
 					m.Name, m.Model, n.Name, n.Model, trimErr(failed))
 			}
 		}
 		if lastErr == nil {
 			lastErr = ErrExhausted
 		}
-		log.Printf("[llmpool] 轮询链已耗尽(%d 个配置全部失败)，最后错误：%s", len(order), trimErr(lastErr))
+		log.Printf(config.TA("[llmpool] failover chain exhausted (%d profiles all failed), last error: %s"), len(order), trimErr(lastErr))
 		yield(llm.StreamEvent{}, fmt.Errorf("%w: %v", ErrExhausted, lastErr))
 	}
 }
@@ -145,18 +146,18 @@ func (p *Pool) Complete(ctx context.Context, req llm.CompletionRequest) (llm.Mes
 		lastErr = err
 		hard := isHardFailure(err)
 		if p.health.Trip(m.ID, trimErr(err), hard) {
-			log.Printf("[llmpool] 配置 %q(%s) 已熔断：%s", m.Name, m.Model, trimErr(err))
+			log.Printf(config.TA("[llmpool] profile %q(%s) breaker tripped: %s"), m.Name, m.Model, trimErr(err))
 		}
 		if i+1 < len(order) {
 			n := order[i+1]
-			log.Printf("[llmpool] LLM 故障转移：%q(%s) → %q(%s)，原因：%s",
+			log.Printf(config.TA("[llmpool] LLM failover: %q(%s) -> %q(%s), cause: %s"),
 				m.Name, m.Model, n.Name, n.Model, trimErr(err))
 		}
 	}
 	if lastErr == nil {
 		lastErr = ErrExhausted
 	}
-	log.Printf("[llmpool] 轮询链已耗尽(%d 个配置全部失败)，最后错误：%s", len(order), trimErr(lastErr))
+	log.Printf(config.TA("[llmpool] failover chain exhausted (%d profiles all failed), last error: %s"), len(order), trimErr(lastErr))
 	return llm.Message{}, "", llm.Usage{}, fmt.Errorf("%w: %v", ErrExhausted, lastErr)
 }
 

@@ -87,3 +87,28 @@ func TestCatalogFormatVerbsMatch(t *testing.T) {
 		}
 	}
 }
+
+// TestTAResolvesActiveLanguage pins TA's resolution: the runtime active language
+// (stubbed via CurrentLanguage) selects the catalog value, languages without an
+// entry fall back to the English source template, and the unwired test default
+// keeps the template unchanged.
+func TestTAResolvesActiveLanguage(t *testing.T) {
+	orig := CurrentLanguage
+	defer func() { CurrentLanguage = orig }()
+	template := "[planner] task %s planning done"
+	if TA(template) != template {
+		t.Fatalf("unwired default = %q, want the template itself", TA(template))
+	}
+	CurrentLanguage = func() string { return "ru" }
+	if TA(template) != "[planner] задача %s планирование завершено" {
+		t.Fatalf("ru = %q", TA(template))
+	}
+	CurrentLanguage = func() string { return "zh" }
+	if TA(template) != "[planner] task %s 规划完成" {
+		t.Fatalf("zh = %q", TA(template))
+	}
+	CurrentLanguage = func() string { return "es" }
+	if TA(template) != template {
+		t.Fatalf("es (no entry) = %q, want the English template", TA(template))
+	}
+}

@@ -8,6 +8,7 @@ package enrich
 
 import (
 	"crypto/tls"
+	"github.com/Autumn-27/artex/config"
 	"html"
 	"io"
 	"log"
@@ -71,7 +72,7 @@ func New(as *db.AssetStore, proxy func() string, workers int) *Engine {
 		Timeout:       4 * time.Second,
 	})
 	if err != nil {
-		log.Printf("[enrich] dnsx 初始化失败，DNS 解析停用：%v", err)
+		log.Printf(config.TA("[enrich] dnsx initialization failed, DNS resolution disabled: %v"), err)
 		resolv = nil
 	}
 	e := &Engine{
@@ -128,7 +129,7 @@ func (e *Engine) enqueue(j job) {
 	select {
 	case e.jobs <- j:
 	default: // queue full → drop (best-effort enrichment)
-		log.Printf("[enrich] 队列已满，丢弃任务 kind=%d id=%d", j.kind, j.id)
+		log.Printf(config.TA("[enrich] queue full, dropping job kind=%d id=%d"), j.kind, j.id)
 	}
 }
 

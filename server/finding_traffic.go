@@ -257,7 +257,7 @@ type evidencePreview struct {
 // 피하려고 중국어 원문을 보존한다(F16 두뇌 경계 계열 — 표시/입력 분리는 별도 결정 대기).
 func readEvidencePreview(store *evidence.Store, snapshot db.TrafficEvidenceSnapshot, side string, offset, length int64) (out evidencePreview, err error) {
 	if offset < 0 || length < 0 {
-		return out, errors.New("offset / length 不能为负数")
+		return out, errors.New("offset / length cannot be negative")
 	}
 	if length == 0 || length > 8192 {
 		length = 8192
@@ -268,7 +268,7 @@ func readEvidencePreview(store *evidence.Store, snapshot db.TrafficEvidenceSnaps
 	}
 	defer f.Close()
 	if offset > total {
-		return out, errors.New("offset 超出正文长度")
+		return out, errors.New("offset exceeds the body length")
 	}
 	if _, err = f.Seek(offset, io.SeekStart); err != nil {
 		return out, err

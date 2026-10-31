@@ -7,6 +7,7 @@ import { getLocalStorageValue } from "@/lib/local-storage.client";
 // 안전하게 쓸 수 있다.
 const DATE_LOCALE: Record<Locale, string> = {
   en: "en-US",
+  ru: "ru-RU",
   ko: "ko-KR",
   zh: "zh-CN",
   es: "es-ES",

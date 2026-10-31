@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/artex/config"
 	"io"
 	"io/fs"
 	"log"
@@ -278,13 +279,13 @@ func (t *Traffic) initIndex() error {
 	}
 	t.incrementalVacuum = mode == autoVacuumIncremental
 	if !t.incrementalVacuum {
-		log.Printf("[traffic] 索引库未启用增量回收（auto_vacuum=%d）：删除流量不会缩小 index.sqlite，需要执行一次存储压缩来转换", mode)
+		log.Printf(config.TA("[traffic] incremental index reclamation is not enabled (auto_vacuum=%d): deleting traffic will not shrink index.sqlite, run a storage compaction once to convert"), mode)
 	}
 	if _, err := conn.ExecContext(ctx, indexSchema); err != nil {
 		return err
 	}
 	if _, err := conn.ExecContext(ctx, ftsSchema); err != nil {
-		log.Printf("[traffic] 全文索引不可用，正文搜索将被禁用（元数据搜索不受影响）：%v", err)
+		log.Printf(config.TA("[traffic] full-text index unavailable, body search disabled (metadata search unaffected): %v"), err)
 		return nil
 	}
 	t.fts = true
@@ -414,7 +415,7 @@ func (t *Traffic) maybePassthrough(f *mproxy.Flow, err error) {
 		return
 	}
 	if _, loaded := t.pass.LoadOrStore(host, struct{}{}); !loaded {
-		log.Printf("[traffic] 与 %s 的 MITM 出错，改为透传（该 host 后续直连目标、不再记录，但请求照常）：%v", host, err)
+		log.Printf(config.TA("[traffic] MITM error with %s, falling back to pass-through (this host will connect directly and is no longer recorded, but requests still work): %v"), host, err)
 	}
 }
 
@@ -456,7 +457,7 @@ func (t *Traffic) record(f *mproxy.Flow) {
 
 	tx, err := t.db.Begin()
 	if err != nil {
-		log.Printf("[traffic] 记录 %s 失败（开启事务）：%v", url, err)
+		log.Printf(config.TA("[traffic] failed to record %s (begin transaction): %v"), url, err)
 		return
 	}
 	defer tx.Rollback() //nolint:errcheck // no-op once committed
@@ -468,19 +469,19 @@ VALUES(?,?,?,?,?,?,?,?,?,?,'')`,
 		id, now.Unix(), host, method, tmpl, url, f.Response.StatusCode, ct,
 		len(f.Request.Body), len(f.Response.Body))
 	if err != nil {
-		log.Printf("[traffic] 记录 %s 失败（写索引）：%v", url, err)
+		log.Printf(config.TA("[traffic] failed to record %s (write index): %v"), url, err)
 		return
 	}
 	rowid, err := res.LastInsertId()
 	if err != nil {
-		log.Printf("[traffic] 记录 %s 失败（取 rowid）：%v", url, err)
+		log.Printf(config.TA("[traffic] failed to record %s (fetch rowid): %v"), url, err)
 		return
 	}
 
 	if _, err := tx.Exec(`INSERT OR REPLACE INTO exchange_bodies(id,req_head,req_body,req_blob,resp_head,resp_body,resp_blob)
 VALUES(?,?,?,?,?,?,?)`,
 		id, reqHead, reqB.inline, nullIfEmpty(reqB.hash), respHead, respB.inline, nullIfEmpty(respB.hash)); err != nil {
-		log.Printf("[traffic] 记录 %s 失败（写正文）：%v", url, err)
+		log.Printf(config.TA("[traffic] failed to record %s (write body): %v"), url, err)
 		return
 	}
 
@@ -489,7 +490,7 @@ VALUES(?,?,?,?,?,?,?)`,
 			continue
 		}
 		if _, err := tx.Exec(`INSERT OR IGNORE INTO blob_refs(hash,exchange_id) VALUES(?,?)`, h, id); err != nil {
-			log.Printf("[traffic] 记录 %s 失败（登记 blob 引用）：%v", url, err)
+			log.Printf(config.TA("[traffic] failed to record %s (register blob references): %v"), url, err)
 			return
 		}
 	}
@@ -499,13 +500,13 @@ VALUES(?,?,?,?,?,?,?)`,
 		// fully searchable even though only its preview is stored inline.
 		idx := strings.Join([]string{url, reqHead, reqB.index, respHead, respB.index}, "\n")
 		if _, err := tx.Exec(`INSERT INTO ex_fts(rowid,content) VALUES(?,?)`, rowid, idx); err != nil {
-			log.Printf("[traffic] 记录 %s 失败（写全文索引）：%v", url, err)
+			log.Printf(config.TA("[traffic] failed to record %s (write full-text index): %v"), url, err)
 			return
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Printf("[traffic] 记录 %s 失败（提交）：%v", url, err)
+		log.Printf(config.TA("[traffic] failed to record %s (commit): %v"), url, err)
 	}
 }
 
@@ -544,13 +545,13 @@ func (t *Traffic) spill(body []byte, contentType string) storedBody {
 	// the store only ever holds bodies above maxInlineBody, deduplicated by hash.
 	blobDir := filepath.Join(t.dir, "_blobs", "sha256", h[:2])
 	if err := os.MkdirAll(blobDir, 0o755); err != nil {
-		log.Printf("[traffic] 创建 blob 目录失败：%v", err)
+		log.Printf(config.TA("[traffic] failed to create blob directory: %v"), err)
 		return storedBody{inline: clipBytes(body, blobPreview), index: indexText()}
 	}
 	blobPath := filepath.Join(blobDir, h+".bin")
 	if _, err := os.Stat(blobPath); os.IsNotExist(err) {
 		if err := os.WriteFile(blobPath, body, 0o644); err != nil {
-			log.Printf("[traffic] 写 blob %s 失败：%v", h, err)
+			log.Printf(config.TA("[traffic] failed to write blob %s: %v"), h, err)
 			return storedBody{inline: clipBytes(body, blobPreview), index: indexText()}
 		}
 	}
@@ -1112,7 +1113,7 @@ func (t *Traffic) DeleteAll() (deleted int64, reclaimed int64, err error) {
 	if err := t.compactIndex(); err != nil {
 		// The deletion is already durable; compaction is disk space, not
 		// correctness, so it must not turn a completed purge into a failed one.
-		log.Printf("[traffic] 压实索引失败：%v", err)
+		log.Printf(config.TA("[traffic] failed to compact index: %v"), err)
 		return deleted, 0, nil
 	}
 	return deleted, before - t.indexBytes(), nil
@@ -1360,7 +1361,7 @@ func (t *Traffic) reapStage(stageDir string) {
 	}
 	t.reaping.Go(func() {
 		if err := os.RemoveAll(stageDir); err != nil {
-			log.Printf("[traffic] 清理历史流量目录 %s 失败：%v", stageDir, err)
+			log.Printf(config.TA("[traffic] failed to clean up old traffic directory %s: %v"), stageDir, err)
 		}
 	})
 }
@@ -1714,7 +1715,7 @@ func (t *Traffic) reclaim() {
 		ctx := context.Background()
 		conn, err := t.db.Conn(ctx)
 		if err != nil {
-			log.Printf("[traffic] 回收索引空间失败（获取连接）：%v", err)
+			log.Printf(config.TA("[traffic] failed to reclaim index space (get connection): %v"), err)
 			return
 		}
 		defer conn.Close()
@@ -1725,7 +1726,7 @@ func (t *Traffic) reclaim() {
 			progressed, err := t.reclaimChunk(ctx, conn, &merges)
 			t.wmu.Unlock()
 			if err != nil {
-				log.Printf("[traffic] 回收索引空间失败：%v", err)
+				log.Printf(config.TA("[traffic] failed to reclaim index space: %v"), err)
 				return
 			}
 			if !progressed {
@@ -1735,11 +1736,11 @@ func (t *Traffic) reclaim() {
 				return // shutdown must not wait out the remaining budget
 			}
 			if step+1 >= reclaimMaxSteps {
-				log.Printf("[traffic] 索引空间回收未做完（已用满 %d 步上限），下次删除时继续", reclaimMaxSteps)
+				log.Printf(config.TA("[traffic] index reclamation incomplete (hit the %d step limit), will continue on the next deletion"), reclaimMaxSteps)
 				return
 			}
 			if time.Now().After(deadline) {
-				log.Printf("[traffic] 索引空间回收未做完（已用满 %s 预算），下次删除时继续", reclaimBudget)
+				log.Printf(config.TA("[traffic] index reclamation incomplete (hit the %s budget), will continue on the next deletion"), reclaimBudget)
 				return
 			}
 		}
@@ -1749,7 +1750,7 @@ func (t *Traffic) reclaim() {
 		t.wmu.Lock()
 		defer t.wmu.Unlock()
 		if _, err := conn.ExecContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE)`); err != nil {
-			log.Printf("[traffic] 截断 WAL 失败：%v", err)
+			log.Printf(config.TA("[traffic] failed to truncate WAL: %v"), err)
 		}
 	})
 }
@@ -1966,7 +1967,7 @@ func (t *Traffic) query(host, contains, bodyContains string, page, limit int) ([
 func normalizeSearchHost(raw string) (host, port string, err error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return "", "", errors.New("host 为必填参数")
+		return "", "", errors.New("host is a required parameter")
 	}
 	if strings.Contains(raw, "://") {
 		u, parseErr := url.Parse(raw)
