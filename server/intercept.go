@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/Autumn-27/artex/db"
+	"github.com/Autumn-27/artex/llmcompat"
 	"github.com/Autumn-27/artex/guard"
 	"github.com/Autumn-27/artex/intercept"
 	"github.com/Autumn-27/artex/llmrec"
@@ -91,14 +92,11 @@ func streamCollectText(ctx context.Context, prov llm.Provider, system, user stri
 		Thinking:    "disabled",
 	}
 	var sb strings.Builder
-	for ev, err := range prov.Stream(ctx, req) {
-		if err != nil {
-			return "", err
-		}
-		if ev.Type == llm.SETextDelta {
-			sb.WriteString(ev.Text)
-		}
+	text, err := llmcompat.StreamText(ctx, prov, req)
+	if err != nil {
+		return "", err
 	}
+	sb.WriteString(text)
 	return sb.String(), nil
 }
 

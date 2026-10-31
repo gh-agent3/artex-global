@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/Autumn-27/artex/llmcompat"
 	"github.com/Autumn-27/norma/llm"
 )
 
@@ -122,7 +123,7 @@ func (b *contextBuilder) summarize(ctx context.Context, prior, text string) (str
 			return "", ErrContextBudget
 		}
 		b.calls++
-		msg, stop, usage, err := b.service.Provider.Complete(ctx, req)
+		msg, stop, usage, err := llmcompat.Complete(ctx, b.service.Provider, req)
 		b.usage.Add(usage)
 		b.progress(b.info.Phase)
 		if ctx.Err() != nil {
