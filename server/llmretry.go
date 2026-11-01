@@ -7,14 +7,16 @@ import (
 	"github.com/Autumn-27/artex/db"
 )
 
-// 重试策略的服务端解析，见 docs/LLM重试设计.md。五层里：
-//   - 建连 / 空响应 / 同 provider 安全窗口 是「跟着端点走」的，每个 LLM 配置可以覆盖
-//     全局默认（profile 的某项留空就继承全局，全局也没配就用内置默认）；
-//   - 熔断 / 意图重跑 是进程级的，只有全局一份。
+// Server-side resolution of the retry policy, see docs/llm-retry-design.md. Of the five layers:
+//   - connect / empty-response / same-provider safe window "follow the endpoint" and each LLM
+//     profile may override the global default (a profile field left empty inherits the global,
+//     and an unconfigured global uses the built-in default);
+//   - circuit breaker / intent rerun are process-level, with exactly one global value.
 //
-// 全局策略读一次 DB 一行 settings，调用点都在低频路径（构建 provider、work 收尾、
-// 保存配置），不值得再加一层缓存；熔断参数是例外——它在失败路径上每次都要读，所以
-// 由 applyRetryPolicy 推给 Registry 保存。
+// The global policy reads one settings row from the DB, and every call site is on a low-frequency
+// path (building a provider, work settlement, saving a profile), so another cache layer is not
+// worth it; the circuit breaker is the exception - it is read on every failure, so applyRetryPolicy
+// pushes it into the Registry.
 
 // retryPolicy reads the global policy; a nil DB yields the zero policy (all
 // layers on their built-in defaults).
@@ -33,8 +35,8 @@ func resolveRetry(o db.RetryOverride, pol db.LLMRetryPolicy) agent.RetryConfig {
 	empty := o.Empty.Or(pol.Empty)
 	stream := o.Stream.Or(pol.Stream)
 	return agent.RetryConfig{
-		// 次数在这里保持「0=默认 / 负=关闭」的原始语义:SDK 的 MaxRetries /
-		// EmptyResponseRetries 与之完全同构,交给它自己解析即可。
+		// The count keeps its raw semantics here ("0 = default / negative = off"): the SDK's MaxRetries /
+		// EmptyResponseRetries are exactly isomorphic, so it can parse them itself.
 		ConnectAttempts: connect.Attempts, ConnectInterval: connect.Interval(),
 		EmptyAttempts: empty.Attempts, EmptyInterval: empty.Interval(),
 		StreamAttempts: stream.Attempts, StreamInterval: stream.Interval(),
@@ -49,8 +51,9 @@ func (s *Server) applyProfileRetry(cfg *agent.Config, p *db.LLMProfile) {
 	cfg.Retry = resolveRetry(p.Retry, s.retryPolicy())
 }
 
-// 熔断(轮询冷却)的默认值,与 llmpool 内置的一致 —— 这里只在「用户配了值」时才覆盖。
-// 意图重跑的默认值见 engine.go 的 modelErrorRetries / modelErrorRetryBackoff。
+// The defaults of the circuit breaker (polling cooldown), the same as llmpool's built-in ones - this
+// only overrides when the user configured a value. The intent-rerun defaults are in engine.go
+// (modelErrorRetries / modelErrorRetryBackoff).
 
 // applyRetryPolicy pushes the process-wide layers of the policy into the objects
 // that consume them on a hot path: the circuit-breaker registry. Called at
@@ -80,17 +83,19 @@ func (e *Engine) modelErrorRetryPolicy() (retries int, backoff time.Duration) {
 }
 
 // emptyTurnNudgeLimit resolves how many empty-turn continuations one work may
-// inject (see steerHooks.Stop). It deliberately reuses layer ②'s knob —— 「空响应
-// 重试次数」:两者是同一件事的两种手段。SDK 那层管「一个内容块都没有」，手段是把
-// 同一个请求原样重发;这里管「只有思考、既无正文也无工具」，手段是追加一条指令让
-// 模型带着已有思考接着做(原样重发对这种由上下文形状决定的空转没有意义)。判空口径
-// 不同是因为 SDK 以「有没有 yield 过事件」为准，而思考增量本身就是事件——但用户配
-// 「空响应重试几次」时想表达的是「模型没产出实质内容就再来一次」，两层共用一个次数
-// 才对得上这个心智。
+// inject (see steerHooks.Stop). It deliberately reuses layer 2's knob - the empty-response retry
+// count: both are two means of the same thing. The SDK layer governs "not a single content block"
+// and resends the same request verbatim; this layer governs "only thinking, no text and no tool" and
+// appends one instruction so the model carries on with the reasoning it has (resending is pointless
+// for an idle turn caused by the shape of the context). The emptiness definitions differ because the
+// SDK goes by "did we yield any event" and a thinking delta is itself an event - but when the user
+// configures "retry N times on an empty response" they mean "if the model produced nothing of
+// substance, run it again", so the two layers share one count.
 //
-// 读全局策略而不是某个 profile 的覆盖:一个 run 中途可能因故障转移换 profile，而这
-// 是整条意图的总量闸，不该跟着换端点而变。语义与 SDK 的 emptyRetries() 同构:
-// 0 = 默认 defaultEmptyTurnNudges;-1(负) = 关闭空转续跑;>0 = 用该值。
+// It reads the global policy, not a profile override: a run may fail over to another profile mid-way,
+// and this is the total cap for the whole intent, which must not change with the endpoint. Same
+// semantics as the SDK's emptyRetries(): 0 = default defaultEmptyTurnNudges; -1 (negative) = turn
+// off the idle-turn nudge; >0 = use this value.
 func (e *Engine) emptyTurnNudgeLimit() int {
 	if e == nil || e.m == nil || e.m.pg == nil {
 		return defaultEmptyTurnNudges

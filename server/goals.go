@@ -28,13 +28,15 @@ type goalSpec struct {
 }
 
 // launchTask runs the shared post-creation sequence for a task created via ANY
-// path (HTTP createTask 或 orchestration spawn_task),避免两处复制粘贴:
-//  1. seed 根资产,喂给事件驱动 loop;
-//  2. 可选种子意图,worker 免等首轮 planner 直接开跑;
-//  3. 后台异步做目标分解(发「0차 목표 분해」round + LLM 分解步骤 + 逐条 goal,页面可见),
-//     分解完再 engine.Run —— 引擎在 goal 节点就绪后才启动,避免 planner 抢在 goal 之前跑的竞态。
+// path (HTTP createTask or orchestration spawn_task), avoiding two copies:
+//  1. seed the root asset, feeding the event-driven loop;
+//  2. an optional seed intent, so a worker can start without waiting for the first planner round;
+//  3. decompose the goals asynchronously in the background (emit a "goal decomposition" round, the
+//     LLM decomposition steps and each goal - all visible on the page), then engine.Run - the engine
+//     only starts once the goal nodes are ready, so the planner cannot race ahead of them.
 //
-// 异步(goroutine)所以调用方立即返回,两条路径行为一致:秒建任务、后台拆目标。
+// Asynchronous (a goroutine), so the caller returns immediately and both paths behave the same: the
+// task is created in a second and the goals decompose in the background.
 // 표시 전용 활동 요약(작업 단위·node_id 없음·전사에만 노출·되먹임 경로 미접촉).
 // 초기 목표 분해 라운드와 동시 실행 대기열 상태 안내다. 한국어화해도 두뇌 입력
 // (BRIEF 경계 #1)을 건드리지 않는다. 포맷 인자(%d)는 원형 보존. [[G132]]
@@ -197,8 +199,8 @@ func (s *Server) admitTaskWhen(t *Task, mode string, requirePaused bool) (queued
 	// this ordering, its already-running worker loops can claim the newly-opened
 	// intent in the gap between status=running and queued=true.
 	if shouldQueue || wasTerminal || wasPaused || wasQueued {
-		s.engine.Pause(t.ID, agent.Causef("queued_for_admission", "任务等待运行准入",
-			"任务正在等待并发队列或准入状态提交，本次执行已停止；只有获得运行槽后才会重新领取意图"))
+		s.engine.Pause(t.ID, agent.Causef("queued_for_admission", "the task is waiting for admission",
+			"the task is waiting on the concurrency queue or the admission state to be submitted; this run has stopped, and intents are claimed again only after a run slot is granted"))
 	}
 
 	status := lifecycle.Status
@@ -286,8 +288,8 @@ func (s *Server) reconcileConcurrency() {
 				continue
 			}
 			mode := s.resumeAdmissionMode(task)
-			s.engine.Pause(task.ID, agent.Causef("llm_unavailable_queued", "LLM 不可用，任务进入等待队列",
-				"任务当前无法解析可运行的 Planner/Worker LLM，已释放并发槽；配置恢复后按队列顺序继续"))
+			s.engine.Pause(task.ID, agent.Causef("llm_unavailable_queued", "no LLM available, the task is queued",
+				"the task currently cannot resolve a runnable Planner/Worker LLM, so its concurrency slot was released; when the profile recovers it continues in queue order"))
 			if err := s.m.EnqueueTask(task.ID, mode); err != nil {
 				s.engine.Resume(task)
 				log.Printf(logA("[concurrency] task %s failed to enqueue due to unavailable LLM: %v"), task.ID, err)
@@ -366,12 +368,14 @@ func (s *Server) reconcileConcurrency() {
 	}
 }
 
-// reviveTask 让一个已停下的任务重新跑起来:把终态(done/failed/timeout)拉回 running、
-// 解除暂停,并(重)启动引擎循环 + 唤醒。已在 running 且未暂停的任务:只剩 Run 里的一次
-// Notify,近乎无副作用。用于「主 agent set_goals 新增目标」和「重跑 blocked 意图」两处。
+// reviveTask brings a stopped task back: it moves a terminal state (done/failed/timeout) to running,
+// unpause it, and (re)starts the engine loop + notifies. A task already running and not paused gets
+// only the single Notify in Run, which is nearly a no-op. Used in two places: "main agent set_goals
+// adds a goal" and "re-run a blocked intent".
 //
-// 为什么必须显式复活:planner/worker 循环的终态门(engine.go)会吞掉普通 notify——光改
-// 图 + Notify 唤不醒已判完成的任务;重启后终态任务的 goroutine 也可能已不在,故还要 Run。
+// Why an explicit revive is required: the planner/worker terminal-state gate (engine.go) swallows an
+// ordinary notify - changing the graph and calling Notify alone cannot wake a task that already judged
+// itself complete; and after a restart a terminal task's goroutine may not even exist, hence Run.
 func (s *Server) reviveTask(t *Task) {
 	if t == nil {
 		return
