@@ -9,19 +9,22 @@ import (
 	"github.com/Autumn-27/artex/db"
 )
 
-// 总览「约束管理」的人工 CRUD 接口 + 注入范围开关的解析。操作约束(allow/deny)与 agent 侧的
-// set_constraints 工具写同一张 task_constraints 表;这里是人类在 UI 上直接增删改。约束仅是
-// 提示上下文——增删改后【不】通知 planner,下一轮规划自然读库生效(按产品决策)。每个变更 handler
-// 都走 beginTaskOperation/decInflight,避免与任务删除竞态(与目标/意图 CRUD 一致)。
+// The manual CRUD endpoints of the constraint management in the overview plus the resolution of the
+// injection-scope switches. Operating constraints (allow/deny) are written to the same task_constraints
+// table as the agent-side set_constraints tool; here a human edits them in the UI. A constraint is only
+// prompt context - adding/editing/deleting does NOT notify the planner; the next planning round reads the
+// table on its own (a product decision). Every mutating handler goes through
+// beginTaskOperation/decInflight so it cannot race a task deletion (same as the goal/intent CRUD).
 
-// 注入范围开关的 settings key,默认都开(GetBool 第二参数 = true)。
+// The settings keys of the injection-scope switches, all on by default (GetBool's second argument = true).
 const (
 	settingConstraintsInjectPlanner = "constraints_inject_planner"
 	settingConstraintsInjectWorker  = "constraints_inject_worker"
 )
 
-// 约束 CRUD 핸들러의 사용자 노출 에러 응답(한국어). writeErr 로 그대로 UI 토스트에 노출된다.
-// 用語: 约束→제약(ko.json 의 약속/제약 표기와 정합), 任务→작업. 추가/수정/삭제 문구는
+// The user-facing error responses of the constraint CRUD handlers. writeErr shows them in the UI toast as
+// they are. Terminology: constraint -> constraint (matching the ko.json promise/constraint wording),
+// task -> task. The add/edit/delete wording is
 // goals_api.go 의 errGoalTaskDeleting* 와 같은 문형이고, kind 검증은 intercept.go 의
 // "값은 … 중 하나여야 합니다" 패턴을 따른다.
 const (
@@ -32,8 +35,9 @@ const (
 	errConstraintKindInvalid        = "kind 값은 allow 또는 deny 중 하나여야 합니다"
 )
 
-// constraintInjectPlanner / constraintInjectWorker 报告是否把操作约束注入对应 agent 的
-// 系统提示(默认开)。作为 resolver 传给 planner/worker,每轮读 → 改开关即时生效。
+// constraintInjectPlanner / constraintInjectWorker report whether operating constraints are injected into
+// the corresponding agent's system prompt (on by default). Passed as the resolver to the planner/worker
+// and read every round, so the switch takes effect immediately.
 func (s *Server) constraintInjectPlanner() bool {
 	return s.m.pg.GetBool(settingConstraintsInjectPlanner, true)
 }
@@ -42,7 +46,7 @@ func (s *Server) constraintInjectWorker() bool {
 	return s.m.pg.GetBool(settingConstraintsInjectWorker, true)
 }
 
-// listConstraints 返回本任务的全部操作约束(allow 在前、deny 在后)。
+// listConstraints returns all of the task's operating constraints (allow first, then deny).
 func (s *Server) listConstraints(w http.ResponseWriter, r *http.Request) {
 	t, ok := s.m.Task(r.PathValue("id"))
 	if !ok {
@@ -57,7 +61,7 @@ func (s *Server) listConstraints(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"constraints": constraintDTOs(rows)})
 }
 
-// addConstraint 人工新增一条操作约束(kind=allow|deny)。不通知 planner。
+// addConstraint adds one operating constraint manually (kind=allow|deny). The planner is not notified.
 func (s *Server) addConstraint(w http.ResponseWriter, r *http.Request) {
 	t, ok := s.m.Task(r.PathValue("id"))
 	if !ok {
@@ -96,7 +100,7 @@ func (s *Server) addConstraint(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, ConstraintDTO{ID: strconv.FormatInt(id, 10), Kind: kind, Text: text, Origin: "human"})
 }
 
-// editConstraint 人工修改一条约束(kind + text)。不通知 planner。
+// editConstraint edits one constraint (kind + text) manually. The planner is not notified.
 func (s *Server) editConstraint(w http.ResponseWriter, r *http.Request) {
 	t, ok := s.m.Task(r.PathValue("id"))
 	if !ok {
@@ -139,7 +143,7 @@ func (s *Server) editConstraint(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, ConstraintDTO{ID: strconv.FormatInt(cid, 10), Kind: kind, Text: text})
 }
 
-// deleteConstraint 人工删除一条约束。不通知 planner。
+// deleteConstraint deletes one constraint manually. The planner is not notified.
 func (s *Server) deleteConstraint(w http.ResponseWriter, r *http.Request) {
 	t, ok := s.m.Task(r.PathValue("id"))
 	if !ok {
