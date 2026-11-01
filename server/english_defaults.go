@@ -34,7 +34,7 @@ func hasHan(s string) bool {
 // Settings-flag guarded, so it runs once. A fresh database needs nothing: SeedPromptIfEmpty
 // and SeedTool already write the English defaults.
 func (s *Server) seedEnglishDefaults() {
-	const flag = "english_defaults_v3"
+	const flag = "english_defaults_v4"
 	if v, _, _ := s.m.pg.GetSetting(flag); v == "true" {
 		return
 	}
