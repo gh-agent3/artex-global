@@ -1054,6 +1054,8 @@ export interface LLMProfileUsage {
   cache_read_tokens: number;
   cache_write_tokens: number;
   today_tokens: number;
+  tokens_per_sec?: number;
+  tokens_per_min?: number;
   last_used_at?: string;
 }
 

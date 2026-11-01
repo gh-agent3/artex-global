@@ -814,6 +814,8 @@
       "usageCached": "{pct}% из кэша",
       "usageToday": "сегодня {tokens}",
       "usageErrors": "ошибок: {count}",
+      "usageTps": "{value} ток/с",
+      "usageTpm": "{value} ток/мин",
       "usageLast": "последний вызов {time}",
       "balance": "баланс {amount} {currency}"
     },

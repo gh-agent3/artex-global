@@ -186,17 +186,22 @@ ORDER BY SUM(input_tokens) + SUM(output_tokens) DESC`)
 // its LLM card next to the provider's own quota windows. Only what the ledger
 // actually stores is reported: calls, errors, tokens, cache hits, last call.
 type ProfileUsageStats struct {
-	Calls            int    `json:"calls"`
-	Errors           int    `json:"errors"`
-	InputTokens      int    `json:"input_tokens"`
-	OutputTokens     int    `json:"output_tokens"`
-	CacheReadTokens  int    `json:"cache_read_tokens"`
-	CacheWriteTokens int    `json:"cache_write_tokens"`
-	TodayTokens      int    `json:"today_tokens"`
-	LastUsedAt       string `json:"last_used_at,omitempty"`
+	Calls            int     `json:"calls"`
+	Errors           int     `json:"errors"`
+	InputTokens      int     `json:"input_tokens"`
+	OutputTokens     int     `json:"output_tokens"`
+	CacheReadTokens  int     `json:"cache_read_tokens"`
+	CacheWriteTokens int     `json:"cache_write_tokens"`
+	TodayTokens      int     `json:"today_tokens"`
+	TokensPerSec     float64 `json:"tokens_per_sec"`
+	TokensPerMin     float64 `json:"tokens_per_min"`
+	LastUsedAt       string  `json:"last_used_at,omitempty"`
 }
 
 // ProfileUsageStats aggregates the metering ledger for one profile name.
+// TokensPerSec/TokensPerMin are the measured average over the last 60 seconds /
+// last 60 minutes, so a card shows the real throughput instead of the (usually
+// unlimited) configured rate cap.
 func (d *DB) ProfileUsageStats(profileName string) (ProfileUsageStats, error) {
 	var s ProfileUsageStats
 	err := d.QueryRow(`
@@ -205,10 +210,13 @@ SELECT COUNT(*),
        COALESCE(SUM(input_tokens),0), COALESCE(SUM(output_tokens),0),
        COALESCE(SUM(cache_read),0), COALESCE(SUM(cache_write),0),
        COALESCE(SUM(CASE WHEN ts >= date_trunc('day', now()) THEN input_tokens + output_tokens ELSE 0 END),0),
+       COALESCE(SUM(CASE WHEN ts >= now() - interval '60 seconds' THEN input_tokens + output_tokens ELSE 0 END),0) / 60.0,
+       COALESCE(SUM(CASE WHEN ts >= now() - interval '60 minutes' THEN input_tokens + output_tokens ELSE 0 END),0) / 60.0,
        COALESCE(to_char(MAX(ts) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
 FROM llm_usage
 WHERE profile_name = $1`, profileName).Scan(&s.Calls, &s.Errors, &s.InputTokens,
-		&s.OutputTokens, &s.CacheReadTokens, &s.CacheWriteTokens, &s.TodayTokens, &s.LastUsedAt)
+		&s.OutputTokens, &s.CacheReadTokens, &s.CacheWriteTokens, &s.TodayTokens,
+		&s.TokensPerSec, &s.TokensPerMin, &s.LastUsedAt)
 	if err != nil {
 		return ProfileUsageStats{}, err
 	}

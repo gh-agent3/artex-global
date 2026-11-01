@@ -3275,6 +3275,8 @@
       "usageCached": "缓存命中 {pct}%",
       "usageToday": "今日 {tokens}",
       "usageErrors": "{count} 次错误",
+      "usageTps": "{value} tok/s",
+      "usageTpm": "{value} tok/min",
       "usageLast": "最近调用 {time}",
       "balance": "余额 {amount} {currency}"
     },

@@ -3275,6 +3275,8 @@
       "usageCached": "{pct}% cached",
       "usageToday": "today {tokens}",
       "usageErrors": "{count} errors",
+      "usageTps": "{value} tok/s",
+      "usageTpm": "{value} tok/min",
       "usageLast": "last call {time}",
       "balance": "balance {amount} {currency}"
     },

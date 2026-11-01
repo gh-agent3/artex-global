@@ -52,14 +52,16 @@ type llmQuotaReply struct {
 
 // llmUsageStats mirrors db.ProfileUsageStats on the wire.
 type llmUsageStats struct {
-	Calls            int    `json:"calls"`
-	Errors           int    `json:"errors"`
-	InputTokens      int    `json:"input_tokens"`
-	OutputTokens     int    `json:"output_tokens"`
-	CacheReadTokens  int    `json:"cache_read_tokens"`
-	CacheWriteTokens int    `json:"cache_write_tokens"`
-	TodayTokens      int    `json:"today_tokens"`
-	LastUsedAt       string `json:"last_used_at,omitempty"`
+	Calls            int     `json:"calls"`
+	Errors           int     `json:"errors"`
+	InputTokens      int     `json:"input_tokens"`
+	OutputTokens     int     `json:"output_tokens"`
+	CacheReadTokens  int     `json:"cache_read_tokens"`
+	CacheWriteTokens int     `json:"cache_write_tokens"`
+	TodayTokens      int     `json:"today_tokens"`
+	TokensPerSec     float64 `json:"tokens_per_sec"`
+	TokensPerMin     float64 `json:"tokens_per_min"`
+	LastUsedAt       string  `json:"last_used_at,omitempty"`
 }
 
 type llmQuotaCacheEntry struct {
@@ -612,6 +614,8 @@ func usageStatsWire(s db.ProfileUsageStats) *llmUsageStats {
 		CacheReadTokens:  s.CacheReadTokens,
 		CacheWriteTokens: s.CacheWriteTokens,
 		TodayTokens:      s.TodayTokens,
+		TokensPerSec:     s.TokensPerSec,
+		TokensPerMin:     s.TokensPerMin,
 		LastUsedAt:       s.LastUsedAt,
 	}
 }

@@ -129,6 +129,12 @@ function QuotaLine({ id }: { id: string }) {
           {usage.calls > 0 ? <span>{t("card.usageCalls", { count: usage.calls })}</span> : null}
           {cachedPct > 0 ? <span>{t("card.usageCached", { pct: cachedPct })}</span> : null}
           {usage.today_tokens > 0 ? <span>{t("card.usageToday", { tokens: formatTokens(usage.today_tokens) })}</span> : null}
+          {usage.tokens_per_sec && usage.tokens_per_sec > 0 ? (
+            <span>{t("card.usageTps", { value: formatTokens(Math.round(usage.tokens_per_sec)) })}</span>
+          ) : null}
+          {usage.tokens_per_min && usage.tokens_per_min > 0 ? (
+            <span>{t("card.usageTpm", { value: formatTokens(Math.round(usage.tokens_per_min)) })}</span>
+          ) : null}
           {usage.errors > 0 ? <span>{t("card.usageErrors", { count: usage.errors })}</span> : null}
         </div>
       ) : null}
@@ -997,9 +1003,11 @@ export default function LLMPage() {
 
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-6 text-muted-foreground text-xs">
                       {p.api_key_hint && <span>{p.api_key_hint}</span>}
-                      <span>
-                        {p.rate_per_second}/s · {p.rate_per_minute}/min
-                      </span>
+                      {p.rate_per_second > 0 || p.rate_per_minute > 0 ? (
+                        <span>
+                          {p.rate_per_second}/s · {p.rate_per_minute}/min
+                        </span>
+                      ) : null}
                       {p.proxy && <span className="truncate">{t("card.proxy", { proxy: p.proxy })}</span>}
                       {p.reasoning_effort && (
                         <span>

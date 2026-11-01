@@ -3275,6 +3275,8 @@
       "usageCached": "캐시 {pct}%",
       "usageToday": "오늘 {tokens}",
       "usageErrors": "오류 {count}회",
+      "usageTps": "{value} 토큰/초",
+      "usageTpm": "{value} 토큰/분",
       "usageLast": "마지막 호출 {time}",
       "balance": "잔액 {amount} {currency}"
     },
