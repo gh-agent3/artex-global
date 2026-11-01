@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -1161,8 +1162,23 @@ func (t *ToolSet) listGoals() actool.CoreTool {
 		})
 }
 
+// proveGoalNegation catches the failure mode where the planner uses prove_goal as a
+// note-taking tool: it records the furthest progress and writes "NOT MET - do not treat
+// as proof ... goal state should remain open" into the reason. prove_goal has no way to
+// "link without proving", so that call silently marks the goal met and, when it was the
+// last open goal, closes the whole task on evidence the model itself disowned.
+var proveGoalNegation = regexp.MustCompile(`(?i)\b(not met|not proven|not proved|unmet|still unmet|no evidence|does not prove|do not treat as proof|not achieved|no command execution|remain(s)? open)\b`)
+
+// disownedProofError reports whether a prove_goal reason says the goal is NOT proven.
+func disownedProofError(reason string) error {
+	if !proveGoalNegation.MatchString(reason) {
+		return nil
+	}
+	return fmt.Errorf("prove_goal marks the goal met, but your reason says it is not met. Do not use prove_goal to record progress: call record_fact with this evidence instead, and leave the goal open until a fact or finding actually proves it")
+}
+
 func (t *ToolSet) proveGoal() actool.CoreTool {
-	return t.writeExpTool("prove_goal", "Call this when you judge that a finding/fact proves a goal is met: link the evidence node to the goal node and mark the goal met.",
+	return t.writeExpTool("prove_goal", "Call this ONLY when a finding/fact actually proves the goal is met: it links the evidence node to the goal node and marks the goal met (and closes the task when it was the last open goal). To record partial progress, a negative result or the furthest point reached, use record_fact - never call prove_goal with a reason that says the goal is not met.",
 		obj(map[string]any{
 			"goal_id":     idp("goal node id"),
 			"evidence_id": idp("id of the finding/fact node that proves it"),
@@ -1178,6 +1194,12 @@ func (t *ToolSet) proveGoal() actool.CoreTool {
 			goal, ev := pid(a.GoalID), pid(a.EvidenceID)
 			if goal == 0 || ev == 0 {
 				return actool.Errorf("goal_id and evidence_id are required"), nil
+			}
+			// Refuse a call whose own reason disowns the proof. Without this the goal is
+			// marked met (and the task may close) on evidence the planner just said is not
+			// proof, which is exactly how a task ends "done" without its goal.
+			if err := disownedProofError(a.Reason); err != nil {
+				return actool.Errorf(err.Error()), nil
 			}
 			goalNode, err := t.ts.GetNode(goal)
 			if err != nil || goalNode == nil || goalNode.Kind != db.KindGoal {
