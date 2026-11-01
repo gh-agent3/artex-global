@@ -667,7 +667,7 @@ CREATE TRIGGER trg_task_asset_links_upd BEFORE UPDATE ON task_asset_links
 CREATE OR REPLACE FUNCTION sync_task_asset_links() RETURNS trigger AS $$
 BEGIN
     INSERT INTO task_asset_links(task_id, asset_id, source, source_summary)
-    SELECT task.id, NEW.id, 'system', '任务执行期间自动关联'
+    SELECT task.id, NEW.id, 'system', 'auto-linked while the task was running'
     FROM unnest(NEW.task_ids) AS requested(task_id)
     JOIN tasks task ON task.id=requested.task_id AND task.deleted_at IS NULL
     ON CONFLICT (task_id, asset_id) DO NOTHING;
