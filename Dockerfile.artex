@@ -43,10 +43,11 @@ FROM ghcr.io/jiwoochris/artex-global@sha256:6cb89efb439b725e2a1b57012b932bba006c
 
 # 3. runtime: their toolset, our binary
 FROM ${RUNTIME_IMAGE}
-ARG ARTEX_GIT_SHA=unknown
-LABEL org.opencontainers.image.source="https://github.com/jiwoochris/artex-global" \
-      org.opencontainers.image.revision="${ARTEX_GIT_SHA}" \
-      org.opencontainers.image.title="artex-local"
+# ARTEX_GIT_SHA is declared and used at the very END (the LABEL just before
+# ENTRYPOINT): a commit-specific ARG/LABEL up here would bust the build cache of
+# every heavy layer below (apt toolset, npm playwright, the Chromium cache), so
+# each image would store its own ~1.5 GB of fresh layers and the droplet disk
+# would fill. Keeping it late makes those layers shared across every build.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates ripgrep curl wget vim git jq unzip \
       dnsutils iputils-ping netcat-openbsd inetutils-telnet whois nmap \
@@ -67,6 +68,10 @@ COPY --from=build /out/artex /app/artex
 COPY start.sh /app/start.sh
 RUN chmod +x /app/artex /app/start.sh
 COPY skills/ /app/skills/
+ARG ARTEX_GIT_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/jiwoochris/artex-global" \
+      org.opencontainers.image.revision="${ARTEX_GIT_SHA}" \
+      org.opencontainers.image.title="artex-local"
 VOLUME ["/app/data"]
 EXPOSE 8787 8788
 ENTRYPOINT ["/app/start.sh"]
