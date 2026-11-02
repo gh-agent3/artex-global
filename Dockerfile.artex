@@ -62,6 +62,11 @@ RUN npm install -g @playwright/mcp@latest @playwright/cli@latest playwright@1.64
     && playwright install-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=browsers /root/.cache/ms-playwright /root/.cache/ms-playwright
+# The runtime HOME is /app/data/home, so Playwright looks for its browsers there and
+# finds nothing. Pin the path to where the browsers were actually copied: without this
+# every playwright consumer (the CLI, the MCP server, skills/browser) reports
+# "Executable doesn't exist" and asks to download a browser.
+ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
 
 WORKDIR /app
 COPY --from=build /out/artex /app/artex
