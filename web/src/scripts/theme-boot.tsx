@@ -102,6 +102,17 @@ export function ThemeBootScript() {
 
         root.style.colorScheme = resolvedMode === "dark" ? "dark" : "light";
 
+        // Demo mode: mask sensitive values before the first paint. The cookie is the same
+        // one the DemoModeProvider reads, so hydration agrees with what is on screen.
+        var demoCookie = readCookie("demo_mode");
+        var demoOn = demoCookie === "1";
+        root.setAttribute("data-demo", demoOn ? "1" : "0");
+        if (demoOn) {
+          root.classList.add("demo-mode");
+        } else {
+          root.classList.remove("demo-mode");
+        }
+
       } catch (e) {
         console.warn("ThemeBootScript error:", e);
       }

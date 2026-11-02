@@ -3819,5 +3819,28 @@
       "name": "Reverificación de vulnerabilidad",
       "description": "Se inicia manualmente desde el detalle de un hallazgo; lee la evidencia original y guarda una conclusión de reverificación independiente."
     }
+  },
+  "demo": {
+    "turnOn": "Activar el modo demostración",
+    "turnOff": "Desactivar el modo demostración",
+    "badge": "Modo demostración",
+    "settingsTitle": "Modo demostración",
+    "settingsHint": "Qué se oculta mientras el ojo de la cabecera está activo. El interruptor es por navegador; estas reglas son de la instancia.",
+    "classesTitle": "Clases sensibles",
+    "class": {
+      "secret": "Secretos (claves, tokens, cookies)",
+      "identity": "Identidad (usuarios, correos)",
+      "target": "Objetivo (hosts, IPs, URL)",
+      "evidence": "Evidencia (PoC, comandos, salida)"
+    },
+    "rulesTitle": "Reglas de enmascarado",
+    "rulesHint": "Una expresión regular por línea, aplicada a texto libre como bloques de evidencia y salida de comandos. Las coincidencias se sustituyen por una máscara.",
+    "rulesPlaceholder": "p. ej. internal-app\\.ru\\n10\\.0\\.0\\.\\d+",
+    "previewTitle": "Vista previa",
+    "previewPlaceholder": "Escribe una línea para ver el resultado",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "saved": "Ajustes de demostración guardados",
+    "hidden": "Oculto en modo demostración - clic para mostrar"
   }
 }

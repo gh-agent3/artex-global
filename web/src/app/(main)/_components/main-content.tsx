@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Separator } from "@/components/ui/separator";
+import { DemoToggle } from "@/components/demo-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { api } from "@/lib/api";
@@ -74,6 +75,7 @@ export function MainContent({ children }: { children: ReactNode }) {
               </span>
             )}
             <UpdateBadge />
+            <DemoToggle />
             <LayoutControls />
             <ThemeSwitcher />
             <AccountSwitcher users={[currentUser]} />

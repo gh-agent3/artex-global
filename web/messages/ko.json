@@ -3819,5 +3819,28 @@
       "name": "취약점 재검증",
       "description": "취약점 상세에서 수동으로 시작해, 원래 증거를 읽고 독립적인 재검증 결론을 저장합니다."
     }
+  },
+  "demo": {
+    "turnOn": "데모 모드 켜기",
+    "turnOff": "데모 모드 끄기",
+    "badge": "데모 모드",
+    "settingsTitle": "데모 모드",
+    "settingsHint": "헤더의 눈 아이콘이 켜져 있을 때 무엇을 가릴지 정합니다. 스위치 자체는 브라우저별이고, 이 규칙은 인스턴스 공통입니다.",
+    "classesTitle": "민감 정보 분류",
+    "class": {
+      "secret": "비밀(키, 토큰, 쿠키)",
+      "identity": "신원(로그인, 이메일)",
+      "target": "대상(호스트, IP, URL)",
+      "evidence": "증거(PoC, 명령, 출력)"
+    },
+    "rulesTitle": "사용자 마스킹 규칙",
+    "rulesHint": "한 줄에 정규식 하나. 증거 블록·명령 출력 같은 자유 텍스트에 적용되며 일치는 마스크로 바뀝니다.",
+    "rulesPlaceholder": "예: internal-app\\.ru\\n10\\.0\\.0\\.\\d+",
+    "previewTitle": "미리보기",
+    "previewPlaceholder": "한 줄 입력해 마스킹 결과 확인",
+    "save": "저장",
+    "saving": "저장 중…",
+    "saved": "데모 설정을 저장했습니다",
+    "hidden": "데모 모드에서 숨김 - 클릭하면 표시"
   }
 }

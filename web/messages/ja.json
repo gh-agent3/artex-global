@@ -3819,5 +3819,28 @@
       "name": "脆弱性の再検証",
       "description": "脆弱性の詳細から手動で開始し、元の証拠を読み取って、独立した再検証の結論を保存します。"
     }
+  },
+  "demo": {
+    "turnOn": "デモモードをオン",
+    "turnOff": "デモモードをオフ",
+    "badge": "デモモード",
+    "settingsTitle": "デモモード",
+    "settingsHint": "ヘッダーの目のアイコンがオンのとき何を隠すかを決めます。スイッチはブラウザごと、このルールはインスタンス共通です。",
+    "classesTitle": "機密の分類",
+    "class": {
+      "secret": "機密（キー、トークン、Cookie）",
+      "identity": "身元（ログイン、メール）",
+      "target": "対象（ホスト、IP、URL）",
+      "evidence": "証拠（PoC、コマンド、出力）"
+    },
+    "rulesTitle": "独自マスク規則",
+    "rulesHint": "1 行に 1 つの正規表現。証拠ブロックやコマンド出力などの自由文に適用され、一致部分はマスクされます。",
+    "rulesPlaceholder": "例: internal-app\\.ru\\n10\\.0\\.0\\.\\d+",
+    "previewTitle": "プレビュー",
+    "previewPlaceholder": "1 行入力してマスク結果を確認",
+    "save": "保存",
+    "saving": "保存中…",
+    "saved": "デモ設定を保存しました",
+    "hidden": "デモモードで非表示 - クリックで表示"
   }
 }

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import * as React from "react";
 
 import { AppSidebar } from "@/app/(main)/_components/sidebar/app-sidebar";
+import { DemoModeProvider } from "@/components/demo-mode";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 import { getClientCookie } from "@/lib/cookie.client";
@@ -60,7 +61,8 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   if (!authed) return null;
 
   return (
-    <SidebarProvider
+    <DemoModeProvider>
+      <SidebarProvider
       defaultOpen={defaultOpen}
       style={
         {
@@ -81,6 +83,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
       >
         <MainContent>{children}</MainContent>
       </SidebarInset>
-    </SidebarProvider>
+      </SidebarProvider>
+    </DemoModeProvider>
   );
 }

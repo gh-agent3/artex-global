@@ -940,6 +940,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tasks/{id}/provenance", s.taskProvenance)
 	mux.HandleFunc("POST /api/tasks/{id}/provenance/cleanup", s.taskProvenanceCleanup)
 	mux.HandleFunc("GET /api/tasks/{id}/provenance/files", s.taskProvenanceFiles)
+	mux.HandleFunc("GET /api/settings/demo", s.demoSettings)
+	mux.HandleFunc("PUT /api/settings/demo", s.demoSettingsSave)
 	mux.HandleFunc("GET /api/report-profiles", s.reportProfiles)
 	mux.HandleFunc("POST /api/report-profiles", s.reportProfileSave)
 	mux.HandleFunc("DELETE /api/report-profiles/{pid}", s.reportProfileDelete)

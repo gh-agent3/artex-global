@@ -6,7 +6,7 @@ import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PencilIcon, SendIcon }
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Markdown } from "@/components/markdown";
+import { DemoMarkdown } from "@/components/demo-markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -255,7 +255,7 @@ function TaskReport({ taskId }: { taskId: string }) {
             {error ? (
               <div className="text-sm text-destructive">{error}</div>
             ) : selected?.content ? (
-              <Markdown text={selected.content} />
+              <DemoMarkdown text={selected.content} />
             ) : (
               <Skeleton className="h-40 w-full" />
             )}

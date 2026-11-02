@@ -3819,5 +3819,28 @@
       "name": "Vulnerability Retest",
       "description": "Launched manually from a finding's detail view; reads the original evidence and saves an independent retest conclusion."
     }
+  },
+  "demo": {
+    "turnOn": "Turn demo mode on",
+    "turnOff": "Turn demo mode off",
+    "badge": "Demo mode",
+    "settingsTitle": "Demo mode",
+    "settingsHint": "What demo mode hides while the eye in the header is on. The switch itself is per browser; these rules are shared by the instance.",
+    "classesTitle": "Sensitive classes",
+    "class": {
+      "secret": "Secrets (keys, tokens, cookies)",
+      "identity": "Identity (logins, e-mails)",
+      "target": "Target (hosts, IPs, URLs)",
+      "evidence": "Evidence (PoC, commands, output)"
+    },
+    "rulesTitle": "Custom masking rules",
+    "rulesHint": "One regular expression per line, applied to free text such as evidence blocks and command output. Matches are replaced with a mask.",
+    "rulesPlaceholder": "e.g. internal-app\\.ru\\n10\\.0\\.0\\.\\d+",
+    "previewTitle": "Preview",
+    "previewPlaceholder": "Type a line to see what will be masked",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Demo settings saved",
+    "hidden": "Hidden in demo mode - click to reveal"
   }
 }

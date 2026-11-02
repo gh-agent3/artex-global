@@ -278,6 +278,10 @@ export const api = {
       `/tasks/${encodeURIComponent(id)}/provenance/cleanup`,
       { note },
     ),
+  // ---- demo mode settings (masking classes + custom regex rules) ----
+  demoSettings: () => get<{ classes: string[]; rules: string[] }>("/settings/demo"),
+  demoSettingsSave: (input: { classes: string[]; rules: string[] }) =>
+    put<{ classes: string[]; rules: string[] }>("/settings/demo", input),
   // ---- report formats + versions ----
   reportProfiles: () => get<{ profiles: ReportProfile[] }>("/report-profiles").then((r) => r.profiles ?? []),
   reportProfileSave: (input: { id?: number; name: string; instructions: string }) =>

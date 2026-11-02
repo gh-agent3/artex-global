@@ -16,6 +16,7 @@ import {
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { Sensitive } from "@/components/demo-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1002,7 +1003,11 @@ export default function LLMPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-6 text-muted-foreground text-xs">
-                      {p.api_key_hint && <span>{p.api_key_hint}</span>}
+                      {p.api_key_hint && (
+                        <Sensitive kind="secret" value={p.api_key_hint}>
+                          {p.api_key_hint}
+                        </Sensitive>
+                      )}
                       {p.rate_per_second > 0 || p.rate_per_minute > 0 ? (
                         <span>
                           {p.rate_per_second}/s · {p.rate_per_minute}/min

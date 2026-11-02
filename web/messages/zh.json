@@ -3819,5 +3819,28 @@
       "name": "漏洞复测",
       "description": "从漏洞详情手动启动，读取原证据并保存独立复测结论。"
     }
+  },
+  "demo": {
+    "turnOn": "开启演示模式",
+    "turnOff": "关闭演示模式",
+    "badge": "演示模式",
+    "settingsTitle": "演示模式",
+    "settingsHint": "页眉眼睛图标开启时隐藏哪些内容。开关按浏览器保存，这些规则为实例共享。",
+    "classesTitle": "敏感类别",
+    "class": {
+      "secret": "机密（密钥、令牌、Cookie）",
+      "identity": "身份（登录名、邮箱）",
+      "target": "目标（主机、IP、URL）",
+      "evidence": "证据（PoC、命令、输出）"
+    },
+    "rulesTitle": "自定义掩码规则",
+    "rulesHint": "每行一个正则表达式，作用于证据块、命令输出等自由文本，匹配内容替换为掩码。",
+    "rulesPlaceholder": "例如 internal-app\\.ru\\n10\\.0\\.0\\.\\d+",
+    "previewTitle": "预览",
+    "previewPlaceholder": "输入一行查看掩码效果",
+    "save": "保存",
+    "saving": "保存中…",
+    "saved": "演示设置已保存",
+    "hidden": "演示模式下已隐藏 - 点击显示"
   }
 }
