@@ -16,7 +16,7 @@ func TestReviewInputIgnoresAuditHistoryAndPreservesCurrentCall(t *testing.T) {
 		{Kind: "tool_use", ToolUseID: "created", Tool: "Write", Text: `{"path":"prior-only.txt"}`},
 		{Kind: "tool_result", ToolUseID: "created", Text: "Created a new file"},
 		{Kind: "tool_use", ToolUseID: "denied", Tool: "Bash", Text: `{"command":"delete prior-only.txt"}`},
-		{Kind: "tool_result", ToolUseID: "denied", Text: "【ARTEX 平台管控·非目标防御】This call was blocked by the platform.", IsError: true},
+		{Kind: "tool_result", ToolUseID: "denied", Text: "[ARTEX platform control - not a target-side defense] This call was blocked by the platform.", IsError: true},
 		{Kind: "tool_use", ToolUseID: "partial", Tool: "Bash", Text: `{}`},
 		{Kind: "tool_result", ToolUseID: "partial", Text: strings.Repeat("partial write ", 10000), IsError: true},
 		{Kind: "tool_result", ToolUseID: "partial", Text: "conflicting result"},

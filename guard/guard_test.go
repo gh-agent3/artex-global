@@ -45,7 +45,7 @@ func TestPreToolUsePassthrough(t *testing.T) {
 // benchmarked agent behavior. This test fails if the framing is edited or localized.
 func TestSystemBlockMessagePreservedIsBrainInput(t *testing.T) {
 	got := systemBlockMessage("<reason>")
-	want := "【ARTEX 平台管控·非目标防御】This call was blocked by the platform. Reason: <reason>. This operation is prohibited."
+	want := "[ARTEX platform control - not a target-side defense] This call was blocked by the platform. Reason: <reason>. This operation is prohibited."
 	if got != want {
 		t.Errorf("systemBlockMessage framing drifted (F14 brain preservation - the wording must stay fixed):\n got %q\nwant %q", got, want)
 	}
