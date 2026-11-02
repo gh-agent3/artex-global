@@ -271,7 +271,22 @@
       "retry": "Reintentar",
       "empty": "No hay informe",
       "copySuccess": "Markdown copiado",
-      "copyError": "Error al copiar. Seleccione el texto manualmente y cópielo"
+      "copyError": "Error al copiar. Seleccione el texto manualmente y cópielo",
+      "download": "Descargar",
+      "versionsTitle": "Versiones",
+      "versionsEmpty": "Aún no hay informe.",
+      "formatDefault": "Formato integrado",
+      "formatHint": "Formato con el que se genera y revisa el informe",
+      "editFormat": "Editar formato",
+      "editFormatTitle": "Formato del informe",
+      "formatName": "Nombre del formato",
+      "formatInstructions": "Secciones y reglas para el redactor",
+      "formatSave": "Guardar formato",
+      "formatSaved": "Formato guardado",
+      "cancel": "Cancelar",
+      "revise": "Enviar",
+      "revising": "Revisando…",
+      "revisePlaceholder": "Dile al redactor del informe qué cambiar:"
     },
     "findings": {
       "columnFinding": "Hallazgo",
@@ -705,7 +720,11 @@
       "colFreed": "Liberado",
       "colFiles": "Archivos",
       "colActor": "Por",
-      "colNote": "Nota"
+      "colNote": "Nota",
+      "state": "estado",
+      "loadingFiles": "Cargando archivos…",
+      "noFiles": "No hay archivos en este directorio.",
+      "download": "Descargar"
     }
   },
   "retest": {

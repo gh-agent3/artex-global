@@ -279,6 +279,9 @@ ON CONFLICT (name) DO NOTHING`,
 	if err := d.seedBuiltinSkillVisibility(); err != nil {
 		return fmt.Errorf("seed skill visibility: %w", err)
 	}
+	if err := d.seedDefaultReportProfile(); err != nil {
+		return err
+	}
 	if err := d.seedDefaultInterceptRules(); err != nil {
 		return fmt.Errorf("seed intercept rules: %w", err)
 	}
@@ -623,4 +626,30 @@ WHERE NOT EXISTS (SELECT 1 FROM intercept_rules WHERE name = $1)`,
 		return fmt.Errorf("rule %q: %w", name, err)
 	}
 	return d.SetSetting("intercept_default_rules_v3", "done")
+}
+
+// seedDefaultReportProfile inserts the built-in report format once. Its instructions
+// describe the standard section skeleton; the built-in profile is rendered by the
+// deterministic report builder, and the text is kept here so an operator can see and
+// copy it when creating their own format.
+func (d *DB) seedDefaultReportProfile() error {
+	const flag = "report_profile_default_v1"
+	if v, _, _ := d.GetSetting(flag); v == "done" {
+		return nil
+	}
+	const instructions = `# Standard penetration test report
+
+- Title, task goal and generation time.
+- Summary: number of confirmed findings and the asset counts by type.
+- Findings: one section per finding, ordered by severity, each with severity, class,
+  status, owning task, the PoC/evidence block and the detailed report when present.
+- Keep every command, URL, identifier and code block verbatim.
+- Never invent findings or evidence.`
+	if _, err := d.Exec(`
+INSERT INTO report_profiles(name, instructions, builtin)
+SELECT 'Standard pentest report', $1, true
+WHERE NOT EXISTS (SELECT 1 FROM report_profiles WHERE builtin)`, instructions); err != nil {
+		return err
+	}
+	return d.SetSetting(flag, "done")
 }

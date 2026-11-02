@@ -1663,6 +1663,16 @@ export interface ProvenanceIntent {
   name: string;
   bytes: number;
   files: number;
+  mtime?: string;
+  intent_id?: number;
+  state?: string;
+  summary?: string;
+}
+
+export interface ProvenanceFile {
+  path: string;
+  bytes: number;
+  mtime: string;
 }
 
 export interface ProvenanceCleanup {
@@ -1686,4 +1696,25 @@ export interface TaskProvenance {
   cleanable_bytes: number;
   cleanable_files: number;
   cleanups: ProvenanceCleanup[];
+}
+
+// Report formats (profiles) and stored report versions.
+export interface ReportProfile {
+  id: number;
+  name: string;
+  instructions: string;
+  builtin: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReportVersion {
+  id: number;
+  task_id: number;
+  version: string;
+  note: string;
+  parent_id?: number;
+  created_at: string;
+  bytes: number;
+  content?: string;
 }

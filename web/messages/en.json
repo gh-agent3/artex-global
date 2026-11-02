@@ -271,7 +271,22 @@
       "retry": "Retry",
       "empty": "No report available",
       "copySuccess": "Markdown copied",
-      "copyError": "Copy failed. Select the text manually and copy it"
+      "copyError": "Copy failed. Select the text manually and copy it",
+      "download": "Download",
+      "versionsTitle": "Versions",
+      "versionsEmpty": "No report yet.",
+      "formatDefault": "Built-in format",
+      "formatHint": "Report format used to generate and revise the report",
+      "editFormat": "Edit format",
+      "editFormatTitle": "Report format",
+      "formatName": "Format name",
+      "formatInstructions": "Sections and rules for the report writer",
+      "formatSave": "Save format",
+      "formatSaved": "Format saved",
+      "cancel": "Cancel",
+      "revise": "Send",
+      "revising": "Revising…",
+      "revisePlaceholder": "Tell report writer agent what to change:"
     },
     "findings": {
       "columnFinding": "Finding",
@@ -705,7 +720,11 @@
       "colFreed": "Freed",
       "colFiles": "Files",
       "colActor": "By",
-      "colNote": "Note"
+      "colNote": "Note",
+      "state": "state",
+      "loadingFiles": "Loading files…",
+      "noFiles": "No files in this directory.",
+      "download": "Download"
     }
   },
   "retest": {

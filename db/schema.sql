@@ -1399,3 +1399,41 @@ CREATE TABLE IF NOT EXISTS task_provenance_cleanups (
 );
 CREATE INDEX IF NOT EXISTS idx_task_provenance_cleanups_task
     ON task_provenance_cleanups(task_id, at DESC);
+
+-- Stored revisions of a task's penetration-test report. Version 1.0 is the generated
+-- report; every chat-driven revision appends a child (1.1, 1.2, ...) and keeps the
+-- previous content readable, so an operator can compare, download or roll back.
+CREATE TABLE IF NOT EXISTS task_report_versions (
+    id         BIGSERIAL PRIMARY KEY,
+    task_id    BIGINT NOT NULL,
+    version    TEXT NOT NULL,
+    content    TEXT NOT NULL,
+    note       TEXT NOT NULL DEFAULT '',
+    parent_id  BIGINT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_task_report_versions_task
+    ON task_report_versions(task_id, created_at DESC);
+
+-- Report FORMATS. A profile is the section skeleton + writing rules the report writer
+-- follows. The built-in profile reproduces the standard deterministic report; a custom
+-- profile is applied as a rewrite over that canonical text, so the facts always come
+-- from the graph and only the shape changes.
+CREATE TABLE IF NOT EXISTS report_profiles (
+    id           BIGSERIAL PRIMARY KEY,
+    name         TEXT NOT NULL,
+    instructions TEXT NOT NULL DEFAULT '',
+    builtin      BOOLEAN NOT NULL DEFAULT false,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Which report profile a task uses. Absent row = the built-in profile.
+CREATE TABLE IF NOT EXISTS task_report_settings (
+    task_id    BIGINT PRIMARY KEY,
+    profile_id BIGINT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- The profile that produced a report version (NULL for versions written before profiles).
+ALTER TABLE task_report_versions ADD COLUMN IF NOT EXISTS profile_id BIGINT;

@@ -271,7 +271,22 @@
       "retry": "重试",
       "empty": "暂无报告",
       "copySuccess": "已复制 Markdown",
-      "copyError": "复制失败，请手动选择文本复制"
+      "copyError": "复制失败，请手动选择文本复制",
+      "download": "下载",
+      "versionsTitle": "版本",
+      "versionsEmpty": "还没有报告。",
+      "formatDefault": "内置格式",
+      "formatHint": "生成和修订报告所用的格式",
+      "editFormat": "编辑格式",
+      "editFormatTitle": "报告格式",
+      "formatName": "格式名称",
+      "formatInstructions": "给报告撰写代理的章节与规则",
+      "formatSave": "保存格式",
+      "formatSaved": "格式已保存",
+      "cancel": "取消",
+      "revise": "发送",
+      "revising": "修订中…",
+      "revisePlaceholder": "告诉报告撰写代理要修改什么："
     },
     "findings": {
       "columnFinding": "漏洞",
@@ -705,7 +720,11 @@
       "colFreed": "释放",
       "colFiles": "文件",
       "colActor": "执行者",
-      "colNote": "备注"
+      "colNote": "备注",
+      "state": "状态",
+      "loadingFiles": "正在加载文件…",
+      "noFiles": "该目录中没有文件。",
+      "download": "下载"
     }
   },
   "retest": {

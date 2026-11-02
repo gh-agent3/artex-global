@@ -82,6 +82,9 @@ import type {
   Stats,
   Task,
   TaskArchive,
+  ProvenanceFile,
+  ReportProfile,
+  ReportVersion,
   TaskProvenance,
   TaskArchivePage,
   TaskAssetMutation,
@@ -275,6 +278,45 @@ export const api = {
       `/tasks/${encodeURIComponent(id)}/provenance/cleanup`,
       { note },
     ),
+  // ---- report formats + versions ----
+  reportProfiles: () => get<{ profiles: ReportProfile[] }>("/report-profiles").then((r) => r.profiles ?? []),
+  reportProfileSave: (input: { id?: number; name: string; instructions: string }) =>
+    post<{ id: number }>("/report-profiles", input),
+  reportProfileDelete: (id: number) => del<{ ok: boolean }>(`/report-profiles/${id}`),
+  taskReportSettings: (id: string) =>
+    get<{ profile_id: number }>(`/tasks/${encodeURIComponent(id)}/report-settings`),
+  taskReportSettingsSave: (id: string, profileId: number) =>
+    put<{ ok: boolean }>(`/tasks/${encodeURIComponent(id)}/report-settings`, { profile_id: profileId }),
+  taskReportVersions: (id: string) =>
+    get<{ versions: ReportVersion[] }>(`/tasks/${encodeURIComponent(id)}/reports`).then((r) => r.versions ?? []),
+  taskReportVersion: (id: string, rid: number) =>
+    get<ReportVersion>(`/tasks/${encodeURIComponent(id)}/reports/${rid}`),
+  taskReportRevise: (id: string, rid: number, instruction: string) =>
+    post<ReportVersion>(`/tasks/${encodeURIComponent(id)}/reports/${rid}/revise`, { instruction }),
+  // The download link has to carry the bearer token, so fetch it as a blob.
+  taskReportDownload: async (id: string, rid: number) => {
+    const token = getToken();
+    const r = await fetch(`/api/tasks/${encodeURIComponent(id)}/reports/${rid}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!r.ok) throw new Error(`download: ${r.status}`);
+    return r.blob();
+  },
+  // Files inside one artifact directory of a task (for the provenance browser).
+  taskProvenanceFiles: (id: string, dir: string) =>
+    get<{ dir: string; files: ProvenanceFile[] }>(
+      `/tasks/${encodeURIComponent(id)}/provenance/files?dir=${encodeURIComponent(dir)}`,
+    ),
+  // Fetch one artifact file as a blob (the download link has to carry the bearer token).
+  taskProvenanceFile: async (id: string, path: string) => {
+    const token = getToken();
+    const r = await fetch(
+      `/api/tasks/${encodeURIComponent(id)}/provenance/file?path=${encodeURIComponent(path)}`,
+      { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+    );
+    if (!r.ok) throw new Error(`file: ${r.status}`);
+    return r.blob();
+  },
   createTask: (input: {
     name?: string;
     categoryId?: number;

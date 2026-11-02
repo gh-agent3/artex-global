@@ -8,7 +8,22 @@
       "retry": "Повторить",
       "empty": "Отчёт отсутствует",
       "copySuccess": "Markdown скопирован",
-      "copyError": "Не удалось скопировать. Выделите текст вручную и скопируйте его"
+      "copyError": "Не удалось скопировать. Выделите текст вручную и скопируйте его",
+      "download": "Скачать",
+      "versionsTitle": "Версии",
+      "versionsEmpty": "Отчёта ещё нет.",
+      "formatDefault": "Встроенный формат",
+      "formatHint": "Формат отчёта, по которому он генерируется и правится",
+      "editFormat": "Править формат",
+      "editFormatTitle": "Формат отчёта",
+      "formatName": "Название формата",
+      "formatInstructions": "Разделы и правила для агента-отчётника",
+      "formatSave": "Сохранить формат",
+      "formatSaved": "Формат сохранён",
+      "cancel": "Отмена",
+      "revise": "Отправить",
+      "revising": "Правлю…",
+      "revisePlaceholder": "Скажите агенту-отчётнику, что изменить:"
     },
     "findings": {
       "columnFinding": "Находка",
@@ -442,7 +457,11 @@
       "colFreed": "Освобождено",
       "colFiles": "Файлов",
       "colActor": "Кто",
-      "colNote": "Заметка"
+      "colNote": "Заметка",
+      "state": "состояние",
+      "loadingFiles": "Загружаю файлы…",
+      "noFiles": "В этом каталоге файлов нет.",
+      "download": "Скачать"
     }
   },
   "tasksPage": {

@@ -271,7 +271,22 @@
       "retry": "다시 시도",
       "empty": "보고서가 없습니다",
       "copySuccess": "Markdown 을 복사했습니다",
-      "copyError": "복사에 실패했습니다. 텍스트를 직접 선택해 복사하세요"
+      "copyError": "복사에 실패했습니다. 텍스트를 직접 선택해 복사하세요",
+      "download": "내려받기",
+      "versionsTitle": "버전",
+      "versionsEmpty": "아직 보고서가 없습니다.",
+      "formatDefault": "기본 형식",
+      "formatHint": "보고서를 생성·수정할 때 쓰는 형식",
+      "editFormat": "형식 편집",
+      "editFormatTitle": "보고서 형식",
+      "formatName": "형식 이름",
+      "formatInstructions": "보고서 작성자용 섹션과 규칙",
+      "formatSave": "형식 저장",
+      "formatSaved": "형식이 저장되었습니다",
+      "cancel": "취소",
+      "revise": "보내기",
+      "revising": "수정 중…",
+      "revisePlaceholder": "보고서 작성자에게 무엇을 바꿀지 알려주세요:"
     },
     "findings": {
       "columnFinding": "취약점",
@@ -705,7 +720,11 @@
       "colFreed": "확보",
       "colFiles": "파일",
       "colActor": "수행",
-      "colNote": "메모"
+      "colNote": "메모",
+      "state": "상태",
+      "loadingFiles": "파일 불러오는 중…",
+      "noFiles": "이 디렉터리에 파일이 없습니다.",
+      "download": "내려받기"
     }
   },
   "retest": {

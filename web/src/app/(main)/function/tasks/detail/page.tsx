@@ -214,7 +214,12 @@ function TaskDetailInner() {
   const [task, setTask] = React.useState<Task | null>(null);
   const [paused, setPaused] = React.useState(false);
   const [loaded, setLoaded] = React.useState(false);
-  const [tab, setTab] = React.useState("sessions");
+  // The tab lives in the URL (?tab=provenance) so a link can point at a specific
+  // view - the provenance file browser links back here from a file row.
+  const [tab, setTab] = React.useState<string>(() => {
+    const fromURL = searchParams.get("tab");
+    return fromURL && (TAB_VALUES as readonly string[]).includes(fromURL) ? fromURL : "sessions";
+  });
   const [interceptPendingCount, setInterceptPendingCount] = React.useState(0);
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
   const [archiving, setArchiving] = React.useState(false);

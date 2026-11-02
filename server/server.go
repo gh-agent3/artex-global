@@ -939,6 +939,17 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/tasks/{id}/chat/stop", s.stopChat)
 	mux.HandleFunc("GET /api/tasks/{id}/provenance", s.taskProvenance)
 	mux.HandleFunc("POST /api/tasks/{id}/provenance/cleanup", s.taskProvenanceCleanup)
+	mux.HandleFunc("GET /api/tasks/{id}/provenance/files", s.taskProvenanceFiles)
+	mux.HandleFunc("GET /api/report-profiles", s.reportProfiles)
+	mux.HandleFunc("POST /api/report-profiles", s.reportProfileSave)
+	mux.HandleFunc("DELETE /api/report-profiles/{pid}", s.reportProfileDelete)
+	mux.HandleFunc("GET /api/tasks/{id}/report-settings", s.taskReportSettings)
+	mux.HandleFunc("PUT /api/tasks/{id}/report-settings", s.taskReportSettingsSave)
+	mux.HandleFunc("GET /api/tasks/{id}/reports", s.taskReports)
+	mux.HandleFunc("GET /api/tasks/{id}/reports/{rid}", s.taskReportVersion)
+	mux.HandleFunc("GET /api/tasks/{id}/reports/{rid}/download", s.taskReportDownload)
+	mux.HandleFunc("POST /api/tasks/{id}/reports/{rid}/revise", s.taskReportRevise)
+	mux.HandleFunc("GET /api/tasks/{id}/provenance/file", s.taskProvenanceFile)
 
 	// --- admin console API (PostgreSQL data source; v2 database and admin console design) ---
 	mux.HandleFunc("DELETE /api/tasks/{id}", s.pgDeleteTask)

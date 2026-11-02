@@ -271,7 +271,22 @@
       "retry": "再試行",
       "empty": "レポートがありません",
       "copySuccess": "Markdown をコピーしました",
-      "copyError": "コピーに失敗しました。テキストを直接選択してコピーしてください"
+      "copyError": "コピーに失敗しました。テキストを直接選択してコピーしてください",
+      "download": "ダウンロード",
+      "versionsTitle": "バージョン",
+      "versionsEmpty": "レポートはまだありません。",
+      "formatDefault": "組み込み形式",
+      "formatHint": "レポートの生成・修正に使う形式",
+      "editFormat": "形式を編集",
+      "editFormatTitle": "レポート形式",
+      "formatName": "形式名",
+      "formatInstructions": "レポート作成者へのセクションと規則",
+      "formatSave": "形式を保存",
+      "formatSaved": "形式を保存しました",
+      "cancel": "キャンセル",
+      "revise": "送信",
+      "revising": "修正中…",
+      "revisePlaceholder": "レポート作成者に変更内容を伝えてください："
     },
     "findings": {
       "columnFinding": "脆弱性",
@@ -705,7 +720,11 @@
       "colFreed": "解放",
       "colFiles": "ファイル",
       "colActor": "実行者",
-      "colNote": "メモ"
+      "colNote": "メモ",
+      "state": "状態",
+      "loadingFiles": "ファイルを読み込み中…",
+      "noFiles": "このディレクトリにファイルはありません。",
+      "download": "ダウンロード"
     }
   },
   "retest": {
