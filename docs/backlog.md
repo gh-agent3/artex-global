@@ -26,6 +26,6 @@ decision 2026-11-02). Full analysis: `demo-mode-arch-review.md`; design: `docs/d
 
 ## Other known gaps
 
-- Traffic capture proxy is wired but inert: the recording proxy listens on :8788 but
-  nothing sets HTTP_PROXY for the tools, so `finding_traffic_bindings` stays empty. Decide
-  whether to inject the proxy env into tool execution or drop the feature.
+(none - the traffic capture item was fixed on 2026-11-02: the mechanism was already wired,
+only the `traffic_capture` and `agent_traffic_binding` switches were off; enabling them via
+PUT /api/settings started recording, verified end-to-end with a proxied request.)
