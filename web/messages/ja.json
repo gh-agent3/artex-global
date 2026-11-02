@@ -312,7 +312,8 @@
       "assets": "テスト対象資産",
       "coverage": "資産カバレッジグラフ",
       "intercept": "インターセプト承認",
-      "report": "レポート"
+      "report": "レポート",
+      "provenance": "プロバナンス"
     },
     "header": {
       "notFound": "タスク {id} が見つかりません。削除・アーカイブされたか、存在しません。",
@@ -685,6 +686,26 @@
           "cidr": "CIDR 帯域"
         }
       }
+    },
+    "provenance": {
+      "title": "タスク成果物",
+      "total": "合計サイズ",
+      "files": "{count} ファイル",
+      "cleanable": "削除可能（インテントの作業領域）",
+      "kept": "保持（レポート、アップロード）",
+      "intentsTitle": "インテント別サイズ",
+      "nothingToClean": "残っているインテント作業領域はありません。",
+      "clean": "成果物を削除",
+      "cleaning": "削除中…",
+      "notePlaceholder": "監査ログ用のメモ（任意）",
+      "historyTitle": "削除履歴",
+      "historyHint": "削除はすべて記録されるため、後から「意図的な削除」と「消失」を区別できます。",
+      "historyEmpty": "まだ削除していません。",
+      "colWhen": "日時",
+      "colFreed": "解放",
+      "colFiles": "ファイル",
+      "colActor": "実行者",
+      "colNote": "メモ"
     }
   },
   "retest": {

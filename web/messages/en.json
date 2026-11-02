@@ -312,7 +312,8 @@
       "assets": "Test assets",
       "coverage": "Asset coverage graph",
       "intercept": "Intercept approval",
-      "report": "Report"
+      "report": "Report",
+      "provenance": "Provenance"
     },
     "header": {
       "notFound": "Task {id} not found. It may have been deleted, archived, or never existed.",
@@ -685,6 +686,26 @@
           "cidr": "CIDR range"
         }
       }
+    },
+    "provenance": {
+      "title": "Task artifacts",
+      "total": "Total size",
+      "files": "{count} files",
+      "cleanable": "Reclaimable (per-intent scratch)",
+      "kept": "Kept (report, uploads)",
+      "intentsTitle": "Per-intent size",
+      "nothingToClean": "No per-intent scratch directories left.",
+      "clean": "Clean up artifacts",
+      "cleaning": "Cleaning…",
+      "notePlaceholder": "Optional note for the audit log",
+      "historyTitle": "Cleanup history",
+      "historyHint": "Every cleanup is recorded here, so a later reader can tell removed artifacts from lost ones.",
+      "historyEmpty": "Nothing has been cleaned yet.",
+      "colWhen": "When",
+      "colFreed": "Freed",
+      "colFiles": "Files",
+      "colActor": "By",
+      "colNote": "Note"
     }
   },
   "retest": {

@@ -312,7 +312,8 @@
       "assets": "测试资产",
       "coverage": "资产覆盖图",
       "intercept": "拦截审批",
-      "report": "报告"
+      "report": "报告",
+      "provenance": "来源与占用"
     },
     "header": {
       "notFound": "任务 {id} 已被删除、归档或不存在",
@@ -685,6 +686,26 @@
           "cidr": "CIDR 网段"
         }
       }
+    },
+    "provenance": {
+      "title": "任务产物",
+      "total": "总大小",
+      "files": "{count} 个文件",
+      "cleanable": "可清理（意图草稿）",
+      "kept": "保留（报告、上传）",
+      "intentsTitle": "按意图大小",
+      "nothingToClean": "没有剩余的意图草稿目录。",
+      "clean": "清理产物",
+      "cleaning": "清理中…",
+      "notePlaceholder": "审计日志备注（可选）",
+      "historyTitle": "清理历史",
+      "historyHint": "每次清理都会记录，便于之后区分“主动删除”与“丢失”。",
+      "historyEmpty": "尚未清理。",
+      "colWhen": "时间",
+      "colFreed": "释放",
+      "colFiles": "文件",
+      "colActor": "执行者",
+      "colNote": "备注"
     }
   },
   "retest": {

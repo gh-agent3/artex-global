@@ -48,6 +48,7 @@ import { GraphTab } from "./_tabs/graph-tab";
 import { InterceptTab } from "./_tabs/intercept-tab";
 import { OverviewTab } from "./_tabs/overview-tab";
 import { ReportTab } from "./_tabs/report-tab";
+import { ProvenanceTab } from "./_tabs/provenance-tab";
 import { RetestsTab } from "./_tabs/retests-tab";
 import { SessionsTab } from "./_tabs/sessions-tab";
 
@@ -62,6 +63,7 @@ const TAB_VALUES = [
   "coverage",
   "intercept",
   "report",
+  "provenance",
 ] as const;
 
 function taskProfileIDs(task: Task): string[] {
@@ -446,6 +448,9 @@ function TaskDetailInner() {
         </TabsContent>
         <TabsContent value="report" className="mt-0">
           <ReportTab taskId={id} />
+        </TabsContent>
+        <TabsContent value="provenance" className="mt-0">
+          <ProvenanceTab taskId={id} />
         </TabsContent>
       </div>
     </Tabs>

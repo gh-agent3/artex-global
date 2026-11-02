@@ -1384,3 +1384,18 @@ CREATE INDEX IF NOT EXISTS idx_notification_deliveries_batch
     ON notification_deliveries(batch_id) WHERE batch_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_notification_deliveries_channel
     ON notification_deliveries(channel_id, id DESC);
+
+-- Audit trail for operator-triggered cleanup of a task's artifact directory. The
+-- per-intent work dirs hold worker scratch (payloads, replicas, logs) and can reach
+-- tens of GB; clearing them is allowed, but the fact that it happened must survive.
+CREATE TABLE IF NOT EXISTS task_provenance_cleanups (
+    id          BIGSERIAL PRIMARY KEY,
+    task_id     BIGINT NOT NULL,
+    at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    freed_bytes BIGINT NOT NULL DEFAULT 0,
+    freed_files BIGINT NOT NULL DEFAULT 0,
+    actor       TEXT NOT NULL DEFAULT '',
+    note        TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_task_provenance_cleanups_task
+    ON task_provenance_cleanups(task_id, at DESC);

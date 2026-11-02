@@ -82,6 +82,7 @@ import type {
   Stats,
   Task,
   TaskArchive,
+  TaskProvenance,
   TaskArchivePage,
   TaskAssetMutation,
   TaskAssetScopeMutation,
@@ -266,6 +267,14 @@ export const api = {
   tasks: () =>
     get<{ tasks: Task[]; active: string }>("/tasks").then((r) => ({ tasks: arr(r.tasks), active: r.active ?? "" })),
   task: (id: string) => get<Task>(`/tasks/${encodeURIComponent(id)}`),
+  // Disk footprint of a task's artifact directory plus its cleanup audit trail.
+  taskProvenance: (id: string) =>
+    get<TaskProvenance>(`/tasks/${encodeURIComponent(id)}/provenance`),
+  taskProvenanceCleanup: (id: string, note: string) =>
+    post<{ removed: number; freed_bytes: number; freed_files: number }>(
+      `/tasks/${encodeURIComponent(id)}/provenance/cleanup`,
+      { note },
+    ),
   createTask: (input: {
     name?: string;
     categoryId?: number;

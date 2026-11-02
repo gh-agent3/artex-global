@@ -1657,3 +1657,33 @@ export interface InterceptExecution {
   seq: number;
   items: Activity[];
 }
+
+// Per-task artifact footprint and its cleanup audit (GET /api/tasks/{id}/provenance).
+export interface ProvenanceIntent {
+  name: string;
+  bytes: number;
+  files: number;
+}
+
+export interface ProvenanceCleanup {
+  id: number;
+  task_id: number;
+  at: string;
+  freed_bytes: number;
+  freed_files: number;
+  actor: string;
+  note: string;
+}
+
+export interface TaskProvenance {
+  path: string;
+  exists: boolean;
+  bytes: number;
+  files: number;
+  intents: ProvenanceIntent[];
+  other_bytes: number;
+  other_files: number;
+  cleanable_bytes: number;
+  cleanable_files: number;
+  cleanups: ProvenanceCleanup[];
+}

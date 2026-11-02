@@ -312,7 +312,8 @@
       "assets": "Activos de prueba",
       "coverage": "Gráfico de cobertura de activos",
       "intercept": "Aprobación de intercepción",
-      "report": "Informe"
+      "report": "Informe",
+      "provenance": "Procedencia"
     },
     "header": {
       "notFound": "No se encontró la tarea {id}. Es posible que se haya eliminado, archivado o que no exista.",
@@ -685,6 +686,26 @@
           "cidr": "Rango CIDR"
         }
       }
+    },
+    "provenance": {
+      "title": "Artefactos de la tarea",
+      "total": "Tamaño total",
+      "files": "{count} archivos",
+      "cleanable": "Recuperable (borradores por intento)",
+      "kept": "Conservado (informe, subidas)",
+      "intentsTitle": "Tamaño por intento",
+      "nothingToClean": "No quedan directorios de borrador por intento.",
+      "clean": "Limpiar artefactos",
+      "cleaning": "Limpiando…",
+      "notePlaceholder": "Nota opcional para el registro",
+      "historyTitle": "Historial de limpiezas",
+      "historyHint": "Cada limpieza queda registrada para distinguir lo eliminado a propósito de lo perdido.",
+      "historyEmpty": "Aún no se ha limpiado nada.",
+      "colWhen": "Cuándo",
+      "colFreed": "Liberado",
+      "colFiles": "Archivos",
+      "colActor": "Por",
+      "colNote": "Nota"
     }
   },
   "retest": {

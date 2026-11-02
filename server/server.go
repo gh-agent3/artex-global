@@ -937,6 +937,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/chat/upload", s.chatUpload) // upload method 1: write into uploads/ under the conversation/task working dir
 	mux.HandleFunc("GET /api/tasks/{id}/chat/status", s.taskChatStatus)
 	mux.HandleFunc("POST /api/tasks/{id}/chat/stop", s.stopChat)
+	mux.HandleFunc("GET /api/tasks/{id}/provenance", s.taskProvenance)
+	mux.HandleFunc("POST /api/tasks/{id}/provenance/cleanup", s.taskProvenanceCleanup)
 
 	// --- admin console API (PostgreSQL data source; v2 database and admin console design) ---
 	mux.HandleFunc("DELETE /api/tasks/{id}", s.pgDeleteTask)
