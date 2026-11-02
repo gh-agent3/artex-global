@@ -4,10 +4,15 @@ import * as React from "react";
 
 import { ExplorationGraph } from "@/components/exploration-graph";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDemoMode } from "@/components/demo-mode";
 import { api } from "@/lib/api";
+import { maskText } from "@/lib/demo";
 import type { Edge, TaskNode } from "@/lib/types";
 
 export function GraphTab({ taskId }: { taskId: string }) {
+  // Node summaries carry target hostnames; the demo rules are applied to the raw payload
+  // before it reaches the graph, so labels and the detail panel are both covered.
+  const { demo, rules } = useDemoMode();
   const [nodes, setNodes] = React.useState<TaskNode[]>([]);
   const [edges, setEdges] = React.useState<Edge[]>([]);
   // 上一次图数据的签名:轮询拿到相同数据时跳过 setState,避免整图无谓重建(拖动时
@@ -22,7 +27,9 @@ export function GraphTab({ taskId }: { taskId: string }) {
         .explorationGraph(taskId)
         .then((g) => {
           if (cancelled) return;
-          const ns = g.nodes ?? [];
+          const ns = (g.nodes ?? []).map((n) =>
+            demo && rules.length > 0 && n.payload ? { ...n, payload: maskText(n.payload, rules) } : n,
+          );
           const es = g.edges ?? [];
           const sig = JSON.stringify([
             ns.map((n) => [n.id, n.type, n.state, n.priority, n.payload]),

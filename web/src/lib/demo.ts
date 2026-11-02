@@ -65,9 +65,8 @@ export function maskText(text: string, rules: RegExp[]): string {
   return out;
 }
 
-// maskedValue keeps a length hint for secrets: the last four characters, nothing else.
+// maskedValue is a fixed mask on purpose: keeping the last characters leaked the TLD
+// ("customer-portal.example" -> "••••••.com"), which defeats the point.
 export function maskedValue(value: string): string {
-  if (!value) return "—";
-  if (value.length <= 8) return "••••••";
-  return `••••••${value.slice(-4)}`;
+  return value ? "••••••" : "—";
 }
