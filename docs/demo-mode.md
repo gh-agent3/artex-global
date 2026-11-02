@@ -129,10 +129,37 @@ too many false positives and false negatives to trust in a demo.
   text content, not pixels).
 - Regression: with demo off, no mask element is rendered at all.
 
-## Open questions
+## Decisions
 
-1. Should the target host (`target` class) be masked by default, or only when the operator
-   turns that class on? Masking it by default makes the demo safer but also less useful.
-2. Should revealing one field survive a page refresh? Recommendation: no - a refresh during
-   a recording should return to the safe state.
-3. Do we need a separate "presentation" preset that also hides the sidebar and system pages?
+1. `target` (hosts, IPs, URLs) is masked by default, like the other classes.
+2. A revealed field never survives a refresh: reload returns to the safe state.
+3. No separate "presentation" preset; the eye plus the class switches are enough.
+
+## Settings: where they live and what they contain
+
+System -> System settings, first card **Demo mode**.
+
+- **Sensitive classes** - four checkboxes (secret / identity / target / evidence), all on by
+  default.
+- **Custom masking rules** - one regular expression per line, with a live preview box. Rules
+  apply to free text (evidence blocks, command output, report bodies) where a field-level
+  component cannot be used.
+- **Save** writes both to the instance: `GET/PUT /api/settings/demo`, stored in the
+  `settings` KV as `demo_classes` and `demo_rules`. The server validates every rule with
+  `regexp.Compile` at save time, so a broken pattern is rejected instead of silently failing
+  to mask during a demo.
+- The on/off switch is NOT here: it is the eye in the header and lives per browser in the
+  `demo_mode` cookie.
+
+## Rendering contract (phase 1, implemented)
+
+- `DemoModeProvider` in `(main)/layout.tsx`: reads the cookie, applies `data-demo` to
+  `<html>`, loads the instance settings, owns the reveal state (15 s auto-hide, cleared on
+  route change, tab blur and when demo is switched on).
+- `ThemeBootScript` sets `data-demo` before the first paint, so nothing flashes unmasked.
+- `<Sensitive kind="secret" value={...}>` - one field, masked, click to reveal.
+- `<DemoText block>` / `<DemoMarkdown>` - free text with the operator's rules applied.
+- `DemoToggle` (eye) sits in the global header and in the task detail header, and
+  `Ctrl/Cmd+Shift+D` toggles it.
+- Wired in phase 1: LLM key hints, the report body, and the task detail header badge.
+  Assets, findings tables, traffic bodies and transcripts are phase 2.
