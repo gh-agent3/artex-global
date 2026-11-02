@@ -55,6 +55,16 @@ roles and names, so read the snapshot first and then click what it shows.
    memory), use `eval`.
 5. Save a screenshot into the task directory when it is evidence for a finding.
 
+## Pitfalls
+
+- **Changing only the URL fragment does not reload the page.** `goto https://h/page#token`
+  while already on `https://h/page#other` keeps the old DOM, so the page script never
+  re-runs and you read stale text. Add a throwaway query to force a real load:
+  `goto "https://h/page/?r=1#token"`.
+- The snapshot is an aria tree, not HTML: it lists roles, names and hrefs. If an element
+  you expect is missing, the page has not finished rendering - run `snapshot` again.
+- `eval` returns JSON for objects; read it, do not print whole pages into the context.
+
 ## Fragment and client-side flows
 
 Links like `https://host/invite/#token=...` or `#/login` never send the fragment
