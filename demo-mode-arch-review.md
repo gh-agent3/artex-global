@@ -76,10 +76,14 @@ hint (last4 / "set"), the real value never leaves the server. ARTEX already does
 LLM keys (api_key_hint); it is the right permanent treatment for `secret` class, and it
 makes the demo problem for secrets smaller than it looks.
 
-Consensus: mask at the boundary of what you protect. Protect the screen -> client mask.
-Protect exports/API -> boundary redact. Protect against the viewer having devtools ->
-server redact. ARTEX's threat model is "screen recording and screenshots", so the client
-mask lane is the primary; exports are the hole; devtools are out of scope for phase 2.
+Threat model (operator decision 2026-11-02): demo mode exists for VIDEO RECORDING and
+live presales screen shares. The viewer sees the screen, nothing else. Therefore:
+- downloads and exports are OUT OF SCOPE - the operator decided they are not masked;
+- devtools / network tab are OUT OF SCOPE - no viewer opens them on a sales call;
+- the ONLY thing that must be protected is what is rendered and what can be selected or
+  screenshotted from the page.
+With that model the architecture collapses to ONE lane: the client-side Mask lane.
+The server redaction middleware (previous finding 3) is dropped as unnecessary.
 
 ## System view
 
@@ -103,14 +107,9 @@ flowchart LR
 
 ## Findings
 
-1. CRITICAL | Downloads and exports leak everything the eye hides.
-   IMPACT: In a demo, one click on "Download" (report version, provenance artifact) or the
-   findings CSV export writes the real data to disk; the eye becomes theatre.
-   ROOT CAUSE: masking exists only in the render layer; the three download paths
-   (taskReportDownload blob, taskProvenanceFile blob, findings CSV) fetch raw bytes.
-   RECOMMENDATION: per Datadog's rule, masked data accessed programmatically stays obfuscated:
-   apply `maskText` to the blob text for Markdown/report downloads, and refuse the findings
-   CSV export while demo mode is on (a CSV is a data product, not a view). EFFORT: S.
+1. OUT OF SCOPE (operator decision) | Downloads and exports are not masked.
+   The threat model is screen recording; the operator explicitly decided downloads stay
+   real. Kept here only as a record of the considered-and-rejected option.
 
 2. HIGH | Per-surface masking cannot be complete.
    IMPACT: every new or missed surface leaks; the exploration graph already did
@@ -123,15 +122,10 @@ flowchart LR
    fields that need click-to-reveal (then exempt those field names from transport masking).
    Delete the per-surface DemoText/DemoMarkdown/graph masking. EFFORT: M.
 
-3. HIGH | No server-side (strict) lane; values always leave the API.
-   IMPACT: anyone with devtools sees everything; a demo over a shared screen with the
-   network tab open is not safe.
-   ROOT CAUSE: demo mode is a browser cookie; the API has no notion of it.
-   RECOMMENDATION: client sends `X-Demo: 1` when the eye is on; a middleware at
-   `root.Handle("/api/", ...)` applies the same rules to JSON responses (buffer with a size
-   cap, skip SSE and file downloads). Guard the edit-form hazard: while demo is on, the
-   client disables save/edit controls (simplest) or the middleware skips endpoints that
-   feed forms. EFFORT: M.
+3. OUT OF SCOPE (operator decision) | No server-side redaction lane.
+   Devtools are outside the threat model (screen recording / presales), so values leaving
+   the API unmasked is accepted. The edit-form hazard disappears with it: forms always
+   receive real values because the API never redacts.
 
 4. MEDIUM | Regex rules only cover free text; typed values in arbitrary fields are not.
    IMPACT: an e-mail or hostname sitting in a field no rule names stays visible.
@@ -165,14 +159,15 @@ flowchart LR
 - Testability: NOT ASSESSED in phase 1 - add a render test asserting no fixture secret
   appears in demo-mode output (see actions).
 
-## Top five actions (impact over effort)
+## Top actions (impact over effort)
 
-1. Mask downloads and block CSV export while the eye is on (finding 1) - S, closes the
-   biggest hole.
-2. Move masking to the client transport with a field-name denylist + rules; delete
-   per-surface masking except `<Sensitive>` revealables (finding 2) - M, ends the
-   whack-a-mole.
-3. Add the `X-Demo` server redaction middleware with edit-lock while demo is on
-   (finding 3) - M, enables demos with devtools open.
-4. Publish the field-name denylist from Go and consume it in the client (finding 4) - S.
-5. Add a fixture-secret render test and the starter rule library (findings 5, testability) - S.
+1. Move masking to the client transport `http<T>()` with a field-name denylist + the
+   regex rules; delete per-surface masking except `<Sensitive>` revealables (finding 2) -
+   M, ends the whack-a-mole and covers every current and future surface.
+2. Publish the field-name denylist from Go and consume it in the client (finding 4) - S,
+   one source of truth for "what is sensitive".
+3. Add a fixture-secret render test (no fixture secret appears in demo-mode output) - S,
+   regression net for the masking itself.
+4. Ship the starter rule library as clickable chips (email, IPv4, hostname, bearer token)
+   instead of free typing only (finding 5) - S.
+5. Everything else (server redaction, download masking) is rejected by the threat model.
