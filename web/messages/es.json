@@ -3831,7 +3831,8 @@
       "secret": "Secretos (claves, tokens, cookies)",
       "identity": "Identidad (usuarios, correos)",
       "target": "Objetivo (hosts, IPs, URL)",
-      "evidence": "Evidencia (PoC, comandos, salida)"
+      "evidence": "Evidencia (PoC, comandos, salida)",
+      "taskname": "Nombres de tareas (hosts del objetivo)"
     },
     "rulesTitle": "Reglas de enmascarado",
     "rulesHint": "Una expresión regular por línea, aplicada a texto libre como bloques de evidencia y salida de comandos. Las coincidencias se sustituyen por una máscara.",

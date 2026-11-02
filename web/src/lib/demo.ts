@@ -4,7 +4,8 @@
 // first paint; WHAT is masked is an instance setting (classes + custom regex rules) and
 // comes from the server.
 
-export const DEMO_CLASSES = ["secret", "identity", "target", "evidence"] as const;
+// Task names are target hostnames in this product, hence their own class (on by default).
+export const DEMO_CLASSES = ["secret", "identity", "target", "evidence", "taskname"] as const;
 export type DemoClass = (typeof DEMO_CLASSES)[number];
 
 export type DemoSettings = {
@@ -13,7 +14,7 @@ export type DemoSettings = {
 };
 
 export const DEMO_DEFAULTS: DemoSettings = {
-  classes: ["secret", "identity", "target", "evidence"],
+  classes: ["secret", "identity", "target", "evidence", "taskname"],
   rules: [],
 };
 

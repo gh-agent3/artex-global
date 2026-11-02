@@ -47,6 +47,7 @@ import { toast } from "sonner";
 
 import { AssetInterceptRulesEditor } from "@/components/asset-intercept-rules-editor";
 import { StatusBadge } from "@/components/status-badge";
+import { useDemoMode } from "@/components/demo-mode";
 import { TablePagination } from "@/components/table-pagination";
 import { TaskLLMProfileChain } from "@/components/task-llm-profile-chain";
 import { TaskTemplateControls } from "@/components/task-template-controls";
@@ -1328,6 +1329,9 @@ const TaskRow = React.memo(function TaskRow({
 
 function TaskNameEditor({ task, onRename }: { task: Task; onRename: (task: Task, name: string) => Promise<void> }) {
   const t = useTranslations("tasksPage");
+  // Task names are target hostnames, so demo mode masks them here.
+  const { demo, enabled } = useDemoMode();
+  const hideName = enabled("taskname");
   const [editing, setEditing] = React.useState(false);
   const [name, setName] = React.useState(task.name ?? "");
   const [saving, setSaving] = React.useState(false);
@@ -1399,9 +1403,23 @@ function TaskNameEditor({ task, onRename }: { task: Task; onRename: (task: Task,
       <Link
         href={`/function/tasks/detail?id=${encodeURIComponent(task.id)}`}
         className="min-w-0 truncate rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        title={task.name?.trim() ? task.name : task.description}
+        title={
+          demo && hideName
+            ? undefined
+            : task.name?.trim()
+              ? task.name
+              : task.description
+        }
       >
-        {task.name?.trim() ? task.name : <span className="text-muted-foreground">{t("row.unnamed")}</span>}
+        {demo && hideName && task.name?.trim() ? (
+          // The row is a link, so a per-field reveal button would nest interactive
+          // elements; here the mask is revealed by turning demo mode off.
+          <span className="text-muted-foreground">••••••</span>
+        ) : task.name?.trim() ? (
+          task.name
+        ) : (
+          <span className="text-muted-foreground">{t("row.unnamed")}</span>
+        )}
       </Link>
       <Button
         type="button"

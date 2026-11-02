@@ -17,7 +17,10 @@ const (
 
 // demoDefaultClasses mirrors the plan: target hosts are masked by default too, because a
 // client demo usually must not reveal which site was tested.
-var demoDefaultClasses = []string{"secret", "identity", "target", "evidence"}
+// Task names ARE target hostnames ("internal-app", "customer-portal.example"), so they are masked by
+// default as their own class: an operator may want to show the host but hide the task title,
+// or the other way round.
+var demoDefaultClasses = []string{"secret", "identity", "target", "evidence", "taskname"}
 
 type demoSettingsPayload struct {
 	Classes []string `json:"classes"`
@@ -55,7 +58,7 @@ func (s *Server) demoSettingsSave(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	allowed := map[string]bool{"secret": true, "identity": true, "target": true, "evidence": true}
+	allowed := map[string]bool{"secret": true, "identity": true, "target": true, "evidence": true, "taskname": true}
 	classes := make([]string, 0, len(req.Classes))
 	for _, c := range req.Classes {
 		c = strings.TrimSpace(c)

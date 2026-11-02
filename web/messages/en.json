@@ -3831,7 +3831,8 @@
       "secret": "Secrets (keys, tokens, cookies)",
       "identity": "Identity (logins, e-mails)",
       "target": "Target (hosts, IPs, URLs)",
-      "evidence": "Evidence (PoC, commands, output)"
+      "evidence": "Evidence (PoC, commands, output)",
+      "taskname": "Task names (target hostnames)"
     },
     "rulesTitle": "Custom masking rules",
     "rulesHint": "One regular expression per line, applied to free text such as evidence blocks and command output. Matches are replaced with a mask.",

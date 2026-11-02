@@ -37,6 +37,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DemoBadge, DemoToggle } from "@/components/demo-toggle";
+import { Sensitive, useDemoMode } from "@/components/demo-mode";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/lib/api";
 import type { LLMProfile, Task } from "@/lib/types";
@@ -369,8 +370,10 @@ function TaskDetailInner() {
               <ArrowLeftIcon />
             </Link>
           </Button>
-          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold" title={task.name || task.description}>
-            {task.name || task.description}
+          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
+            <Sensitive kind="taskname" value={task.name || task.description}>
+              {task.name || task.description}
+            </Sensitive>
           </h1>
           <code className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:inline">
             {task.id}
@@ -401,13 +404,13 @@ function TaskDetailInner() {
             </Tooltip>
           )}
           <DemoToggle />
+          <DemoBadge />
           <Button size="sm" variant={controlVariant} onClick={togglePause} disabled={terminal}>
             {controlIcon}
             {controlLabel}
           </Button>
         </div>
         <p className="truncate text-xs text-muted-foreground">{task.goal}</p>
-          <DemoBadge />
         {/* Tabs */}
         <div className="no-scrollbar min-w-0 overflow-x-auto">
           <TabsList variant="default" className="min-w-max">
