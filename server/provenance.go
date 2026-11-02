@@ -75,7 +75,7 @@ func (s *Server) taskProvenance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dir := filepath.Join(s.m.dir, "tasks", t.ID)
-	view := provenanceView{Path: dir}
+	view := provenanceView{Path: dir, Intents: []provenanceIntent{}, Cleanups: []db.ProvenanceCleanup{}}
 	entries, err := os.ReadDir(dir)
 	if err == nil {
 		view.Exists = true
@@ -110,7 +110,7 @@ func (s *Server) taskProvenance(w http.ResponseWriter, r *http.Request) {
 	view.Files = view.CleanableNo + view.OtherFiles
 	if pg := s.pg(w); pg != nil {
 		taskID, _ := strconv.ParseInt(t.ID, 10, 64)
-		if list, err := pg.ListProvenanceCleanups(taskID); err == nil {
+		if list, err := pg.ListProvenanceCleanups(taskID); err == nil && list != nil {
 			view.Cleanups = list
 		}
 	}

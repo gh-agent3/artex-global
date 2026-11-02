@@ -105,13 +105,13 @@ export function ProvenanceTab({ taskId }: { taskId: string }) {
             </span>
           </div>
 
-          {data.intents.length > 0 ? (
+          {(data.intents ?? []).length > 0 ? (
             <div className="grid gap-1">
               <div className="text-xs font-medium">{t("intentsTitle")}</div>
               <div className="max-h-64 overflow-y-auto rounded-md border">
                 <table className="w-full text-xs">
                   <tbody>
-                    {data.intents.slice(0, 60).map((it) => (
+                    {(data.intents ?? []).slice(0, 60).map((it) => (
                       <tr key={it.name} className="border-b last:border-0">
                         <td className="px-2 py-1 font-mono">{it.name}</td>
                         <td className="px-2 py-1 text-right tabular-nums">{formatBytes(it.bytes)}</td>
@@ -147,7 +147,7 @@ export function ProvenanceTab({ taskId }: { taskId: string }) {
           <CardDescription>{t("historyHint")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {data.cleanups.length === 0 ? (
+          {(data.cleanups ?? []).length === 0 ? (
             <div className="text-xs text-muted-foreground">{t("historyEmpty")}</div>
           ) : (
             <table className="w-full text-xs">
@@ -161,7 +161,7 @@ export function ProvenanceTab({ taskId }: { taskId: string }) {
                 </tr>
               </thead>
               <tbody>
-                {data.cleanups.map((c) => (
+                {(data.cleanups ?? []).map((c) => (
                   <tr key={c.id} className="border-b last:border-0">
                     <td className="px-2 py-1 whitespace-nowrap">{new Date(c.at).toLocaleString()}</td>
                     <td className="px-2 py-1 text-right tabular-nums">{formatBytes(c.freed_bytes)}</td>
