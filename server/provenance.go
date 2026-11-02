@@ -156,7 +156,7 @@ func (s *Server) taskProvenanceCleanup(w http.ResponseWriter, r *http.Request) {
 	taskID, _ := strconv.ParseInt(t.ID, 10, 64)
 	if pg := s.pg(w); pg != nil {
 		if err := pg.SaveProvenanceCleanup(taskID, freedBytes, freedFiles, "operator", req.Note); err != nil {
-			log.Printf("[provenance] task %d cleanup audit failed: %v", t.ID, err)
+			log.Printf("[provenance] task %s cleanup audit failed: %v", t.ID, err)
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
