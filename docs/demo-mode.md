@@ -42,7 +42,7 @@ attributes on `<html>` before paint. Demo mode reuses that:
 
 ## What is sensitive
 
-Four classes, each switchable in settings (default: all on):
+Five classes, each switchable in settings (default: all on):
 
 - **secret** - API keys and key hints, bearer tokens, session cookies, passwords, webhook
   secrets. Masked as `••••••` with the length hint kept (`sk-••••3f9a` is still too much;
@@ -52,6 +52,11 @@ Four classes, each switchable in settings (default: all on):
   is usually the thing that must not leak.
 - **evidence** - PoC blocks, command lines and command output, captured request/response
   bodies. These are blocks, not single values: masked with a one-line placeholder.
+- **taskname** - the task title, which in this product IS the target hostname (`internal-app`,
+  `customer-portal.example`). Its own class because an operator may want to show the host but hide the
+  title, or the reverse. In the task list the mask is revealed by turning demo mode off (the
+  row is a link, so a per-field reveal button would nest interactive elements); in the task
+  detail header it reveals on click.
 
 Classification lives next to the render site (`<Sensitive kind="secret">`), not in a global
 regex. A regex over free text (chat, transcripts, agent output) is a phase-3 nice-to-have:
@@ -131,7 +136,8 @@ too many false positives and false negatives to trust in a demo.
 
 ## Decisions
 
-1. `target` (hosts, IPs, URLs) is masked by default, like the other classes.
+1. `target` (hosts, IPs, URLs) is masked by default, like the other classes, and so is
+   `taskname` - a task title is a target hostname here.
 2. A revealed field never survives a refresh: reload returns to the safe state.
 3. No separate "presentation" preset; the eye plus the class switches are enough.
 
