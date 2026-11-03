@@ -9,12 +9,12 @@
 #
 #   docker build -f Dockerfile.artex -t artex-local:<tag> .
 #
-// Build args:
-//   ARTEX_GIT_SHA   commit the source tree came from, recorded in the label
-//   ARTEX_VERSION   version string embedded in the binary (git describe from build.sh)
-//   ARTEX_COMMIT_SHA / ARTEX_COMMIT_SUBJECT / ARTEX_COMMIT_TIME / ARTEX_REPO_URL
-//                   commit metadata shown next to the version in the UI header
-//   TARGETARCH      amd64 (default) or arm64, set by buildx/buildkit
+# Build args:
+#   ARTEX_GIT_SHA   commit the source tree came from, recorded in the label
+#   ARTEX_VERSION   version string embedded in the binary (git describe from build.sh)
+#   ARTEX_COMMIT_SHA / ARTEX_COMMIT_SUBJECT / ARTEX_COMMIT_TIME / ARTEX_REPO_URL
+#                   commit metadata shown next to the version in the UI header
+#   TARGETARCH      amd64 (default) or arm64, set by buildx/buildkit
 
 ARG NODE_IMAGE=node:22-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da
 ARG GO_IMAGE=golang:1.26-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb
