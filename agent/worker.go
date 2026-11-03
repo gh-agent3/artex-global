@@ -262,6 +262,19 @@ func artifactSpec(dir string) string {
 	return "\n\n**Artifact output rules**: scripts, payloads, captured response bodies, temporary data and any other intermediate artifact **must be written to this task's working directory " + dir + "** (a relative path lands there, or use that absolute path) - **do not write to /tmp and do not use other absolute paths**."
 }
 
+// measurementSpec is section [D]: the code-owned, non-editable verification and
+// measurement discipline appended to every pentest agent's prompt. Born from
+// live pentest run defects: probe scripts crashing on expected-empty results
+// (tool-error noise), findings refuted by source (registration-without-invite,
+// refresh-rotation), and a "no per-IP limiter" conclusion drawn from a
+// nonexistent user while the real per-account limiter was never measured clean.
+func measurementSpec() string {
+	return "\n\n**Verification and measurement discipline** (mandatory for every probe and every finding):\n" +
+		"- Probe scripts: validate inputs before use and handle expected-empty outcomes explicitly (no rows, empty list, missing field, 404 body). Print a clear marker such as `RESULT: not_found` and exit 0. A crashed probe (IndexError, `no rows in result set`, any traceback) marks the whole tool result as an error and pollutes the run - \"empty\" is a normal answer, not a failure.\n" +
+		"- Before report_finding you must verify the claim: cite the exact source reference (file/function/line) that proves the mechanism, or reproduce the behaviour in a clean session. A claim contradicted by the source, or seen once and never re-checked, is a lead for record_fact - not a finding.\n" +
+		"- Rate-limit and abuse testing: always identify the bucket you are measuring (per-account vs per-ip vs per-session) and say which one a result proves. Never conclude \"no limiter\" from a nonexistent identity or an already-warmed bucket. Measure from a clean bucket (fresh account / untouched ip), pace requests, stop on the first limit signal, and do not consume the bucket you still need for the next step."
+}
+
 // workerArtifactSpec is section [C] for the worker: its per-intent run dir is pre-created
 // by the engine (ensureRunDir), so it just writes relative paths there — no manual
 // mkdir, no cross-worker name collisions.
@@ -291,7 +304,7 @@ func workerSystem(proxyAddr, caCert, dataDir, runDir string) string {
 	// caCert is present only when the recording MITM is on, which is exactly when
 	// the traffic_* tools are registered — so it gates the traffic-tool note.
 	// Optional finding guidance is added for every role after tool resolution.
-	return body + workerTrafficBlock(caCert != "") + workerArtifactSpec(runDir) + langDirective(resolveOutputLang())
+	return body + workerTrafficBlock(caCert != "") + workerArtifactSpec(runDir) + measurementSpec() + langDirective(resolveOutputLang())
 }
 
 // renderIntentTask formats the claimed intent for the worker's launch USER message:

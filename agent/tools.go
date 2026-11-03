@@ -1246,20 +1246,21 @@ func (t *ToolSet) goalMet() actool.CoreTool {
 // --- worker write tools ---
 
 func (t *ToolSet) addFinding() actool.CoreTool {
-	return writeTool("report_finding", "Records a confirmed finding; use evidence for verifiable proof such as command output and logs. In a task context pass the current intent_id. The returned finding_id is the standalone finding record ID and finding_node_id is the exploration node ID (the first line keeps that node number).", obj(map[string]any{
+	return writeTool("report_finding", "Records a confirmed finding; use evidence for verifiable proof such as command output and logs. In a task context pass the current intent_id. The returned finding_id is the standalone finding record ID and finding_node_id is the exploration node ID (the first line keeps that node number). The claim must be VERIFIED before filing: confirmed against the exact source reference (file/function/line) or reproduced in a clean session - an unverified inference is a lead for record_fact, not a finding.", obj(map[string]any{
 		"vulnclass": str("vulnerability class"), "name": str("vulnerability name"), "severity": str("critical|high|medium|low"), "summary": str("finding summary"),
 		"intent_id": idp("intent id of the current task"), "asset_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer"}, "description": "affected asset ids"},
 		"evidence":         str("evidence/PoC text"),
+		"verification":     str("mandatory: how the claim was verified - the exact source reference (file/function/line) proving the mechanism, or the clean-session reproduction that demonstrated it"),
 		"evidence_hint_id": idp("optional: id of the hint node in this task that corresponds to this finding; its structured traffic_refs are carried over automatically; must not reference an inherited hint or another finding's hint"),
 		"traffic_refs": map[string]any{"type": "array", "description": "optional; for HTTP/HTTPS findings first search and verify that each request/response really supports the conclusion, then fill in the real IDs in reproduction order. For non-HTTP findings such as TCP, or when nothing was captured or no exact record matches, omit it or pass [] - reporting is not blocked; explain why in evidence and give other verifiable evidence. Do not guess IDs, infer a link from domain/time, or re-probe just to fill in packets. Roles: baseline normal control / proof vulnerability proof / verification extra verification / supporting auxiliary evidence.",
 			"items": obj(map[string]any{"traffic_id": str("real traffic ID returned by traffic_search"), "role": map[string]any{"type": "string", "enum": []string{"baseline", "proof", "verification", "supporting"}}, "note": str("how this traffic supports the finding")}, "traffic_id")},
-	}, "vulnclass", "severity", "summary"), func(ctx context.Context, in json.RawMessage) (actool.Result, error) {
+	}, "vulnclass", "severity", "summary", "verification"), func(ctx context.Context, in json.RawMessage) (actool.Result, error) {
 		var a struct {
-			VulnClass, Name, Severity, Summary, Evidence string
-			IntentID                                     json.RawMessage   `json:"intent_id"`
-			AssetIDs                                     []json.RawMessage `json:"asset_ids"`
-			TrafficRefs                                  []db.TrafficRef   `json:"traffic_refs"`
-			EvidenceHintID                               json.RawMessage   `json:"evidence_hint_id"`
+			VulnClass, Name, Severity, Summary, Evidence, Verification string
+			IntentID                                                   json.RawMessage   `json:"intent_id"`
+			AssetIDs                                                   []json.RawMessage `json:"asset_ids"`
+			TrafficRefs                                                []db.TrafficRef   `json:"traffic_refs"`
+			EvidenceHintID                                             json.RawMessage   `json:"evidence_hint_id"`
 		}
 		if err := json.Unmarshal(in, &a); err != nil {
 			return actool.Errorf(err.Error()), nil
@@ -1278,11 +1279,24 @@ func (t *ToolSet) addFinding() actool.CoreTool {
 		if len(a.EvidenceHintID) > 0 && pid(a.EvidenceHintID) <= 0 {
 			return actool.Errorf("evidence_hint_id must be a valid hint node ID; omit it when there is no handoff hint"), nil
 		}
+		// Mandatory verification gate: a finding must be proven against source or a
+		// clean session before it is filed. Refuted-by-source claims (#54, #62 on
+		// customer-portal.example) slipped through when filing was cheaper than checking.
+		verification := strings.TrimSpace(a.Verification)
+		if verification == "" {
+			return actool.Errorf("report_finding requires verification: cite the exact source reference (file/function/line) that proves the mechanism, or describe the clean-session reproduction that demonstrated it. If you cannot verify the claim, do not file it - record a fact with the lead so the planner can dispatch a verification intent"), nil
+		}
+		evidence := a.Evidence
+		if strings.TrimSpace(evidence) == "" {
+			evidence = verification
+		} else {
+			evidence = evidence + "\n\nVerification: " + verification
+		}
 		refs, err := t.findingRefsFromHint(pid(a.EvidenceHintID), a.TrafficRefs)
 		if err != nil {
 			return actool.Errorf(err.Error()), nil
 		}
-		input := db.RecordFindingInput{TaskID: t.taskID, ExplorationID: t.ts.ID(), IntentID: pid(a.IntentID), VulnClass: a.VulnClass, Name: a.Name, Severity: a.Severity, Summary: a.Summary, Evidence: a.Evidence, Worker: t.worker, AssetIDs: pidList(a.AssetIDs)}
+		input := db.RecordFindingInput{TaskID: t.taskID, ExplorationID: t.ts.ID(), IntentID: pid(a.IntentID), VulnClass: a.VulnClass, Name: a.Name, Severity: a.Severity, Summary: a.Summary, Evidence: evidence, Worker: t.worker, AssetIDs: pidList(a.AssetIDs)}
 		var recorded *db.RecordedFinding
 		if t.findingRecorder != nil {
 			recorded, err = t.findingRecorder.Record(ctx, input, refs)

@@ -102,7 +102,7 @@ Never invent findings; answer only from the real data the tools return.`
 
 func mainAgentSystem(goal, dataDir, workDir string) string {
 	body := renderSystem("mainagent", mainAgentDefaultTmpl, MainVars{Goal: goal, DataDir: dataDir, Now: nowStr()})
-	return body + artifactSpec(workDir) + langDirective(resolveOutputLang())
+	return body + artifactSpec(workDir) + measurementSpec() + langDirective(resolveOutputLang())
 }
 
 // Chat handles one human message and returns the assistant reply. emit, if

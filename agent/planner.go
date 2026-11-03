@@ -341,7 +341,7 @@ Do not repeat, do not pad; but when the goal is unmet and a deeper uncovered app
 
 func plannerSystem(goal, dataDir, workDir string) string {
 	body := renderSystem("planner", plannerDefaultTmpl, PlannerVars{Goal: goal, DataDir: dataDir, Now: nowStr()})
-	return body + artifactSpec(workDir) + langDirective(resolveOutputLang())
+	return body + artifactSpec(workDir) + measurementSpec() + langDirective(resolveOutputLang())
 }
 
 // Plan runs one planning round. emit, if non-nil, receives the planner's execution
