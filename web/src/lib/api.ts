@@ -251,7 +251,16 @@ function interceptPageQuery(page: number, size: number, filter: InterceptApprova
 
 export const api = {
   // backend app version (injected via ldflags on release, "dev" by default).
-  health: () => get<{ ok: boolean; service: string; version: string }>("/health"),
+  health: () =>
+    get<{
+      ok: boolean;
+      service: string;
+      version: string;
+      commit_sha?: string;
+      commit_subject?: string;
+      commit_time?: string;
+      commit_url?: string;
+    }>("/health"),
 
   // ---- auth ----
   authStatus: () => get<{ initialized: boolean; setup_token_required?: boolean }>("/auth/status"),

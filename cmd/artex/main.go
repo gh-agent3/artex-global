@@ -26,6 +26,15 @@ import (
 // -ldflags "-X main.version=<tag>". Defaults to "dev" for local builds.
 var version = "dev"
 
+// Commit metadata injected via -ldflags at build time (see build.sh /
+// build-image.sh); all empty for plain local builds.
+var (
+	commitSHA     string
+	commitSubject string
+	commitTime    string
+	repoURL       string
+)
+
 const banner = `
     _    ____ _____ _______  __
    / \  |  _ \_   _| ____\ \/ /
@@ -61,6 +70,10 @@ func run() int {
 	// hand the build version to the server package so GET /api/health can report it
 	// to the frontend top bar.
 	server.BuildVersion = version
+	server.BuildCommitSHA = commitSHA
+	server.BuildCommitSubject = commitSubject
+	server.BuildCommitTime = commitTime
+	server.BuildRepoURL = repoURL
 
 	printBanner(*addr)
 

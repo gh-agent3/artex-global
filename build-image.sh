@@ -16,11 +16,22 @@ fi
 SHA=$(git -C "$SRC" rev-parse HEAD)
 SHORT=$(git -C "$SRC" rev-parse --short HEAD)
 VERSION=$(git -C "$SRC" describe --tags --always --dirty 2>/dev/null || echo "$SHORT")
+SUBJECT=$(git -C "$SRC" log -1 --format=%s)
+CTIME=$(git -C "$SRC" log -1 --format=%cI)
+REPO_URL=$(git -C "$SRC" remote get-url origin 2>/dev/null || true)
+case "$REPO_URL" in
+  git@*:*/*) REPO_URL="https://$(echo "$REPO_URL" | sed 's/^git@//; s/:/\//; s/\.git$//')" ;;
+  *.git) REPO_URL="${REPO_URL%.git}" ;;
+esac
 
 docker build \
   -f "$(cd "$(dirname "$0")" && pwd)/Dockerfile.artex" \
   --build-arg ARTEX_GIT_SHA="$SHA" \
   --build-arg ARTEX_VERSION="${VERSION#v}" \
+  --build-arg ARTEX_COMMIT_SHA="$SHA" \
+  --build-arg ARTEX_COMMIT_SUBJECT="$SUBJECT" \
+  --build-arg ARTEX_COMMIT_TIME="$CTIME" \
+  --build-arg ARTEX_REPO_URL="$REPO_URL" \
   -t "artex-local:$SHORT" \
   "$SRC"
 

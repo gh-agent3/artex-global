@@ -97,6 +97,15 @@ if [ -z "${ARTEX_BUILD_VERSION:-}" ]; then
     ARTEX_BUILD_VERSION="dev"
   fi
 fi
+# Commit metadata for the UI header (version tooltip + GitHub link); empty outside a repo.
+ARTEX_BUILD_COMMIT_SHA="$(git rev-parse HEAD 2>/dev/null || true)"
+ARTEX_BUILD_COMMIT_SUBJECT="$(git log -1 --format=%s 2>/dev/null || true)"
+ARTEX_BUILD_COMMIT_TIME="$(git log -1 --format=%cI 2>/dev/null || true)"
+ARTEX_BUILD_REPO_URL="$(git remote get-url origin 2>/dev/null || true)"
+case "$ARTEX_BUILD_REPO_URL" in
+  git@*:*/*) ARTEX_BUILD_REPO_URL="https://$(echo "$ARTEX_BUILD_REPO_URL" | sed 's/^git@//; s/:/\//; s/\.git$//')" ;;
+  *.git) ARTEX_BUILD_REPO_URL="${ARTEX_BUILD_REPO_URL%.git}" ;;
+esac
 # Release tags are commonly passed as v0.3.3; keep the binary version consistent.
 ARTEX_BUILD_VERSION="${ARTEX_BUILD_VERSION#v}"
 ARTEX_OUTPUT_DIR="${ARTEX_OUTPUT_DIR:-dist}"
@@ -219,7 +228,7 @@ build_target() {
   go build \
     -tags embedui \
     -trimpath \
-    -ldflags "-s -w -buildid= -X main.version=${ARTEX_BUILD_VERSION}" \
+    -ldflags "-s -w -buildid= -X main.version=${ARTEX_BUILD_VERSION} -X 'main.commitSHA=${ARTEX_BUILD_COMMIT_SHA}' -X 'main.commitSubject=${ARTEX_BUILD_COMMIT_SUBJECT}' -X 'main.commitTime=${ARTEX_BUILD_COMMIT_TIME}' -X 'main.repoURL=${ARTEX_BUILD_REPO_URL}'" \
     -o "$output" \
     ./cmd/artex
 

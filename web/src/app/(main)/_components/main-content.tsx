@@ -39,11 +39,15 @@ export function MainContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const t = useTranslations("header");
   const [version, setVersion] = useState("");
+  const [commit, setCommit] = useState<{ url?: string; subject?: string; time?: string }>({});
 
   useEffect(() => {
     api
       .health()
-      .then((h) => setVersion((h.version ?? "").replace(/^v(?=\d)/, "")))
+      .then((h) => {
+        setVersion((h.version ?? "").replace(/^v(?=\d)/, ""));
+        setCommit({ url: h.commit_url, subject: h.commit_subject, time: h.commit_time });
+      })
       .catch(() => setVersion(""));
   }, []);
 
@@ -71,7 +75,21 @@ export function MainContent({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             {version && (
               <span className="font-medium text-muted-foreground text-xs tabular-nums">
-                {t("version", { version })}
+                {commit.url ? (
+                  <a
+                    href={commit.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline decoration-dotted underline-offset-2 hover:text-foreground"
+                    title={[commit.subject, commit.time ? new Date(commit.time).toLocaleString() : ""]
+                      .filter(Boolean)
+                      .join("\n")}
+                  >
+                    {t("version", { version })}
+                  </a>
+                ) : (
+                  t("version", { version })
+                )}
               </span>
             )}
             <UpdateBadge />

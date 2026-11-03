@@ -39,6 +39,16 @@ import (
 // Defaults to "dev" for local builds. Exposed to the frontend via GET /api/health.
 var BuildVersion = "dev"
 
+// Commit metadata of the build, injected from cmd/artex at startup. Empty for
+// local builds; served via GET /api/health so the header can link the exact
+// commit and show its subject + date.
+var (
+	BuildCommitSHA     string
+	BuildCommitSubject string
+	BuildCommitTime    string
+	BuildRepoURL       string
+)
+
 // 사용자에게 노출되는 writeErr 응답 문구(한국어). 에이전트에 전달되는 프롬프트·도구
 // 설명·payload·로그는 원문을 보존하고, HTTP 핸들러가 writeErr/fmt.Errorf 로 내보내는
 // 최종 사용자 응답만 한국어로 둔다. (F3b, 번역어는 완료 파일·web i18n 과 동일 표기)
@@ -1082,7 +1092,16 @@ func (s *Server) Handler() http.Handler {
 // --- handlers ---
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]any{"ok": true, "service": "artex", "version": BuildVersion})
+	out := map[string]any{"ok": true, "service": "artex", "version": BuildVersion}
+	if BuildCommitSHA != "" {
+		out["commit_sha"] = BuildCommitSHA
+		out["commit_subject"] = BuildCommitSubject
+		out["commit_time"] = BuildCommitTime
+		if BuildRepoURL != "" {
+			out["commit_url"] = BuildRepoURL + "/commit/" + BuildCommitSHA
+		}
+	}
+	writeJSON(w, 200, out)
 }
 
 func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
