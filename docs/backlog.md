@@ -26,6 +26,10 @@ decision 2026-11-02). Full analysis: `demo-mode-arch-review.md`; design: `docs/d
 
 ## Other known gaps
 
-(none - the traffic capture item was fixed on 2026-11-02: the mechanism was already wired,
+- Server-side credential redaction in activity/exploration payloads was considered and
+  REJECTED for now (operator decision 2026-11-03). See
+  `docs/adr/0001-credentials-unredacted-in-activity.md`. MUST be revisited before any
+  multi-user deployment or export feature.
+- (none other; the traffic capture item was fixed on 2026-11-02: the mechanism was already wired,
 only the `traffic_capture` and `agent_traffic_binding` switches were off; enabling them via
 PUT /api/settings started recording, verified end-to-end with a proxied request.)
