@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/traffic"
+	"github.com/Autumn-27/artex/internal/traffic"
 )
 
 type Store struct {

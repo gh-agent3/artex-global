@@ -14,7 +14,7 @@ import (
 
 	"github.com/Autumn-27/artex/agent"
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/intercept"
+	"github.com/Autumn-27/artex/internal/intercept"
 	actool "github.com/Autumn-27/norma/tool"
 )
 

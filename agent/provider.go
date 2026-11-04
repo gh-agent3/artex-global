@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Autumn-27/artex/llmrec"
+	"github.com/Autumn-27/artex/llm/rec"
 	"github.com/Autumn-27/norma/agentcore"
 	"github.com/Autumn-27/norma/compaction"
 	"github.com/Autumn-27/norma/llm"

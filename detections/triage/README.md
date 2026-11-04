@@ -29,11 +29,11 @@ carries the same honest caveat as the matching Sigma rule or indicator row.
   on the live host, or from a file you pass with `--ports-from`.
 - **Recording-proxy artifacts** — the MITM CA the recorder writes on first start,
   `<data-dir>/traffic/_ca/mitmproxy-ca-cert.pem`, and the sibling `_index/index.sqlite` and `_blobs/`
-  ([`traffic/traffic.go`](../../traffic/traffic.go); the data directory default is `data/` next to the binary).
+  ([`internal/traffic/traffic.go`](../../internal/traffic/traffic.go); the data directory default is `data/` next to the binary).
   The CA is the trust anchor of an adversary-in-the-middle traffic recorder (ATT&CK T1557).
-- **Log markers** — the enrichment prober UA `artex-enrich/1.0` ([`enrich/enrich.go`](../../enrich/enrich.go)),
-  the self-update egress UA `artex-selfupdate` ([`selfupdate/github.go`](../../selfupdate/github.go)), and
-  the platform-guard audit marker ([`guard/guard.go`](../../guard/guard.go); kept verbatim, including the
+- **Log markers** — the enrichment prober UA `artex-enrich/1.0` ([`internal/enrich/enrich.go`](../../internal/enrich/enrich.go)),
+  the self-update egress UA `artex-selfupdate` ([`internal/selfupdate/github.go`](../../internal/selfupdate/github.go)), and
+  the platform-guard audit marker ([`internal/guard/guard.go`](../../internal/guard/guard.go); kept verbatim, including the
   non-ASCII framing, so the grep matches) in the log file(s) you point it at. Rotated logs compressed as
   `.gz`/`.bz2`/`.xz` are decompressed and scanned too, so the host's log history is covered; a format with
   no standard-library codec (`.zst`/`.lz4`) is reported as **skipped** rather than silently treated as

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Autumn-27/artex/notify"
+	"github.com/Autumn-27/artex/internal/notify"
 )
 
 // This file holds the channel configuration and event layer of IM push. Delivery

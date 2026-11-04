@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/notify"
+	"github.com/Autumn-27/artex/internal/notify"
 )
 
 // Global settings keys (kept in the settings key/value table, no table of their own).

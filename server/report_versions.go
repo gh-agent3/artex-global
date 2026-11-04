@@ -11,7 +11,7 @@ import (
 
 	"github.com/Autumn-27/artex/agent"
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/report"
+	"github.com/Autumn-27/artex/internal/report"
 	"github.com/Autumn-27/norma/llm"
 )
 

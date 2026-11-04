@@ -6,7 +6,7 @@ import (
 
 	"github.com/Autumn-27/artex/agent"
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/llmpool"
+	"github.com/Autumn-27/artex/llm/pool"
 	"github.com/Autumn-27/norma/llm"
 )
 

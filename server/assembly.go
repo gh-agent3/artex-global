@@ -10,7 +10,7 @@ import (
 
 	"github.com/Autumn-27/artex/agent"
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/traffic"
+	"github.com/Autumn-27/artex/internal/traffic"
 	"github.com/Autumn-27/norma/skill"
 	actool "github.com/Autumn-27/norma/tool"
 )

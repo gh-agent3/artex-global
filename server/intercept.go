@@ -12,10 +12,10 @@ import (
 	"strings"
 
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/llmcompat"
-	"github.com/Autumn-27/artex/guard"
-	"github.com/Autumn-27/artex/intercept"
-	"github.com/Autumn-27/artex/llmrec"
+	"github.com/Autumn-27/artex/llm/compat"
+	"github.com/Autumn-27/artex/internal/guard"
+	"github.com/Autumn-27/artex/internal/intercept"
+	"github.com/Autumn-27/artex/llm/rec"
 	"github.com/Autumn-27/norma/llm"
 )
 

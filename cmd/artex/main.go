@@ -18,7 +18,7 @@ import (
 
 	"github.com/Autumn-27/artex/agent"
 	"github.com/Autumn-27/artex/config"
-	"github.com/Autumn-27/artex/selfupdate"
+	"github.com/Autumn-27/artex/internal/selfupdate"
 	"github.com/Autumn-27/artex/server"
 )
 

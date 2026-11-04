@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/notify"
+	"github.com/Autumn-27/artex/internal/notify"
 )
 
 // The HTTP surface of the notification push feature. Every route sits behind requireAuth (see Handler()),

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/guard"
-	"github.com/Autumn-27/artex/intercept"
+	"github.com/Autumn-27/artex/internal/guard"
+	"github.com/Autumn-27/artex/internal/intercept"
 	"github.com/Autumn-27/norma/agentcore"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/permission"
