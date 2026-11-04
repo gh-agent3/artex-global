@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/internal/evidence"
-	"github.com/Autumn-27/artex/internal/report"
+	"github.com/gh-agent3/artex-global/db"
+	"github.com/gh-agent3/artex-global/internal/evidence"
+	"github.com/gh-agent3/artex-global/internal/report"
 )
 
 func writeFindingsEvidenceZip(out io.Writer, findings []*db.DBFinding, stage string, now time.Time) error {

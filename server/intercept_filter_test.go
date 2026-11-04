@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/internal/intercept"
+	"github.com/gh-agent3/artex-global/db"
+	"github.com/gh-agent3/artex-global/internal/intercept"
 )
 
 func TestInterceptFilterHTTP(t *testing.T) {

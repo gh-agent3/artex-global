@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Autumn-27/artex/db"
+	"github.com/gh-agent3/artex-global/db"
 )
 
 // The manual CRUD endpoints of the constraint management in the overview plus the resolution of the

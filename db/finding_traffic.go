@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Autumn-27/artex/internal/notify"
+	"github.com/gh-agent3/artex-global/internal/notify"
 )
 
 var (

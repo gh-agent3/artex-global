@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/llm/compat"
-	"github.com/Autumn-27/artex/internal/guard"
-	"github.com/Autumn-27/artex/internal/intercept"
-	"github.com/Autumn-27/artex/llm/rec"
+	"github.com/gh-agent3/artex-global/db"
+	"github.com/gh-agent3/artex-global/llm/compat"
+	"github.com/gh-agent3/artex-global/internal/guard"
+	"github.com/gh-agent3/artex-global/internal/intercept"
+	"github.com/gh-agent3/artex-global/llm/rec"
 	"github.com/Autumn-27/norma/llm"
 )
 

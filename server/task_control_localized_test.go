@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Autumn-27/artex/db"
+	"github.com/gh-agent3/artex-global/db"
 )
 
 // task_control.go 의 작업·의도 제어 API 에러 응답을 한국어로 유지하는 회귀 방어 테스트다.

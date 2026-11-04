@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	pgdb "github.com/Autumn-27/artex/db"
+	pgdb "github.com/gh-agent3/artex-global/db"
 	"github.com/klauspost/compress/zstd"
 )
 

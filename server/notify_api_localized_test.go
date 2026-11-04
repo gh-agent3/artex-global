@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Autumn-27/artex/db"
+	"github.com/gh-agent3/artex-global/db"
 )
 
 // notify_api.go 의 알림 설정 API 응답 문구와 테스트 메시지를 한국어로 유지하는 회귀 방어

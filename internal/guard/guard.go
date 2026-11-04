@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Autumn-27/artex/internal/intercept"
+	"github.com/gh-agent3/artex-global/internal/intercept"
 	"github.com/Autumn-27/norma/hook"
 )
 

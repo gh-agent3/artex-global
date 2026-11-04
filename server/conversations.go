@@ -13,10 +13,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/Autumn-27/artex/agent"
-	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/internal/intercept"
-	"github.com/Autumn-27/artex/internal/sidequestion"
+	"github.com/gh-agent3/artex-global/agent"
+	"github.com/gh-agent3/artex-global/db"
+	"github.com/gh-agent3/artex-global/internal/intercept"
+	"github.com/gh-agent3/artex-global/internal/sidequestion"
 )
 
 const (

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/Autumn-27/artex/llm/compat"
+	"github.com/gh-agent3/artex-global/llm/compat"
 	"github.com/Autumn-27/norma/llm"
 )
 

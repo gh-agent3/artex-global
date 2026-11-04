@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Autumn-27/artex/internal/sidequestion"
+	"github.com/gh-agent3/artex-global/internal/sidequestion"
 	"github.com/Autumn-27/norma/agentcore"
 )
 

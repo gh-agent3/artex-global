@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/llm/mcphttp"
+	"github.com/gh-agent3/artex-global/db"
+	"github.com/gh-agent3/artex-global/llm/mcphttp"
 )
 
 // 자산 동기화(ScopeSentry 데이터 소스).

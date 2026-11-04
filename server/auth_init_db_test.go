@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Autumn-27/artex/db"
+	"github.com/gh-agent3/artex-global/db"
 )
 
 // 첫 실행 관리자 계정 선점 제보(/api/auth/init 무인증 호출)의 수정을 실제 DB 로 끝까지

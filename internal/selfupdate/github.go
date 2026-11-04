@@ -13,7 +13,7 @@ import (
 // Repo is the release source. Hardcoded instead of configurable: a configurable
 // update source would hand a remote-code-execution channel to anyone who can edit the
 // config, and that is not a door a pentest platform can leave open.
-const Repo = "Autumn-27/artex"
+const Repo = "gh-agent3/artex-global"
 
 // latestURL is GitHub's "latest stable release" endpoint. It skips prereleases and
 // drafts automatically.

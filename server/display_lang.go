@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	"github.com/Autumn-27/artex/config"
+	"github.com/gh-agent3/artex-global/config"
 )
 
 // face picks the operator-facing string for the active output language.

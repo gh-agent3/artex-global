@@ -4,7 +4,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/Autumn-27/artex/config"
+	"github.com/gh-agent3/artex-global/config"
 )
 
 // TestTrMsgSwitchesLanguage pins the backend output-language switching: a

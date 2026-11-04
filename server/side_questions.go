@@ -15,10 +15,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Autumn-27/artex/agent"
-	"github.com/Autumn-27/artex/db"
-	"github.com/Autumn-27/artex/llm/rec"
-	"github.com/Autumn-27/artex/internal/sidequestion"
+	"github.com/gh-agent3/artex-global/agent"
+	"github.com/gh-agent3/artex-global/db"
+	"github.com/gh-agent3/artex-global/llm/rec"
+	"github.com/gh-agent3/artex-global/internal/sidequestion"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/transcript"
 )

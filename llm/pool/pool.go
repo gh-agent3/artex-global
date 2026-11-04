@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/Autumn-27/artex/config"
+	"github.com/gh-agent3/artex-global/config"
 	"github.com/Autumn-27/norma/llm"
 )
 

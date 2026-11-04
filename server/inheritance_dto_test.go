@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Autumn-27/artex/db"
+	"github.com/gh-agent3/artex-global/db"
 )
 
 func TestInheritedDTOProvenance(t *testing.T) {

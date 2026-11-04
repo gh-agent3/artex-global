@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Autumn-27/artex/config"
+	"github.com/gh-agent3/artex-global/config"
 	"io"
 	"log"
 	"net/http"
@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Autumn-27/artex/llm/rec"
+	"github.com/gh-agent3/artex-global/llm/rec"
 	"github.com/Autumn-27/norma/agentcore"
 	"github.com/Autumn-27/norma/compaction"
 	"github.com/Autumn-27/norma/llm"

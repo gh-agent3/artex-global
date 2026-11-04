@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Autumn-27/artex/config"
+	"github.com/gh-agent3/artex-global/config"
 )
 
 func TestOperatorChromeFollowsEnglishAndRussian(t *testing.T) {

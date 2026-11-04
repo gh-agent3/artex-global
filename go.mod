@@ -1,4 +1,4 @@
-module github.com/Autumn-27/artex
+module github.com/gh-agent3/artex-global
 
 go 1.26.3
 
