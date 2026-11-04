@@ -48,34 +48,12 @@ via `/api/health`.
 
 ## Run
 
-ARTEX needs PostgreSQL. Minimal compose (adapt passwords and LLM provider settings):
+ARTEX needs PostgreSQL. A minimal working stack ships as `docker-compose.yml`
+(PostgreSQL pinned by digest, artex pinned by the binary-hash tag):
 
-```yaml
-services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: artex
-      POSTGRES_PASSWORD: change-me
-      POSTGRES_DB: artex
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  artex:
-    image: artex-local:<short-sha>-<hash>
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      ARTEX_PG_DSN: postgres://artex:change-me@postgres:5432/artex?sslmode=disable
-    ports:
-      - "8787:8787"
-    volumes:
-      - artex-data:/app/data
-
-volumes:
-  pgdata:
-  artex-data:
+```sh
+./build-image.sh .
+ARTEX_IMAGE=artex-local:<short-sha>-<hash> docker compose up -d
 ```
 
 Then open `http://127.0.0.1:8787`. Health check: `GET /api/health`.

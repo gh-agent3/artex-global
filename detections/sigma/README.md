@@ -1,15 +1,12 @@
 # ARTEX detection rules (Sigma / host · log · SIEM)
 
-English · [한국어](README.ko.md)
+English
 
-> 한국어: 이 디렉터리는 [방어·탐지 가이드(docs/defense-ko.md)](../../docs/defense-ko.md) 4절
 > "탐지 규칙"의 의사 규칙을 실제로 배포 가능한 [Sigma](https://sigmahq.io) 규칙으로 옮긴 것입니다.
 > 네트워크 계층은 [`../suricata/`](../suricata/)가 담당합니다. 모든 규칙은 자신이 소유하거나 서면
 > 허가를 받은 시스템을 지키는 **방어·탐지 목적에만** 사용하십시오. 한국어 전체 문서는
-> **[README.ko.md](README.ko.md)** 를, 전체 탐지 묶음 개요는 **[../README.ko.md](../README.ko.md)** 를 보십시오.
 
 The host, log, and SIEM layer of the ARTEX detection set. These [Sigma](https://sigmahq.io) rules
-formalize the pseudo-rules in the defense guide ([Korean](../../docs/defense-ko.md) ·
 [English](../../docs/defense-en.md), section 4) into a vendor-neutral format you convert to your own
 SIEM or EDR query language. Every indicator is grounded in a string or behaviour verified in this
 repository's source, not inferred. The network layer lives under [`../suricata/`](../suricata/); the
@@ -123,5 +120,5 @@ backends), and [`sigma_lint/`](../tests/sigma_lint/) (the full SigmaHQ validator
 Detection contributions are welcome. New rules should keep every indicator grounded in an observable fact,
 state limitations in the `description`, pass the SigmaHQ validator baseline cleanly
 (`sigma check --validation-config ../tests/sigma_lint/validators.yml .`), and avoid any content that reads
-as attack guidance. See [`../../CONTRIBUTING.en.md`](../../CONTRIBUTING.en.md) and the network layer in
+as attack guidance. See the contribution guidelines and the network layer in
 [`../suricata/`](../suricata/) / [`../README.md`](../README.md).
