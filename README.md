@@ -60,6 +60,9 @@ Then open `http://127.0.0.1:8787`. Health check: `GET /api/health`.
 
 ## Documentation
 
+- `docs/fork-review.md` — the standing process for reviewing third-party forks
+  (repos under review are saved as git remotes, one review file per repo in
+  `docs/forks/`)
 - `docs/demo-mode.md` — demo mode (screen-share masking) design and decisions
 - `docs/backlog.md` — known gaps and pending improvements
 - `docs/adr/` — architecture decision records
