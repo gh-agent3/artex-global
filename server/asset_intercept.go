@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // 자산 가로채기 규칙 검증기(validateAssetInterceptRuleReq)가 돌려주는 사용자 노출

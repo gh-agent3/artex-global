@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // cgNode is the minimal node view the cold-graph algorithms need.

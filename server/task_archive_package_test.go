@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	pgdb "github.com/gh-agent3/artex-global/db"
+	pgdb "artex-global/db"
 	"github.com/klauspost/compress/zstd"
 )
 

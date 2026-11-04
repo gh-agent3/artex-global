@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // TestTaskLLMResolutionLocalized guards F18: every user-facing reason/label that

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/agent"
+	"artex-global/db"
 )
 
 func newAdmissionTestServer(m *Manager, available func(*Task) bool) *Server {

@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/sidequestion"
+	"artex-global/agent"
+	"artex-global/db"
+	"artex-global/internal/sidequestion"
 	"github.com/Autumn-27/norma/harness"
 	"github.com/Autumn-27/norma/llm"
 )

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 	actool "github.com/Autumn-27/norma/tool"
 )
 

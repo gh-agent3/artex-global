@@ -5,7 +5,7 @@ import (
 	"log"
 	"unicode"
 
-	"github.com/gh-agent3/artex-global/agent"
+	"artex-global/agent"
 	actool "github.com/Autumn-27/norma/tool"
 )
 

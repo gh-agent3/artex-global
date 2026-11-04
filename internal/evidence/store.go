@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/traffic"
+	"artex-global/db"
+	"artex-global/internal/traffic"
 )
 
 type Store struct {

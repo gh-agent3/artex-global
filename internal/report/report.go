@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // Input bundles what the report needs.

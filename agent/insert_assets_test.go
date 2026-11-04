@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // testDB opens a DB connection, skipping if PG is unavailable.

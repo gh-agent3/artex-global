@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // TestCoreTaskLifecyclePG exercises the migrated core (tasks/exploration on PG)

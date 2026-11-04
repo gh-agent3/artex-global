@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/evidence"
+	"artex-global/db"
+	"artex-global/internal/evidence"
 )
 
 type failingFindingRecorder struct{}

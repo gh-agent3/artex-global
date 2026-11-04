@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // Scheduler drives P3 triggers: on each tick it fires due interval triggers and

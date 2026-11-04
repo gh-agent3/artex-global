@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // ---------- P3 agent triggers (사용자 지정 에이전트 전용) ----------

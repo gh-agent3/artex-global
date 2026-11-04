@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/report"
+	"artex-global/agent"
+	"artex-global/db"
+	"artex-global/internal/report"
 	"github.com/Autumn-27/norma/llm"
 )
 

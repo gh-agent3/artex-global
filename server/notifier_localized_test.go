@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // TestNotifierDeliveryReasonsLocalized guards F17: every delivery failure/defer

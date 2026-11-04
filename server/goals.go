@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/agent"
+	"artex-global/db"
 )
 
 // admitPausedTask 재개 경로(requirePaused)의 사전 조건 검증 오류 문구다. 두 문구는

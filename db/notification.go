@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/internal/notify"
+	"artex-global/internal/notify"
 )
 
 // This file holds the channel configuration and event layer of IM push. Delivery

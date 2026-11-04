@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // helper: intent/fact node

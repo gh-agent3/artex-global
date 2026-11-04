@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 const maxWorkerMessageBytes = 64 << 10

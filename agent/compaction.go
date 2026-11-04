@@ -26,8 +26,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/llm/compat"
+	"artex-global/db"
+	"artex-global/llm/compat"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/transcript"
 )

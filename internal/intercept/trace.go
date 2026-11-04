@@ -11,7 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 const (

@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/llm/mcphttp"
+	"artex-global/db"
+	"artex-global/llm/mcphttp"
 	"github.com/Autumn-27/norma/mcp"
 	actool "github.com/Autumn-27/norma/tool"
 )

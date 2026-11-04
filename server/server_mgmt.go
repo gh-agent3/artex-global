@@ -23,8 +23,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/agent"
+	"artex-global/db"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/skill"
 )

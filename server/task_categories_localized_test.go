@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // decodeErrorField pulls the "error" string out of a writeErr JSON body so the

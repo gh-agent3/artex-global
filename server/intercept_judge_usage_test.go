@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // 이 테스트는 상류 ARTEX(0.3.15 계열)에 있던

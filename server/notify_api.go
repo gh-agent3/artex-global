@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/notify"
+	"artex-global/db"
+	"artex-global/internal/notify"
 )
 
 // The HTTP surface of the notification push feature. Every route sits behind requireAuth (see Handler()),

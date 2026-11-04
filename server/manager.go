@@ -14,12 +14,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	pgdb "github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/enrich"
-	"github.com/gh-agent3/artex-global/internal/guard"
-	"github.com/gh-agent3/artex-global/internal/intercept"
-	"github.com/gh-agent3/artex-global/internal/traffic"
+	"artex-global/agent"
+	pgdb "artex-global/db"
+	"artex-global/internal/enrich"
+	"artex-global/internal/guard"
+	"artex-global/internal/intercept"
+	"artex-global/internal/traffic"
 	actool "github.com/Autumn-27/norma/tool"
 )
 

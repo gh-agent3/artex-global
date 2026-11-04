@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/transcript"
 )

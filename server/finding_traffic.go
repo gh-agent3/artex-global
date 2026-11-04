@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/evidence"
+	"artex-global/agent"
+	"artex-global/db"
+	"artex-global/internal/evidence"
 	actool "github.com/Autumn-27/norma/tool"
 )
 

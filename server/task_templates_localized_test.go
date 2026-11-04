@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // TestTaskTemplateErrorConstantsLocalized guards the F3b task-template bundle:

@@ -1,4 +1,4 @@
-module github.com/gh-agent3/artex-global
+module artex-global
 
 go 1.26.3
 

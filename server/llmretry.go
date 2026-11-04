@@ -3,8 +3,8 @@ package server
 import (
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/agent"
+	"artex-global/db"
 )
 
 // Server-side resolution of the retry policy, see docs/llm-retry-design.md. Of the five layers:

@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
+	"artex-global/agent"
 )
 
 func TestEngineDeleteBarrierRejectsNewTaskOperations(t *testing.T) {

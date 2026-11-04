@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/internal/selfupdate"
+	"artex-global/internal/selfupdate"
 )
 
 // The HTTP surface of the one-click page update. The actual download/verify/swap logic lives in the

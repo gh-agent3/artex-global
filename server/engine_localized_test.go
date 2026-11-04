@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // engine.go 의 작업 제어·의도 개입 오류 중 "사용자 노출" 문구를 한국어로 유지하는 회귀

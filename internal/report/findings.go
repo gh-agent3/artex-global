@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // Rendering for the findings page export: several findings table rows as a summary Markdown,

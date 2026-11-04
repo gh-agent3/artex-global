@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // Initialize an explicitly configured fresh database before taking the same

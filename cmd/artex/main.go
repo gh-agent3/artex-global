@@ -16,10 +16,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/config"
-	"github.com/gh-agent3/artex-global/internal/selfupdate"
-	"github.com/gh-agent3/artex-global/server"
+	"artex-global/agent"
+	"artex-global/config"
+	"artex-global/internal/selfupdate"
+	"artex-global/server"
 )
 
 // version is the build version, injected at release time via

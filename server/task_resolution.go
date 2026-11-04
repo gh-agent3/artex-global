@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 type taskLLMResolution struct {

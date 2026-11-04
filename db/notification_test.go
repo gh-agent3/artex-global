@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/internal/notify"
+	"artex-global/internal/notify"
 )
 
 // Every test in this file talks to a real PostgreSQL (skipped when unavailable). The

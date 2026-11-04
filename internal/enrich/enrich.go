@@ -8,7 +8,7 @@ package enrich
 
 import (
 	"crypto/tls"
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 	"html"
 	"io"
 	"log"
@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 
 	"github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"

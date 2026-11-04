@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // LogLine is one captured backend log entry exposed by the /api/logs endpoints.

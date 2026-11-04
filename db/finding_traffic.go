@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/internal/notify"
+	"artex-global/internal/notify"
 )
 
 var (

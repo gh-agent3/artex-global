@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/traffic"
+	"artex-global/agent"
+	"artex-global/db"
+	"artex-global/internal/traffic"
 )
 
 func trafficEvidenceServer(t *testing.T) (*Server, *db.RecordedFinding, func(string, string, string) *httptest.ResponseRecorder) {

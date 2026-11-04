@@ -1,6 +1,6 @@
 package intercept
 
-import "github.com/gh-agent3/artex-global/config"
+import "artex-global/config"
 
 // 가로채기 판정 액션 라벨(allow/deny/ask)의 다국어 표. 판정 메시지에 쓰이며 출력 언어를
 // 따른다(config.ActiveLanguage). 미배선/미지원 언어는 ko 로 떨어진다. enum 키(allow/deny/

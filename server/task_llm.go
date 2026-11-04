@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/llm/rec"
+	"artex-global/agent"
+	"artex-global/db"
+	"artex-global/llm/rec"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/transcript"
 )

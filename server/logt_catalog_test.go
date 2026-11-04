@@ -11,7 +11,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 )
 
 // TestLogTTemplatesHaveTranslations pins that every logT("…") template in this

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // Per-profile usage for the LLM card: the provider's own subscription windows

@@ -3,7 +3,7 @@ package agent
 import (
 	"context"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // RunInfo identifies WHICH run a tool call belongs to. Tool assembly only receives

@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 	"io"
 	"log"
 	"os"

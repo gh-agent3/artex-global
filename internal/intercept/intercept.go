@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // 사용자에게 노출되는 가로채기 판정·승인 메시지(한국어). judge 판정 결과·규칙 메시지는

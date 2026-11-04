@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/config"
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/config"
+	"artex-global/db"
 	acperm "github.com/Autumn-27/norma/permission"
 	actool "github.com/Autumn-27/norma/tool"
 )

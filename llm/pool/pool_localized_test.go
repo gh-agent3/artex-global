@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 	"github.com/Autumn-27/norma/llm"
 )
 

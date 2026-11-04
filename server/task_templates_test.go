@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 func TestTaskTemplateHTTPCRUD(t *testing.T) {

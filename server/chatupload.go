@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // maxChatUpload caps a single chat-attachment upload request (memory + spill).

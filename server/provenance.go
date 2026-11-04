@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // provenanceIntent is one top-level entry of a task's artifact directory.

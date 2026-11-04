@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gh-agent3/artex-global/llm/pool"
+	"artex-global/llm/pool"
 	"github.com/Autumn-27/norma/harness"
 	"github.com/Autumn-27/norma/llm"
 )

@@ -3,7 +3,7 @@ package server
 import (
 	"sync"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // Broadcaster is a per-task in-process pub/sub for live activity events. The

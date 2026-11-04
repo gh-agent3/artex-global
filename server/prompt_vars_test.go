@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // A stored catalog entry that collides with a global runtime var (e.g. a legacy

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-agent3/artex-global/config"
+	"artex-global/config"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // pgx database/sql driver ("pgx")
 )

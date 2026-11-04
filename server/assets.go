@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // companyScopeInputs accepts both the new [{kind,value}] contract and the

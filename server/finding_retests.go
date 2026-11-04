@@ -12,9 +12,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/gh-agent3/artex-global/agent"
-	"github.com/gh-agent3/artex-global/db"
-	"github.com/gh-agent3/artex-global/internal/intercept"
+	"artex-global/agent"
+	"artex-global/db"
+	"artex-global/internal/intercept"
 	actool "github.com/Autumn-27/norma/tool"
 )
 

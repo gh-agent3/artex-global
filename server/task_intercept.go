@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gh-agent3/artex-global/db"
+	"artex-global/db"
 )
 
 // validateTaskInterceptRuleReq 의 action 검증 오류다. 이 검증기와 buildTaskInterceptRules
