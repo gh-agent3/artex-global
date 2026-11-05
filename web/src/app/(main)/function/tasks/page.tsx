@@ -258,7 +258,7 @@ type TaskSortField = "id" | "created" | "duration" | "status";
 const TASK_SORT_FIELDS: readonly TaskSortField[] = ["id", "created", "duration", "status"];
 const TASK_SORT_PREFERENCE_KEY = "artex_task_list_sort";
 const TASK_FILTER_PREFERENCE_KEY = "artex_task_list_filters";
-const TASK_COLUMN_WIDTHS_PREFERENCE_KEY = "artex_task_list_column_widths";
+const TASK_COLUMN_WIDTHS_PREFERENCE_KEY = "artex_task_list_column_widths_v2";
 
 const TASK_STATUS_RANK = new Map(STATUS_OPTIONS.map((status, index) => [status, index]));
 
@@ -949,21 +949,24 @@ export default function TasksPage() {
                 >
                   <TableHeader className="[&_tr]:border-t">
                     <TableRow>
-                      <TableHead className="w-10">
-                        <Checkbox
-                          checked={headerChecked}
-                          onCheckedChange={(checked) => toggleSelectedPage(checked === true)}
-                          aria-label={t("table.selectAllAria")}
-                        />
+                      <TableHead className="w-24">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={headerChecked}
+                            onCheckedChange={(checked) => toggleSelectedPage(checked === true)}
+                            aria-label={t("table.selectAllAria")}
+                          />
+                          <SortableTaskHead
+                            field="id"
+                            label="ID"
+                            activeField={sortField}
+                            direction={sortDirection}
+                            className="font-mono"
+                            onSort={sortTasksBy}
+                            bare
+                          />
+                        </div>
                       </TableHead>
-                      <SortableTaskHead
-                        field="id"
-                        label="ID"
-                        activeField={sortField}
-                        direction={sortDirection}
-                        className="font-mono"
-                        onSort={sortTasksBy}
-                      />
                       <TableHead>{t("table.name")}</TableHead>
                       <TableHead className="hidden @5xl:table-cell">{t("table.description")}</TableHead>
                       <TableHead>{t("table.target")}</TableHead>
@@ -1059,6 +1062,7 @@ function SortableTaskHead({
   align = "left",
   className,
   onSort,
+  bare = false,
 }: {
   field: TaskSortField;
   label: string;
@@ -1067,6 +1071,8 @@ function SortableTaskHead({
   align?: "left" | "right";
   className?: string;
   onSort: (field: TaskSortField) => void;
+  /** bare renders only the sort button, for merging into a shared header cell. */
+  bare?: boolean;
 }) {
   const t = useTranslations("tasksPage");
   const active = activeField === field;
@@ -1076,20 +1082,24 @@ function SortableTaskHead({
   let actionLabel = t("sort.default", { label });
   if (active) actionLabel = t("sort.active", { label, direction });
 
+  const button = (
+    <button
+      type="button"
+      className={cn(
+        "group/sort inline-flex h-full w-full items-center gap-1 outline-none focus-visible:underline",
+        align === "right" && "justify-end",
+      )}
+      aria-label={actionLabel}
+      onClick={() => onSort(field)}
+    >
+      <span>{label}</span>
+      {taskSortIcon(active, direction)}
+    </button>
+  );
+  if (bare) return button;
   return (
     <TableHead className={className} aria-sort={ariaSort}>
-      <button
-        type="button"
-        className={cn(
-          "group/sort inline-flex h-full w-full items-center gap-1 outline-none focus-visible:underline",
-          align === "right" && "justify-end",
-        )}
-        aria-label={actionLabel}
-        onClick={() => onSort(field)}
-      >
-        <span>{label}</span>
-        {taskSortIcon(active, direction)}
-      </button>
+      {button}
     </TableHead>
   );
 }
@@ -1208,14 +1218,14 @@ const TaskRow = React.memo(function TaskRow({
   return (
     <TableRow className="group border-border/60" data-state={selected ? "selected" : undefined}>
       <TableCell>
-        <Checkbox
-          checked={selected}
-          onCheckedChange={(checked) => onSelectedChange(task.id, checked === true)}
-          aria-label={t("row.selectAria", { id: task.id })}
-        />
-      </TableCell>
-      <TableCell>
-        <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{task.id}</code>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={selected}
+            onCheckedChange={(checked) => onSelectedChange(task.id, checked === true)}
+            aria-label={t("row.selectAria", { id: task.id })}
+          />
+          <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{task.id}</code>
+        </div>
       </TableCell>
       <TableCell className="font-medium">
         <div className="flex max-w-xs items-center gap-2">
