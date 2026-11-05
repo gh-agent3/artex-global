@@ -70,3 +70,64 @@ export function maskText(text: string, rules: RegExp[]): string {
 export function maskedValue(value: string): string {
   return value ? "••••••" : "—";
 }
+
+// ── Transport masking ────────────────────────────────────────────────────────
+// One masking pass at the client transport choke point (http<T> in api.ts), so
+// every surface — findings, traffic, activity streams, task text — is covered
+// without per-screen wiring (the arch-review decision; docs/backlog.md item 1).
+// Field-name denylist (Sentry-style) for structured secrets; the operator regex
+// rules run over every other string. Keys managed by <Sensitive>/task-name
+// classes are exempt so click-to-reveal keeps working.
+
+const DENYLIST = /^(password|passwd|pwd|secret|token|access_token|refresh_token|id_token|api[_-]?key|authorization|auth|cookie|set-cookie|credential|credentials|private[_-]?key|session|email|e-mail|invite|invitation)$/i;
+
+// Exempt: reveal-managed fields (LLM key hints, task names/titles) — masking
+// them here would break the intentional click-to-reveal.
+const EXEMPT = /^(name|title|api_key_hint)$/i;
+
+const MASK_FULL = "••••••";
+const MAX_DEPTH = 12;
+const MAX_STRING = 200_000;
+
+let transportRules: RegExp[] = [];
+
+// configureDemoMask is called by DemoModeProvider once the instance rules load.
+export function configureDemoMask(rules: string[]) {
+  transportRules = compileRules(rules);
+}
+
+export function demoMaskActive(): boolean {
+  return readDemoCookie();
+}
+
+export function maskPayload<T>(value: T): T {
+  if (!demoMaskActive() || transportRules.length === 0) return value;
+  return walk(value, 0) as T;
+}
+
+function walk(value: any, depth: number): any {
+  if (value === null || value === undefined) return value;
+  if (typeof value === "string") {
+    if (value.length > MAX_STRING) return value.slice(0, MAX_STRING);
+    return maskText(value, transportRules);
+  }
+  if (typeof value !== "object" || depth > MAX_DEPTH) return value;
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) value[i] = walk(value[i], depth + 1);
+    return value;
+  }
+  for (const key of Object.keys(value)) {
+    const v = value[key];
+    if (typeof v === "string") {
+      if (EXEMPT.test(key)) continue;
+      if (DENYLIST.test(key)) {
+        value[key] = v === "" ? v : MASK_FULL;
+      } else if (v.length <= MAX_STRING) {
+        value[key] = maskText(v, transportRules);
+      }
+    } else {
+      value[key] = walk(v, depth + 1);
+    }
+  }
+  return value;
+}

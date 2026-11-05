@@ -1022,7 +1022,7 @@ export default function FindingsPage() {
         )}
 
         {view === "grouped" && (
-          <div className="flex flex-col gap-3">
+          <div className="reading flex flex-col gap-3">
             {groups.map((group) => {
               const key = findingGroupKey(group);
               const groupOpen = expandedGroups.has(key);

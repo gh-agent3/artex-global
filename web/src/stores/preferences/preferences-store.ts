@@ -1,6 +1,7 @@
 import { createStore } from "zustand/vanilla";
 
 import type { FontKey } from "@/lib/fonts/registry";
+import type { FontSize } from "@/lib/preferences/layout";
 import type { ContentLayout, NavbarStyle, SidebarCollapsible, SidebarVariant } from "@/lib/preferences/layout";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import type { ResolvedThemeMode, ThemeMode, ThemePreset } from "@/lib/preferences/theme";
@@ -10,6 +11,7 @@ export type PreferencesState = {
   resolvedThemeMode: ResolvedThemeMode;
   themePreset: ThemePreset;
   font: FontKey;
+  fontSize: FontSize;
   contentLayout: ContentLayout;
   navbarStyle: NavbarStyle;
   sidebarVariant: SidebarVariant;
@@ -18,6 +20,7 @@ export type PreferencesState = {
   setResolvedThemeMode: (mode: ResolvedThemeMode) => void;
   setThemePreset: (preset: ThemePreset) => void;
   setFont: (font: FontKey) => void;
+  setFontSize: (fontSize: FontSize) => void;
   setContentLayout: (layout: ContentLayout) => void;
   setNavbarStyle: (style: NavbarStyle) => void;
   setSidebarVariant: (variant: SidebarVariant) => void;
@@ -32,6 +35,7 @@ export const createPreferencesStore = (init?: Partial<PreferencesState>) =>
     resolvedThemeMode: init?.resolvedThemeMode ?? "light",
     themePreset: init?.themePreset ?? PREFERENCE_DEFAULTS.theme_preset,
     font: init?.font ?? PREFERENCE_DEFAULTS.font,
+    fontSize: init?.fontSize ?? PREFERENCE_DEFAULTS.font_size,
     contentLayout: init?.contentLayout ?? PREFERENCE_DEFAULTS.content_layout,
     navbarStyle: init?.navbarStyle ?? PREFERENCE_DEFAULTS.navbar_style,
     sidebarVariant: init?.sidebarVariant ?? PREFERENCE_DEFAULTS.sidebar_variant,
@@ -40,6 +44,7 @@ export const createPreferencesStore = (init?: Partial<PreferencesState>) =>
     setResolvedThemeMode: (mode) => set({ resolvedThemeMode: mode }),
     setThemePreset: (preset) => set({ themePreset: preset }),
     setFont: (font) => set({ font }),
+    setFontSize: (fontSize) => set({ fontSize }),
     setContentLayout: (layout) => set({ contentLayout: layout }),
     setNavbarStyle: (style) => set({ navbarStyle: style }),
     setSidebarVariant: (variant) => set({ sidebarVariant: variant }),

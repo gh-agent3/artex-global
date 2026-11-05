@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { configureDemoMask } from "@/lib/demo";
 import { usePathname } from "next/navigation";
 
 import { api } from "@/lib/api";
@@ -54,7 +55,9 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
           const classes = (s.classes ?? DEMO_DEFAULTS.classes).filter((c): c is DemoClass =>
             (DEMO_CLASSES as readonly string[]).includes(c),
           );
-          setSettings({ classes: classes.length > 0 ? classes : DEMO_DEFAULTS.classes, rules: s.rules ?? [] });
+          const rules = s.rules ?? [];
+          setSettings({ classes: classes.length > 0 ? classes : DEMO_DEFAULTS.classes, rules });
+          configureDemoMask(rules);
         }
       })
       .catch(() => {

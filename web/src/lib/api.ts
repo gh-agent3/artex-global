@@ -4,6 +4,7 @@
 // are passed through and formatted at the call site.
 
 import type { ChatMention } from "@/lib/chat-mentions";
+import { demoMaskActive, maskPayload } from "@/lib/demo";
 import { MOCK } from "@/lib/mock/enabled";
 import { mockHandle } from "@/lib/mock/handler";
 import type {
@@ -161,7 +162,10 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(message, r.status);
   }
   if (r.status === 204) return undefined as T;
-  return r.json();
+  const data = await r.json();
+  // Demo mode: one masking pass at the transport covers every surface that
+  // renders API data (findings, traffic, activity streams) — see lib/demo.ts.
+  return demoMaskActive() ? maskPayload(data) : data;
 }
 
 // sseUrl builds a URL for Server-Sent Events streams.

@@ -98,7 +98,15 @@ function QuotaLine({ id }: { id: string }) {
     <div className="flex flex-col gap-y-0.5 pl-6 text-muted-foreground text-xs">
       {quota.plan || quota.account ? (
         <span title={quota.renews_at ? t("card.quotaRenews", { time: new Date(quota.renews_at).toLocaleString() }) : undefined}>
-          {[quota.plan, quota.account].filter(Boolean).join(" · ")}
+          {quota.plan ? <span>{quota.plan}</span> : null}
+          {quota.plan && quota.account ? <span> · </span> : null}
+          {quota.account ? (
+            // The provider account identity (e.g. the Kimi account name) is exactly
+            // what demo mode exists to hide on this page.
+            <Sensitive kind="identity" value={quota.account} revealKey={`quota-account:${id}`}>
+              {quota.account}
+            </Sensitive>
+          ) : null}
         </span>
       ) : null}
       {windows.length ? (

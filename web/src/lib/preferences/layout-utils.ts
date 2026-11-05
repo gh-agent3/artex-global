@@ -22,3 +22,8 @@ export function applyFont(value: string) {
   const root = document.documentElement;
   root.setAttribute("data-font", value);
 }
+
+export function applyFontSize(value: string) {
+  const root = document.documentElement;
+  root.setAttribute("data-font-size", value);
+}

@@ -8,9 +8,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { type FontKey, fontOptions } from "@/lib/fonts/registry";
-import type { ContentLayout, NavbarStyle, SidebarCollapsible, SidebarVariant } from "@/lib/preferences/layout";
+import type { ContentLayout, FontSize, NavbarStyle, SidebarCollapsible, SidebarVariant } from "@/lib/preferences/layout";
+import { FONT_SIZE_OPTIONS } from "@/lib/preferences/layout";
 import {
   applyContentLayout,
+  applyFontSize,
   applyFont,
   applyNavbarStyle,
   applySidebarCollapsible,
@@ -38,6 +40,8 @@ export function LayoutControls() {
   const setSidebarCollapsible = usePreferencesStore((s) => s.setSidebarCollapsible);
   const font = usePreferencesStore((s) => s.font);
   const setFont = usePreferencesStore((s) => s.setFont);
+  const fontSize = usePreferencesStore((s) => s.fontSize);
+  const setFontSize = usePreferencesStore((s) => s.setFontSize);
 
   const onThemePresetChange = (preset: ThemePreset) => {
     applyThemePreset(preset);
@@ -84,6 +88,13 @@ export function LayoutControls() {
     applyFont(value);
     setFont(value);
     void persistPreference("font", value);
+  };
+
+  const onFontSizeChange = (value: FontSize | "") => {
+    if (!value) return;
+    applyFontSize(value);
+    setFontSize(value);
+    void persistPreference("font_size", value);
   };
 
   const handleRestore = () => {
@@ -146,6 +157,24 @@ export function LayoutControls() {
                     {fontOptions.map((font) => (
                       <SelectItem key={font.key} className="text-xs" value={font.key}>
                         {font.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="font-medium text-xs">Reading Size</Label>
+              <Select value={fontSize} onValueChange={onFontSizeChange}>
+                <SelectTrigger size="sm" className="w-full text-xs">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {FONT_SIZE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} className="text-xs" value={opt.value}>
+                        {opt.label}
                       </SelectItem>
                     ))}
                   </SelectGroup>

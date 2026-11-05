@@ -905,7 +905,8 @@ export default function DashboardPage() {
             {recentActivity.length === 0 ? (
               <div className="py-4 text-center text-xs text-muted-foreground">{t("noActivity")}</div>
             ) : (
-              recentActivity.map((a) => (
+              <div className="reading">
+              {recentActivity.map((a) => (
                 <div key={a.seq} className="flex gap-2.5 py-2">
                   <span
                     className={cn(
@@ -926,7 +927,8 @@ export default function DashboardPage() {
                     <div className="mt-0.5 text-[9px] tabular-nums text-muted-foreground">{rel(a.ts)}</div>
                   </div>
                 </div>
-              ))
+              ))}
+              </div>
             )}
           </div>
         </Card>
@@ -946,7 +948,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="divide-y">
+          <div className="reading divide-y">
             {recentFindings.length === 0 ? (
               <div className="py-4 text-center text-xs text-muted-foreground">{t("noFindings")}</div>
             ) : (

@@ -30,3 +30,12 @@ export const NAVBAR_STYLE_OPTIONS = [
 ] as const;
 export const NAVBAR_STYLE_VALUES = NAVBAR_STYLE_OPTIONS.map((v) => v.value);
 export type NavbarStyle = (typeof NAVBAR_STYLE_VALUES)[number];
+
+// Reading font size for dense text surfaces (findings, activity streams).
+// Default is "large" — a couple of points above the utility-class baseline.
+export const FONT_SIZE_OPTIONS = [
+  { label: "Normal", value: "normal" },
+  { label: "Large", value: "large" },
+] as const;
+export const FONT_SIZE_VALUES = FONT_SIZE_OPTIONS.map((v) => v.value);
+export type FontSize = (typeof FONT_SIZE_VALUES)[number];

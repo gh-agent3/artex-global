@@ -282,3 +282,23 @@ html {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* Reading size (preference "Reading Size", data-font-size; default Large).
+   Applies to dense reading surfaces marked with .reading — findings lists and
+   activity streams — bumping the small utility sizes by ~2px. "Normal" leaves
+   the utility classes untouched. */
+html[data-font-size="large"] .reading {
+  font-size: 14px;
+  line-height: 1.55;
+}
+html[data-font-size="large"] .reading [class*="text-[9px]"],
+html[data-font-size="large"] .reading .text-xs {
+  font-size: 12.5px;
+}
+html[data-font-size="large"] .reading [class*="text-[10px]"] {
+  font-size: 13px;
+}
+html[data-font-size="large"] .reading [class*="text-[11px]"],
+html[data-font-size="large"] .reading .text-sm {
+  font-size: 14.5px;
+}
