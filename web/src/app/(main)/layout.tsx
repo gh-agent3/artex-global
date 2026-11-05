@@ -64,11 +64,6 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
     <DemoModeProvider>
       <SidebarProvider
       defaultOpen={defaultOpen}
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 68)",
-        } as React.CSSProperties
-      }
     >
       <AppSidebar variant={variant} collapsible={collapsible} />
       <SidebarInset
