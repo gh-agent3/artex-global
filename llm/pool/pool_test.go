@@ -261,6 +261,26 @@ func TestHardVsSoftClassification(t *testing.T) {
 			t.Errorf("status %d should be transient, not hard", s)
 		}
 	}
+	// Body semantics beat the status code (llmclass): a gateway that packs
+	// "insufficient balance" into a 429, or a spending limit into a 403, must
+	// switch endpoints instead of retrying in place.
+	for _, err := range []error{
+		fmt.Errorf("status 429: insufficient balance, please top up"),
+		fmt.Errorf("status 403: spending limit reached for this account"),
+		fmt.Errorf("status 429: 额度已用尽"),
+	} {
+		if !isHardFailure(err) {
+			t.Errorf("%v should be a hard (switch) failure", err)
+		}
+	}
+	// A plain rate limit without exhaustion wording stays transient.
+	if isHardFailure(fmt.Errorf("status 429: rate limit exceeded")) {
+		t.Error("plain 429 should stay transient")
+	}
+	// Cancellation is not a provider fault and must not trip the breaker hard.
+	if isHardFailure(context.Canceled) {
+		t.Error("context.Canceled must stay soft")
+	}
 }
 
 // A member whose context window can't hold the request is a guaranteed 400 —

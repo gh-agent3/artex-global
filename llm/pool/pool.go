@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 
 	"artex-global/config"
+	"artex-global/llm/class"
 	"github.com/Autumn-27/norma/llm"
 )
 
@@ -259,8 +260,16 @@ func shouldFailover(ctx context.Context, err error) bool {
 // keep failing until a human fixes it) rather than transient. Hard failures open
 // the breaker on the first occurrence.
 func isHardFailure(err error) bool {
-	switch statusOf(err) {
-	case 401, 402, 403, 404:
+	// Cancellation/timeout is not a provider fault: keep it soft so a user-canceled
+	// task never counts toward the breaker's deterministic trip (previous behavior).
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	// One classification for the whole process (llmclass): text semantics before
+	// status code — gateways that answer "insufficient balance" with a 429, or a
+	// spending-limit 403, must switch endpoints, not retry in place.
+	switch llmclass.Classify(err) {
+	case llmclass.VerdictSwitch, llmclass.VerdictFail:
 		return true
 	}
 	return false
