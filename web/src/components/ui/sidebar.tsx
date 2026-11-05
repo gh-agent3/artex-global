@@ -24,9 +24,14 @@ import {
 } from "@/components/ui/tooltip"
 import { PanelLeftIcon } from "lucide-react"
 
+import { getClientCookie, setClientCookie } from "@/lib/cookie.client"
+
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH_COOKIE = "sidebar_width"
+const SIDEBAR_WIDTH_MIN = 192 // px, ~12rem — below this labels stop being usable
+const SIDEBAR_WIDTH_MAX = 416 // px, ~26rem
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -39,6 +44,9 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  /** Operator-resizable width (CSS length). Persisted in the sidebar_width cookie. */
+  width: string
+  setWidth: (width: string) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -135,6 +143,18 @@ function SidebarProvider({
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? "expanded" : "collapsed"
 
+  // Resizable width: initial value from the cookie (validated), live updates
+  // persist back so the next load keeps the operator's choice.
+  const [width, setWidthState] = React.useState<string>(() => {
+    if (typeof document === "undefined") return SIDEBAR_WIDTH;
+    const raw = getClientCookie(SIDEBAR_WIDTH_COOKIE) ?? "";
+    return /^\d+(px|rem)$/.test(raw) ? raw : SIDEBAR_WIDTH;
+  });
+  const setWidth = React.useCallback((next: string) => {
+    setWidthState(next);
+    setClientCookie(SIDEBAR_WIDTH_COOKIE, next, 365);
+  }, []);
+
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
       state,
@@ -144,8 +164,10 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      width,
+      setWidth,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, width, setWidth]
   )
 
   return (
@@ -154,7 +176,7 @@ function SidebarProvider({
         data-slot="sidebar-wrapper"
         style={
           {
-            "--sidebar-width": SIDEBAR_WIDTH,
+            "--sidebar-width": width,
             "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
             ...style,
           } as React.CSSProperties
@@ -184,7 +206,35 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, openMobile, setOpenMobile, width, setWidth } = useSidebar()
+
+  // Drag-to-resize on the inner (right/left) edge. Live-updates the width CSS
+  // variable through context; the final value persists to a cookie on release.
+  // Mirrors the tasks-table column resizing interaction.
+  const startResize = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (isMobile) return
+      event.preventDefault()
+      const handle = event.currentTarget
+      const panel = handle.parentElement
+      if (!panel) return
+      const startX = event.clientX
+      const startWidthPx = panel.getBoundingClientRect().width
+      handle.setPointerCapture?.(event.pointerId)
+      const onMove = (ev: PointerEvent) => {
+        const delta = side === "left" ? ev.clientX - startX : startX - ev.clientX
+        const next = Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, startWidthPx + delta))
+        setWidth(`${Math.round(next)}px`)
+      }
+      const onUp = () => {
+        window.removeEventListener("pointermove", onMove)
+        window.removeEventListener("pointerup", onUp)
+      }
+      window.addEventListener("pointermove", onMove)
+      window.addEventListener("pointerup", onUp)
+    },
+    [isMobile, side, setWidth],
+  )
 
   if (collapsible === "none") {
     return (
@@ -261,6 +311,20 @@ function Sidebar({
         )}
         {...props}
       >
+        {!isMobile && state === "expanded" ? (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize sidebar"
+            title="Drag to resize"
+            onPointerDown={startResize}
+            className={cn(
+              "absolute inset-y-0 z-30 w-2 cursor-col-resize bg-transparent transition-colors",
+              side === "left" ? "right-0 translate-x-1/2" : "left-0 -translate-x-1/2",
+              "hover:bg-sidebar-accent/70 active:bg-sidebar-accent",
+            )}
+          />
+        ) : null}
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
