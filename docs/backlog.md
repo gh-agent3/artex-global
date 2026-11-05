@@ -6,13 +6,11 @@ Things decided but not yet implemented. Newest on top within a section.
 
 Adopted plan (operator decision 2026-11-05). Order is priority.
 
-1. **[M] LLM failure classification** — port `llmclass` (verdicts Retry/Switch/Fail/
-   Quality, text-semantics before status code) + `llmrepair` (quality errors), then
-   route our failover/retry points through one classification instead of the current
-   scattered checks. Status: packages ported to `llm/class` + `llm/repair`;
-   `llm/pool` breaker decision (`isHardFailure`) routed through `llmclass.Classify`
-   with regression tests. Remaining: route the server-side retry point and the
-   agent-side quota checks through the same classification.
+1. **[M] LLM failure classification** — DONE. `llmclass` + `llmrepair` ported
+   (`llm/class`, `llm/repair`) with our additions (403-with-exhaustion override,
+   subscription-window markers). `llm/pool` breaker, `agent.IsQuotaExhaustedMessage`
+   (which `server/task_llm.go` uses) and `isHardFailure` all route through
+   `llmclass.Classify` / `IsQuotaExhausted`; regression tests in pool + provider.
 2. **[M] MCP server** — port `mcpserver/` (builtin/guard/http/probe) so external
    orchestrators (paperclip) can hand ARTEX tasks over MCP.
 3. **[L] Finding verifier agent** — independent read-only re-verification pipeline

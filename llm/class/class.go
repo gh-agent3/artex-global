@@ -216,16 +216,32 @@ var quotaTransientLimit = regexp.MustCompile(`(?i)(?:\b(?:rpm|tpm|rpd|qps)\b|quo
 // 的话，照字面判会得出「余额不足，换一家」，于是把一次上游抖动误判成欠费。
 var nonQuotaHTTPStatus = regexp.MustCompile(`(?i)(?:status(?:\s+code)?|http(?:\s+status)?)\s*[=:]?\s*(?:401|403|5\d\d)\b`)
 
+// forbiddenHTTP403 只匹配 403。403 通常是鉴权，但 xAI 的 exhausted-subscription
+// 错误（personal-team-blocked:spending-limit）也骑在 403 上——body 明确点名额度
+// 耗尽时 403 的否决被覆盖；裸 403 仍然不换供应商。
+var forbiddenHTTP403 = regexp.MustCompile(`(?i)(?:status(?:\s+code)?|http(?:\s+status)?)\s*[=:]?\s*403\b`)
+
+// subscriptionQuotaMarkers name an exhausted PLAN WINDOW (a 5-hour/day/month
+// allowance that resets later) rather than a per-minute throttle. Providers send
+// these on 429 next to ordinary rate-limit wording, so they override the
+// transient-rate veto below — otherwise the profile is retried until the whole
+// task dies instead of failing over.
+var subscriptionQuotaMarkers = []string{
+	"5-hour usage limit", "5 hour usage limit", "5-hour limit",
+	"reached your usage limit", "usage limit will reset", "quota will reset",
+	"purchase extra usage", "upgrade your plan to continue",
+}
+
 // IsQuotaExhausted 判断文案是否在讲「余额/额度真的耗尽」。
 //
 // 刻意严格：只认明确的余额、计费、额度耗尽信号。普通 429、鉴权失败、网络故障、
 // 服务器故障都**不算**——它们要么归瞬时重试，要么归端点级，与「欠费」是三件事。
 func IsQuotaExhausted(message string) bool {
 	message = strings.ToLower(message)
-	if nonQuotaHTTPStatus.MatchString(message) {
+	if nonQuotaHTTPStatus.MatchString(message) && !forbiddenHTTP403.MatchString(message) {
 		return false
 	}
-	if quotaTransientLimit.MatchString(message) {
+	if quotaTransientLimit.MatchString(message) && !containsAny(message, subscriptionQuotaMarkers) {
 		return false
 	}
 	markers := []string{
@@ -233,12 +249,11 @@ func IsQuotaExhausted(message string) bool {
 		"exceeded your current quota", "billing_hard_limit_reached",
 		"billing hard limit", "billing_not_active", "credit balance", "insufficient credit",
 		"insufficient balance", "balance is too low", "payment required", "status 402",
+		"run out of credits", "out of credits", "spending-limit",
 		"余额不足", "额度不足", "额度已用尽", "额度耗尽", "额度已耗尽", "欠费",
 	}
-	for _, marker := range markers {
-		if strings.Contains(message, marker) {
-			return true
-		}
+	if containsAny(message, markers) || containsAny(message, subscriptionQuotaMarkers) {
+		return true
 	}
 	// gRPC RESOURCE_EXHAUSTED 同时用于「账号额度」与「请求速率」两种含义，
 	// 只有在同一个错误里没有出现速率限制措辞时，才当作真的额度耗尽。
