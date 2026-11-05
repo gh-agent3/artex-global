@@ -343,6 +343,12 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 		if err := s.seedFindingRetester(); err != nil {
 			log.Printf("[retester] seed: %v", err)
 		}
+		if err := s.seedFindingVerifier(); err != nil {
+			log.Printf("[verifier] seed: %v", err)
+		} else {
+			go s.verifyScanner(s.ctx)
+			go s.verifyReaper(s.ctx)
+		}
 		go s.evidenceStore().RunGC(s.ctx)
 		s.seedPythonInterpreter()     // custom script tool: detect the python interpreter at startup and store it (only when empty)
 		go newScheduler(s).Run(s.ctx) // P3 trigger scheduler (interval/finding/goal events), custom agents only
@@ -900,6 +906,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/exploration/findings/{id}/retests", s.listFindingRetests)
 	mux.HandleFunc("GET /api/exploration/findings/retests/active", s.listActiveFindingRetests)
 	mux.HandleFunc("POST /api/exploration/findings/{id}/retests", s.startFindingRetest)
+	mux.HandleFunc("GET /api/exploration/findings/{id}/verifications", s.listFindingVerifications)
 	mux.HandleFunc("PATCH /api/exploration/findings/{id}", s.patchFinding)
 	mux.HandleFunc("DELETE /api/exploration/findings/{id}", s.deleteFinding)
 	mux.HandleFunc("GET /api/exploration/intents", s.intents)

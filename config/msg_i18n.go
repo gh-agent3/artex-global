@@ -53,6 +53,18 @@ var logCatalog = map[string]map[string]string{
 	"[auth] 새 JWT 키를 %s 에 기록": {
 		"en": "[auth] wrote new JWT key to %s", "zh": "[auth] 已将新的 JWT 密钥写入 %s", "es": "[auth] nueva clave JWT escrita en %s", "ja": "[auth] 新しい JWT キーを %s に書き込みました",
 	},
+	"[auth] credential master key written to %s (at-rest credential encryption ON)": {
+		"en": "[auth] credential master key written to %s (at-rest credential encryption ON)", "ru": "[auth] мастер-ключ шифрования записан в %s (шифрование credential at rest включено)", "zh": "[auth] 凭据主密钥已写入 %s（静态凭据加密已开启）", "es": "[auth] clave maestra de credenciales escrita en %s (cifrado en reposo activado)", "ja": "[auth] クレデンシャルマスターキーを %s に書き込みました（保存時暗号化が有効）",
+	},
+	"[verify] scan: %v": {
+		"en": "[verify] scan: %v", "ru": "[verify] сканирование: %v", "zh": "[verify] 扫描：%v", "es": "[verify] escaneo: %v", "ja": "[verify] スキャン: %v",
+	},
+	"[verify] enqueue finding %d: %v": {
+		"en": "[verify] enqueue finding %d: %v", "ru": "[verify] постановка находки %d в очередь: %v", "zh": "[verify] 正在为发现 %d 排队：%v", "es": "[verify] encolando hallazgo %d: %v", "ja": "[verify] ファインド %d をキューに追加: %v",
+	},
+	"[verify] reaper: %v": {
+		"en": "[verify] reaper: %v", "ru": "[verify] сборщик: %v", "zh": "[verify] 清理：%v", "es": "[verify] limpieza: %v", "ja": "[verify] クリーナ: %v",
+	},
 	"[auth] %s 가 %d자 미만이라 무시합니다. 설정 토큰 방식으로 초기화하세요": {
 		"en": "[auth] ignoring %s because it is shorter than %d characters; initialise with the setup token instead",
 		"zh": "[auth] %s 少于 %d 个字符，已忽略。请使用设置令牌方式初始化",

@@ -47,7 +47,7 @@ func loadOrCreateCredentialKey(keyDir string) ([]byte, error) {
 	if err := os.WriteFile(path, []byte(key), 0o600); err != nil {
 		return nil, fmt.Errorf("write credential key: %w", err)
 	}
-	log.Printf(logT("[auth] credential master key written to %s (at-rest credential encryption ON)"), path)
+	log.Printf(logA("[auth] credential master key written to %s (at-rest credential encryption ON)"), path)
 	return []byte(key), nil
 }
 

@@ -133,6 +133,10 @@ func ensureDatabase(dsn string) error {
 
 // Open connects, applies the schema (idempotent), and seeds builtin rows.
 func Open(dsn string) (*DB, error) {
+	if strings.HasPrefix(dsn, "sqlite") || strings.HasSuffix(dsn, ".db") || strings.HasSuffix(dsn, ".sqlite") {
+		return nil, errors.New("sqlite backend is not supported yet: this build requires PostgreSQL " +
+			"(a SQLite dialect layer is backlog item 6, see docs/backlog.md)")
+	}
 	if err := ensureDatabase(dsn); err != nil {
 		return nil, err
 	}

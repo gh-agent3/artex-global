@@ -1128,6 +1128,29 @@ CREATE INDEX IF NOT EXISTS idx_finding_retests_history ON finding_retests(findin
 CREATE UNIQUE INDEX IF NOT EXISTS idx_finding_retests_active ON finding_retests(finding_id)
     WHERE status IN ('pending','running');
 
+-- Independent verification of a finding by a separate read-only agent (P2
+-- verifier). Unlike finding_retests (operator-triggered recheck), these are
+-- enqueued automatically by severity policy at recording time: critical/high
+-- always, medium by sample rate, low never. The verdict feeds findings.validation.
+CREATE TABLE IF NOT EXISTS finding_verifications (
+    id BIGSERIAL PRIMARY KEY,
+    finding_id BIGINT NOT NULL REFERENCES findings(id) ON DELETE CASCADE,
+    conversation_id BIGINT UNIQUE REFERENCES conversations(id) ON DELETE SET NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','running','verified','refuted','inconclusive','error')),
+    reason TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    snapshot JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    finished_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_finding_verifications_history ON finding_verifications(finding_id, id DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_finding_verifications_active ON finding_verifications(finding_id)
+    WHERE status IN ('pending','running');
+
+-- Verification state mirrored onto the finding for list/report surfaces.
+ALTER TABLE findings ADD COLUMN IF NOT EXISTS validation TEXT NOT NULL DEFAULT 'unverified';
+
 -- 删除会话保留复测记录，同时解除尚未结束的复测占用。
 CREATE OR REPLACE FUNCTION stop_deleted_conversation_retest() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN

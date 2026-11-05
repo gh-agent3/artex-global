@@ -17,9 +17,15 @@ Adopted plan (operator decision 2026-11-05). Order is priority.
    `ARTEX_MCP_TOKEN` (endpoint not mounted at all without it), fixed narrow
    surface — `task_create` (normal creation path, never raw SQL), `task_status`,
    `task_list`. Their full L0-L3 capability registry is not ported.
-3. **[L] Finding verifier agent** — independent read-only re-verification pipeline
-   (high severity mandatory, medium/low sampled) driving a validation state on
-   findings; complements the report_finding verification gate.
+3. **[L] Finding verifier agent** — DONE (scoped). Scanner applies severity policy
+   (critical/high always, medium deterministic 50% sample, low never) to fresh
+   findings; `finding_verifications` table + bound read-only "verifier"
+   conversation agent (seeded, editable) with a frozen evidence snapshot; verdict
+   (verified/refuted/inconclusive) mirrors onto `findings.validation`; reaper
+   seals rows interrupted by restarts; history API
+   `GET /api/exploration/findings/{id}/verifications`. Complements the
+   report_finding verification gate (pre-filing) with a post-filing independent
+   check. UI panel not built — API only for now.
 4. **[M] Credential encryption at rest** — DONE (opt-in). `db/credential_crypto.go`
    (AES-256-GCM, `enc:v1:` prefix, lazy upgrade) + hooks: profile key encrypt on
    save / decrypt in the `scanProfile` funnel, web-search settings keys. Enabled
@@ -31,11 +37,19 @@ Adopted plan (operator decision 2026-11-05). Order is priority.
    path-traversal-lfi-rfi), Apache-2.0, verbatim at the pinned upstream commit;
    `skills/NOTICE.md` records provenance. Bulk import of the 75-pack tree stays
    rejected.
-6. **[L] SQLite backend option** — dialect layer so a single-user/local deployment
-   can run without PostgreSQL. Enabler for a desktop-friendly mode.
-7. **[L] Desktop-friendly mode** — phase 1: SQLite option + single-binary local run;
-   phase 2 (evaluate later): thin desktop shell/tray. No Wails port until phase 1
-   proves out.
+6. **[L] SQLite backend option** — RE-SCOPED (measurement 2026-11-05). Upstream's
+   SQLite support is a platform subsystem, not a flag: 16 files / ~180 KB of
+   dialect and adapter code plus a separate 96 KB SQLite schema
+   (dialect_arrays/companies/intercept/locking/mixed/softdelete, open_sqlite,
+   json scan adapters, error mapping), all woven through a db layer that has
+   since diverged from ours. Honest estimate: a multi-day port with per-query
+   validation, not a session item. Until it lands, `db.Open` fails fast with a
+   clear message on sqlite DSNs. PG stays the only backend.
+7. **[L] Desktop-friendly mode** — phase 1 delivered as far as possible without
+   item 6: the release image is a single binary with the UI embedded, and the
+   local/desktop path is `./build-image.sh . && docker compose up` (README).
+   A bundled no-Postgres single-user mode waits on item 6. No Wails shell until
+   that proves out.
 
 Explicitly rejected: the zh-only locale model, the coordinator replacing
 planner/workers (study only), the editorial theme, wholesale skills import,
