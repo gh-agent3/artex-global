@@ -19,9 +19,11 @@ Adopted plan (operator decision 2026-11-05). Order is priority.
 4. **[M] Credential encryption at rest** — optional (off by default), key from
    env/file (0600, rotatable); encrypts stored tokens/invites. Defense-in-depth on
    top of ADR-0001, not a replacement.
-5. **[S] Selective skills import** — pick 5-10 vuln-class packs from the strix skill
-   set (idor, ssrf, jwt, oauth, graphql...), translate to English, review each;
-   do NOT bulk-import the 75-pack tree.
+5. **[S] Selective skills import** — DONE. 8 packs imported from the strix skill
+   set (idor, ssrf, authentication-jwt, oauth, graphql, xss, sql-injection,
+   path-traversal-lfi-rfi), Apache-2.0, verbatim at the pinned upstream commit;
+   `skills/NOTICE.md` records provenance. Bulk import of the 75-pack tree stays
+   rejected.
 6. **[L] SQLite backend option** — dialect layer so a single-user/local deployment
    can run without PostgreSQL. Enabler for a desktop-friendly mode.
 7. **[L] Desktop-friendly mode** — phase 1: SQLite option + single-binary local run;
