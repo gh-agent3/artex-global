@@ -1,8 +1,9 @@
 <div align="center">
 
-# ARTEX — Global Edition
+# ARTEX ACP Edition
 
-**An autonomous penetration-testing console driven by LLM multi-agents** (Go backend + Next.js frontend)
+**An autonomous penetration-testing console driven by LLM multi-agents.**
+Go backend + Next.js frontend, built from source as a single container image.
 
 [![license: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -12,91 +13,124 @@
 
 > ## Security & misuse warning — read this first
 >
-> This repository is published for use only within authorized environments, and only
-> to build defensive and detection capabilities.
+> **ARTEX autonomously plans and executes real attack chains. Run it only against
+> infrastructure you own or are explicitly authorized to test, and only to build
+> defensive and detection capabilities.**
 
-## What this fork is
+![ARTEX ACP Edition — the tasks console](docs/screenshots/console.png)
 
-A source-built, English-first deployment of the ARTEX platform:
+## What ARTEX ACP Edition is
 
-- The Docker image builds the frontend and the Go binary from source — no prebuilt
-  binary is copied in. The image is tied to the exact commit via build args and labels.
-- UI and agent-generated output are English by default; Russian is available in
-  Settings (System → Settings → Display language). Other locales (ko/zh/es/ja) ship
-  with the upstream translation catalogs.
-- Demo mode: one click masks sensitive fields for video recording and presales screen
-  shares (see `docs/demo-mode.md`).
-- Traffic capture: an MITM recording proxy captures worker HTTP/S traffic for evidence
-  binding to findings.
-- Finding quality gates: `report_finding` requires an explicit verification (source
-  reference or clean-session reproduction) before a finding is filed.
-- The version in the UI header links to the exact commit on GitHub; hover shows the
-  commit subject and date.
+An operator-facing platform for authorized penetration testing. You describe the
+goal; a planner decomposes it, worker agents execute testing intents across the
+engagement surface, findings flow through verification and independent
+re-check, and every claim lands in an evidence-backed report. The UI, agent
+output and reports are in **English and Russian** (switchable in Settings);
+English is the built-in literal, Russian ships as a catalog.
 
-## Build the image
+Key capabilities:
 
-Requires Docker with buildx. From the repository root:
+- **Autonomous multi-agent engine** — planner/worker orchestration over a live
+  exploration graph (facts, intents, findings, assets), with goals proved
+  explicitly before a task can close.
+- **Finding quality pipeline** — filing a finding requires a verification
+  (exact source reference or clean-session reproduction); an independent
+  read-only verifier agent then re-checks recorded findings by severity policy
+  and drives a `verified/refuted` state.
+- **LLM reliability layer** — one failure classification (retry / switch /
+  fail / quality) shared by the provider pool, quota detection and retries;
+  text semantics beat status codes.
+- **Evidence-grade traffic capture** — an MITM recording proxy captures worker
+  HTTP/S traffic; findings bind to the exact request/response pairs that prove
+  them.
+- **MCP ingress** — ARTEX itself serves MCP (`POST /mcp`, Bearer token), so
+  external harnesses can hand in tasks and poll status.
+- **Demo mode** — one click masks sensitive fields for video recording and
+  presales screen shares.
+- **Credential hygiene** — optional AES-256-GCM encryption of stored keys at
+  rest; scoped, single-use task credentials are revoked by procedure after
+  each run.
+- **Provenance & reporting** — per-task artifact inventory with audited
+  cleanup, report versions with chat-driven revisions, retests, CVSS-calibrated
+  severity.
+
+## Quick start
+
+Prerequisites: Docker with buildx. Build takes a few minutes (frontend + Go
+binary + toolset, all from source):
 
 ```sh
+git clone https://github.com/gh-agent3/artex-global.git artex
+cd artex
 ./build-image.sh .
 ```
 
-This produces `artex-local:<short-sha>` plus an immutable binary-hash tag
-`artex-local:<short-sha>-<hash>` suitable for pinning in a compose file. Build-time
-git metadata (commit, subject, date, repo URL) is embedded into the binary and served
-via `/api/health`.
-
-## Run
-
-ARTEX needs PostgreSQL. A minimal working stack ships as `docker-compose.yml`
-(PostgreSQL pinned by digest, artex pinned by the binary-hash tag):
+Run the minimal stack (PostgreSQL pinned by digest, ARTEX pinned by its
+binary-hash tag):
 
 ```sh
-./build-image.sh .
 ARTEX_IMAGE=artex-local:<short-sha>-<hash> docker compose up -d
 ```
 
-Then open `http://127.0.0.1:8787`. Health check: `GET /api/health`.
+Open `http://127.0.0.1:8787` — first start prints a one-time setup token in
+the logs (`docker logs artex-artex-1`); use it to set the admin password.
 
-### MCP ingress (task intake for external harnesses)
+![First run — password setup](docs/screenshots/first-run.png)
 
-Set `ARTEX_MCP_TOKEN` to expose `POST /mcp` (Streamable HTTP MCP, Bearer auth):
-external harnesses (e.g. paperclip) can then call `task_create`, `task_status` and
-`task_list`. Without the token the endpoint is not mounted (fail closed).
+### Single-user / local mode (experimental)
 
-### SQLite backend (experimental option)
-
-Single-user/local deployments can skip PostgreSQL and point the DSN at SQLite
-(modernc.org/sqlite, no CGO):
+Skip PostgreSQL and run on SQLite (pure Go, no CGO):
 
 ```sh
 ARTEX_PG_DSN="file:/path/to/artex.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)" ./artex
 ```
 
-The core paths are validated on SQLite (see `db/sqlite_core_test.go`); archive
-restore, notification delivery and traffic search remain PostgreSQL-only for
-now. PostgreSQL stays the default and the fully supported backend.
+Core flows are validated on SQLite (`db/sqlite_core_test.go`); the default and
+fully supported backend remains PostgreSQL.
 
-Set `ARTEX_CRED_ENCRYPT=1` to encrypt stored credentials (LLM profile API keys,
-web-search API keys) with AES-256-GCM. The master key is created on first start
-as `credential.key` (0600) next to `jwt.key`, outside the browsable data dir.
-Values upgrade lazily on their next save (`enc:v1:` prefix); without the env the
-storage stays plaintext, exactly as before.
+## Operating modes
+
+- **Server deployment** (default) — the container behind your reverse proxy or
+  VPN; the operator console for a team or a single operator.
+- **Local / desktop-friendly** — the same single binary with the UI embedded,
+  on SQLite, on a laptop. No separate installer is required.
+
+## Integrations
+
+- **MCP (Model Context Protocol)** — set `ARTEX_MCP_TOKEN` to expose
+  `task_create` / `task_status` / `task_list` to external harnesses
+  (e.g. paperclip). Without the token the endpoint is not mounted at all.
+- **LLM providers** — any Anthropic-compatible, OpenAI-compatible or Gemini
+  endpoint; per-profile chains with circuit-breaker failover, per-endpoint
+  retry ladders and provider quota detection.
+- **MCP tool servers** — attach external tool servers (browser, GitHub and
+  friends) to agents through the built-in registry.
+
+## Security posture
+
+- Fail-closed by default: no setup token → no admin account; no MCP token → no
+  MCP surface; encryption off unless explicitly enabled.
+- Version string in the UI header links to the exact commit; hover shows the
+  commit subject and date.
+- Dependency and secret scanning run in CI (govulncheck, npm audit, trivy,
+  gitleaks, trufflehog) across the full history.
 
 ## Documentation
 
+- `docs/demo-mode.md` — demo mode design and decisions
 - `docs/fork-review.md` — the standing process for reviewing third-party forks
-  (repos under review are saved as git remotes, one review file per repo in
-  `docs/forks/`)
-- `docs/demo-mode.md` — demo mode (screen-share masking) design and decisions
-- `docs/backlog.md` — known gaps and pending improvements
+- `docs/forks/` — per-fork reviews (ARTEX-HYDRA and successors)
+- `docs/backlog.md` — known gaps, SQLite coverage notes, pending improvements
 - `docs/adr/` — architecture decision records
 
-## Branches
+## Branches and releases
 
-- `main` — release branch; each release is tagged `v<version>` (e.g. `v0.3.16-global.1`)
+- `main` — release branch; releases are tagged `v<version>`
+  (current: `v0.3.16-global.1`)
 - `dev` — active development
 
 ## License
 
-AGPL-3.0, inherited from upstream (Autumn-27/ARTEX).
+AGPL-3.0. Derived from the ARTEX project (upstream: Autumn-27/ARTEX and the
+global edition lineage); see `LICENSE` and `skills/NOTICE.md` for third-party
+attribution.
