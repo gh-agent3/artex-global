@@ -41,7 +41,16 @@ const { chromium } = require("/usr/lib/node_modules/playwright");
     return null;
   });
   console.log("http:", resp ? resp.status() : "-", "url:", page.url());
-  await page.waitForTimeout(9000); // let lists/charts settle after hydration (networkidle never fires: the UI polls)
+  // The UI polls, so networkidle never fires; fixed waits settle hydration.
+  // Cold starts can leave the pre-paint splash stuck — detect an empty body
+  // and reload once.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    await page.waitForTimeout(9000);
+    const text = (await page.evaluate(() => document.body?.innerText ?? "")).trim();
+    if (text.length > 80 || attempt === 2) break;
+    console.log("page looks blank (", text.length, "chars), reloading");
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 90000 }).catch(() => {});
+  }
   await page.screenshot({ path: out, fullPage: full });
   await browser.close();
   console.log("saved:", out);
