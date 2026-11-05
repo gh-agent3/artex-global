@@ -240,6 +240,11 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 	if err != nil {
 		log.Fatalf("[auth] JWT key: %v", err)
 	}
+	if credEncryptionEnabled() {
+		if err := InstallCredentialKey(keyDir); err != nil {
+			log.Fatalf("[auth] credential key: %v", err)
+		}
+	}
 	s := &Server{m: m, engine: NewEngine(m), ctx: ctx, skillDir: skillDir, jwtKey: key, chatBusy: map[string]bool{},
 		chatCancel: map[string]context.CancelCauseFunc{}, triggerQ: map[string][]triggeredRun{},
 		triggerActive: map[string]int{}, triggerCfg: map[string]triggerBehavior{},

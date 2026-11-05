@@ -132,10 +132,11 @@ func TestMCPAuthAndTaskIntake(t *testing.T) {
 		t.Fatalf("task_status: isErr=%v %s", isErr, text)
 	}
 
-	// list contains the new task.
-	rec = mcpPOST(t, h, "test-token", jsonRPC(3, "task_list", map[string]any{"limit": 10}))
+	// list contains the new task (search by the unique marker — the shared test
+	// DB holds tasks from other suites).
+	rec = mcpPOST(t, h, "test-token", jsonRPC(3, "task_list", map[string]any{"limit": 200}))
 	text, isErr = rpcResult(t, rec)
-	if isErr || !strings.Contains(text, "#"+dto.ID) {
+	if isErr || !strings.Contains(text, "#"+dto.ID+" [") {
 		t.Fatalf("task_list: isErr=%v %s", isErr, text)
 	}
 

@@ -64,6 +64,14 @@ Set `ARTEX_MCP_TOKEN` to expose `POST /mcp` (Streamable HTTP MCP, Bearer auth):
 external harnesses (e.g. paperclip) can then call `task_create`, `task_status` and
 `task_list`. Without the token the endpoint is not mounted (fail closed).
 
+### Credential encryption at rest (opt-in)
+
+Set `ARTEX_CRED_ENCRYPT=1` to encrypt stored credentials (LLM profile API keys,
+web-search API keys) with AES-256-GCM. The master key is created on first start
+as `credential.key` (0600) next to `jwt.key`, outside the browsable data dir.
+Values upgrade lazily on their next save (`enc:v1:` prefix); without the env the
+storage stays plaintext, exactly as before.
+
 ## Documentation
 
 - `docs/fork-review.md` — the standing process for reviewing third-party forks

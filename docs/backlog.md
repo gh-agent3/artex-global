@@ -20,9 +20,12 @@ Adopted plan (operator decision 2026-11-05). Order is priority.
 3. **[L] Finding verifier agent** — independent read-only re-verification pipeline
    (high severity mandatory, medium/low sampled) driving a validation state on
    findings; complements the report_finding verification gate.
-4. **[M] Credential encryption at rest** — optional (off by default), key from
-   env/file (0600, rotatable); encrypts stored tokens/invites. Defense-in-depth on
-   top of ADR-0001, not a replacement.
+4. **[M] Credential encryption at rest** — DONE (opt-in). `db/credential_crypto.go`
+   (AES-256-GCM, `enc:v1:` prefix, lazy upgrade) + hooks: profile key encrypt on
+   save / decrypt in the `scanProfile` funnel, web-search settings keys. Enabled
+   by `ARTEX_CRED_ENCRYPT=1`; key file `credential.key` (0600) next to `jwt.key`;
+   default off keeps existing deployments plaintext. Defense-in-depth on top of
+   ADR-0001, not a replacement.
 5. **[S] Selective skills import** — DONE. 8 packs imported from the strix skill
    set (idor, ssrf, authentication-jwt, oauth, graphql, xss, sql-injection,
    path-traversal-lfi-rfi), Apache-2.0, verbatim at the pinned upstream commit;
