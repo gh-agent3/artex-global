@@ -126,7 +126,7 @@ fully supported backend remains PostgreSQL.
 ## Branches and releases
 
 - `main` — release branch; releases are tagged `v<version>`
-  (current: `v0.3.16-global.1`)
+  (current: `v0.3.16-acp.1`)
 - `dev` — active development
 
 ## License
