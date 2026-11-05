@@ -53,6 +53,10 @@ Key capabilities:
 - **Provenance & reporting** — per-task artifact inventory with audited
   cleanup, report versions with chat-driven revisions, retests, CVSS-calibrated
   severity.
+- **Operator ergonomics** — drag-resizable sidebar and task-table columns
+  (both persisted), a Reading Size preference for dense text surfaces, and a
+  header toggle for demo mode. Authenticated UI screenshots for docs and
+  reviews: `./scripts/ui-shot.sh /dashboard/ out.png [--demo]`.
 
 ## Quick start
 
