@@ -95,7 +95,7 @@ func (s *Server) verifyReaper(ctx context.Context) {
 			return
 		case <-tick.C:
 			if _, err := s.m.pg.ExecContext(ctx, `
-UPDATE finding_verifications SET status='error', reason='service restarted mid-verification', finished_at=now()
+UPDATE finding_verifications SET status='failed', reason='service restarted mid-verification', finished_at=now()
 WHERE status='running'`); err != nil {
 				log.Printf(logA("[verify] reaper: %v"), err)
 			}

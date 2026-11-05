@@ -24,6 +24,7 @@ type FindingVerification struct {
 	FindingID      int64      `json:"finding_id"`
 	ConversationID *int64     `json:"conversation_id"`
 	Status         string     `json:"status"`
+	Verdict        string     `json:"verdict"`
 	Reason         string     `json:"reason"`
 	Notes          string     `json:"notes"`
 	CreatedAt      time.Time  `json:"created_at"`
@@ -31,7 +32,7 @@ type FindingVerification struct {
 	FinishedAt     *time.Time `json:"finished_at"`
 }
 
-const verificationCols = `id, finding_id, conversation_id, status, reason, notes, created_at, started_at, finished_at`
+const verificationCols = `id, finding_id, conversation_id, status, verdict, reason, notes, created_at, started_at, finished_at`
 
 // FindingPendingVerificationRow is one finding the scanner judged in scope.
 type FindingPendingVerificationRow struct {
@@ -71,18 +72,22 @@ func (d *DB) CreateFindingVerification(ctx context.Context, findingID int64, not
 		return nil, nil, false, err
 	}
 	defer tx.Rollback()
-	var title string
-	var snapshot []byte
-	err = tx.QueryRowContext(ctx, `SELECT COALESCE(NULLIF(f.name,''), NULLIF(f.vulnclass,''), 'uncategorized'),
-	jsonb_build_object('finding', to_jsonb(f),
-	 'assets', COALESCE((SELECT jsonb_agg(to_jsonb(a)) FROM assets a WHERE f.asset_ids @> to_jsonb(ARRAY[a.id])), '[]'::jsonb),
-	 'constraints', COALESCE((SELECT jsonb_agg(to_jsonb(c)) FROM task_constraints c JOIN tasks t ON t.exploration_id=c.exploration_id WHERE t.id=f.task_id), '[]'::jsonb))
-	FROM findings f WHERE f.id=$1 FOR UPDATE OF f`, findingID).Scan(&title, &snapshot)
+	title, snapshot, err := d.findingSnapshot(findingID)
 	if err != nil {
 		return nil, nil, false, err
 	}
+	// Serialize concurrent enqueue decisions on the finding row (PG: row lock;
+	// SQLite: single-writer + the unique active index below).
+	lockSQL := `SELECT 1 FROM findings f WHERE f.id=$1 FOR UPDATE OF f`
+	if d.sqlite {
+		lockSQL = `SELECT 1 FROM findings WHERE id=$1`
+	}
+	var one int
+	if err := tx.QueryRowContext(ctx, lockSQL, findingID).Scan(&one); err != nil {
+		return nil, nil, false, err
+	}
 	var exists bool
-	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM finding_verifications WHERE finding_id=$1 AND status IN ('pending','running','verified','refuted','inconclusive'))`, findingID).Scan(&exists); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM finding_verifications WHERE finding_id=$1 AND status IN ('pending','running'))`, findingID).Scan(&exists); err != nil {
 		return nil, nil, false, err
 	}
 	if exists {
@@ -99,7 +104,7 @@ func (d *DB) CreateFindingVerification(ctx context.Context, findingID int64, not
 	var v FindingVerification
 	var conv *int64
 	err = tx.QueryRowContext(ctx, `INSERT INTO finding_verifications(finding_id,conversation_id,notes,snapshot) VALUES ($1,$2,$3,$4) RETURNING `+verificationCols,
-		findingID, c.ID, strings.TrimSpace(notes), snapshot).Scan(&v.ID, &v.FindingID, &conv, &v.Status, &v.Reason, &v.Notes, &v.CreatedAt, &v.StartedAt, &v.FinishedAt)
+		findingID, c.ID, strings.TrimSpace(notes), snapshot).Scan(&v.ID, &v.FindingID, &conv, &v.Status, &v.Verdict, &v.Reason, &v.Notes, &v.CreatedAt, &v.StartedAt, &v.FinishedAt)
 	if err != nil {
 		return nil, nil, false, err
 	}
@@ -120,21 +125,22 @@ func VerificationInitialMessage(findingID int64) string {
 	return fmt.Sprintf(`Independently verify finding #%d. Call get_finding_verify_context for the frozen snapshot (finding, evidence, assets, constraints). Judge whether the recorded claim is proven by the captured evidence: verified / refuted / inconclusive, then call record_finding_verification_result with the verdict and a reason. Read-only: do not probe the target, do not change the finding, do not create tasks.`, findingID)
 }
 
-// FinishFindingVerification closes a row with its verdict and mirrors the
-// outcome onto findings.validation (verified / refuted / unverified).
-func (d *DB) FinishFindingVerification(id int64, status, reason string) error {
+// FinishFindingVerification closes a row: status becomes 'completed' (or
+// 'failed'), the verdict is stored separately, and the outcome mirrors onto
+// findings.validation (verified / refuted / unverified).
+func (d *DB) FinishFindingVerification(id int64, verdict, reason string) error {
 	tx, err := d.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 	var findingID int64
-	if err := tx.QueryRow(`UPDATE finding_verifications SET status=$2, reason=$3, finished_at=now() WHERE id=$1 RETURNING finding_id`,
-		id, status, reason).Scan(&findingID); err != nil {
+	if err := tx.QueryRow(`UPDATE finding_verifications SET status='completed', verdict=$2, reason=$3, finished_at=now() WHERE id=$1 RETURNING finding_id`,
+		id, verdict, reason).Scan(&findingID); err != nil {
 		return err
 	}
 	validation := "unverified"
-	switch status {
+	switch verdict {
 	case "verified":
 		validation = "verified"
 	case "refuted":
@@ -157,7 +163,7 @@ func (d *DB) ListFindingVerifications(findingID int64) ([]FindingVerification, e
 	for rows.Next() {
 		var v FindingVerification
 		var conv *int64
-		if err := rows.Scan(&v.ID, &v.FindingID, &conv, &v.Status, &v.Reason, &v.Notes, &v.CreatedAt, &v.StartedAt, &v.FinishedAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.FindingID, &conv, &v.Status, &v.Verdict, &v.Reason, &v.Notes, &v.CreatedAt, &v.StartedAt, &v.FinishedAt); err != nil {
 			return nil, err
 		}
 		v.ConversationID = conv
@@ -172,7 +178,7 @@ func (d *DB) VerificationForConversation(ctx context.Context, convID int64) (*Fi
 	var v FindingVerification
 	var conv *int64
 	err := d.QueryRowContext(ctx, `SELECT `+verificationCols+` FROM finding_verifications WHERE conversation_id=$1`, convID).
-		Scan(&v.ID, &v.FindingID, &conv, &v.Status, &v.Reason, &v.Notes, &v.CreatedAt, &v.StartedAt, &v.FinishedAt)
+		Scan(&v.ID, &v.FindingID, &conv, &v.Status, &v.Verdict, &v.Reason, &v.Notes, &v.CreatedAt, &v.StartedAt, &v.FinishedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}

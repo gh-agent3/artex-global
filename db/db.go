@@ -97,7 +97,11 @@ func DSN() (dsn, source string, err error) {
 
 // DB wraps the shared *sql.DB. PG handles its own connection pool + concurrency
 // (MVCC), so unlike the old SQLite store there is no process-wide write mutex.
-type DB struct{ *sql.DB }
+// sqlite marks the experimental SQLite dialect (see sqlite.go).
+type DB struct {
+	*sql.DB
+	sqlite bool
+}
 
 // ensureDatabase connects to the postgres system database and creates the target
 // database if it does not exist. dsn must be a postgres:// URL.
@@ -133,9 +137,8 @@ func ensureDatabase(dsn string) error {
 
 // Open connects, applies the schema (idempotent), and seeds builtin rows.
 func Open(dsn string) (*DB, error) {
-	if strings.HasPrefix(dsn, "sqlite") || strings.HasSuffix(dsn, ".db") || strings.HasSuffix(dsn, ".sqlite") {
-		return nil, errors.New("sqlite backend is not supported yet: this build requires PostgreSQL " +
-			"(a SQLite dialect layer is backlog item 6, see docs/backlog.md)")
+	if isSQLiteDSN(dsn) {
+		return openSQLite(dsn)
 	}
 	if err := ensureDatabase(dsn); err != nil {
 		return nil, err
@@ -158,13 +161,16 @@ func Open(dsn string) (*DB, error) {
 		sqlDB.Close()
 		return nil, fmt.Errorf("ping postgres (%s): %w", config.Redact(dsn), err)
 	}
-	d := &DB{sqlDB}
+	d := &DB{DB: sqlDB}
 	// pgx runs multi-statement Exec via the simple protocol when there are no args.
 	// Keep the dedicated lock connection checked out until both DDL and seeding
 	// finish so concurrent application instances cannot initialize out of order.
 	err = withSchemaMigrationLock(context.Background(), sqlDB, func(conn *sql.Conn) error {
 		if err := applySchemaWithRetry(context.Background(), conn, time.Sleep); err != nil {
 			return fmt.Errorf("apply schema: %w", err)
+		}
+		if err := migrateFindingVerificationsShape(context.Background(), conn); err != nil {
+			return fmt.Errorf("migrate finding_verifications: %w", err)
 		}
 		if err := d.seedBuiltins(); err != nil {
 			return fmt.Errorf("seed builtins: %w", err)

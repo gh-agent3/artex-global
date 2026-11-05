@@ -66,7 +66,7 @@ func TestFindingVerificationLifecycle(t *testing.T) {
 		t.Fatalf("findings.validation = %q, want verified", validation)
 	}
 	fin, _ := d.VerificationForConversation(ctx, *v.ConversationID)
-	if fin.Status != "verified" || fin.Reason == "" {
+	if fin.Status != "completed" || fin.Verdict != "verified" || fin.Reason == "" {
 		t.Fatalf("finished row: %+v", fin)
 	}
 }

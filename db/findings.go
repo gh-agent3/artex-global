@@ -166,6 +166,7 @@ type FindingFilter struct {
 	assetIDs  []int64 // every asset id in the subtree
 	assetNone bool    // only findings with unassigned assets
 	assetMiss bool    // the selected node does not exist under this filter -> always empty
+	sqlite    bool    // dialect: SQLite json_each instead of jsonb operators
 }
 
 // FindingUnassignedTask is the task filter sentinel for findings whose task is
@@ -207,16 +208,36 @@ func (f FindingFilter) where() (string, []any) {
 		// assets table (the assets were deleted). Both kinds land in the tree's unassigned
 		// bucket, so they must be included here too, otherwise the bucket count would
 		// exceed the number of rows the bucket returns when opened.
-		conds = append(conds, `(
-			jsonb_array_length(COALESCE(f.asset_ids, '[]'::jsonb)) = 0
-			OR NOT EXISTS (
-				SELECT 1 FROM jsonb_array_elements_text(f.asset_ids) e(v)
-				JOIN assets a ON a.id = e.v::bigint
-			)
-		)`)
+		if f.sqlite {
+			conds = append(conds, `(
+				COALESCE(json_array_length(f.asset_ids), 0) = 0
+				OR NOT EXISTS (
+					SELECT 1 FROM json_each(f.asset_ids) e
+					JOIN assets a ON a.id = e.value
+				)
+			)`)
+		} else {
+			conds = append(conds, `(
+				jsonb_array_length(COALESCE(f.asset_ids, '[]'::jsonb)) = 0
+				OR NOT EXISTS (
+					SELECT 1 FROM jsonb_array_elements_text(f.asset_ids) e(v)
+					JOIN assets a ON a.id = e.v::bigint
+				)
+			)`)
+		}
 	case len(f.assetIDs) > 0:
-		args = append(args, assetIDContainments(f.assetIDs))
-		conds = append(conds, fmt.Sprintf("f.asset_ids @> ANY($%d::jsonb[])", len(args)))
+		if f.sqlite {
+			// Integer ids expanded as literals (no array binding on SQLite); the
+			// values come from the asset tree, never from user text.
+			ids := make([]string, len(f.assetIDs))
+			for i, id := range f.assetIDs {
+				ids[i] = strconv.FormatInt(id, 10)
+			}
+			conds = append(conds, "EXISTS (SELECT 1 FROM json_each(f.asset_ids) WHERE value IN ("+strings.Join(ids, ",")+"))")
+		} else {
+			args = append(args, assetIDContainments(f.assetIDs))
+			conds = append(conds, fmt.Sprintf("f.asset_ids @> ANY($%d::jsonb[])", len(args)))
+		}
 	}
 	if query := strings.TrimSpace(f.Query); query != "" {
 		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(query)
@@ -249,6 +270,7 @@ func (d *DB) ListFindingsPage(f FindingFilter, page, pageSize int) ([]*DBFinding
 	if err != nil {
 		return nil, 0, err
 	}
+	f.sqlite = d.sqlite
 	where, args := f.where()
 
 	var total int
@@ -309,6 +331,7 @@ func (d *DB) ListFindingGroups(f FindingFilter, page, pageSize int) ([]FindingGr
 		pageSize = 10
 	}
 	f, err := d.applyAssetScope(f)
+	f.sqlite = d.sqlite
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -493,6 +516,7 @@ func (d *DB) ListFindingsForExport(f FindingFilter, ids []int64) ([]*DBFinding, 
 			WHERE f.id IN (` + strings.Join(ph, ",") + `)
 			` + order
 	} else {
+		f.sqlite = d.sqlite
 		scoped, err := d.applyAssetScope(f)
 		if err != nil {
 			return nil, err
@@ -733,9 +757,15 @@ func (d *DB) setFindingCol(id int64, col, jsonKey, val string) (int64, error) {
 		return 0, err
 	}
 	if nodeID != nil {
-		_, _ = d.Exec(`UPDATE exploration_nodes
-			SET payload = jsonb_set(payload, '{`+jsonKey+`}', to_jsonb($1::text))
-			WHERE id = $2`, val, *nodeID)
+		if d.sqlite {
+			_, _ = d.Exec(`UPDATE exploration_nodes
+				SET payload = json_set(payload, '$.`+jsonKey+`', $1)
+				WHERE id = $2`, val, *nodeID)
+		} else {
+			_, _ = d.Exec(`UPDATE exploration_nodes
+				SET payload = jsonb_set(payload, '{`+jsonKey+`}', to_jsonb($1::text))
+				WHERE id = $2`, val, *nodeID)
+		}
 	}
 	return 1, nil
 }

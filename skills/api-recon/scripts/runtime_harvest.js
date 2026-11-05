@@ -97,7 +97,7 @@ function neutralize(txt, n) {
   const launchArgs = ['--no-sandbox', '--disable-dev-shm-usage', '--ignore-certificate-errors'];
   if (cfg.proxy) launchArgs.push(`--proxy-server=${cfg.proxy}`);
   const browser = await puppeteer.launch({
-    executablePath: cfg.chromium, headless: cfg.headless ? 'new' : false,
+    executablePath: cfg.chromium, headless: !!cfg.headless, // puppeteer >=22 removed the 'new' string; boolean only
     args: launchArgs
   });
   const page = await browser.newPage();

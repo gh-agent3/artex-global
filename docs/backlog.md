@@ -37,19 +37,20 @@ Adopted plan (operator decision 2026-11-05). Order is priority.
    path-traversal-lfi-rfi), Apache-2.0, verbatim at the pinned upstream commit;
    `skills/NOTICE.md` records provenance. Bulk import of the 75-pack tree stays
    rejected.
-6. **[L] SQLite backend option** — RE-SCOPED (measurement 2026-11-05). Upstream's
-   SQLite support is a platform subsystem, not a flag: 16 files / ~180 KB of
-   dialect and adapter code plus a separate 96 KB SQLite schema
-   (dialect_arrays/companies/intercept/locking/mixed/softdelete, open_sqlite,
-   json scan adapters, error mapping), all woven through a db layer that has
-   since diverged from ours. Honest estimate: a multi-day port with per-query
-   validation, not a session item. Until it lands, `db.Open` fails fast with a
-   clear message on sqlite DSNs. PG stays the only backend.
-7. **[L] Desktop-friendly mode** — phase 1 delivered as far as possible without
-   item 6: the release image is a single binary with the UI embedded, and the
-   local/desktop path is `./build-image.sh . && docker compose up` (README).
-   A bundled no-Postgres single-user mode waits on item 6. No Wails shell until
-   that proves out.
+6. **[L] SQLite backend option** — DONE (experimental core). `ARTEX_PG_DSN=file:/path/
+   artex.db?...` opens SQLite via modernc.org/sqlite (no CGO): translated schema
+   (`schema_sqlite.sql`, adopted from upstream and extended with our tables), a
+   rewrite hook (casts / FOR UPDATE / ILIKE / advisory locks) funnelled through
+   shadowed Query/Exec methods, custom SQL functions (`now`, `regexp`, GREATEST
+   and friends in `sqlite_compat.go`), Go-assembled finding snapshots (no jsonb
+   emulation), dialect-conditional json paths in the findings filter. Validated
+   by `TestSQLiteCore` (settings, profiles, tasks, findings, activity,
+   verification queue, credential crypto). NOT validated: archive/restore,
+   notification delivery, report versions, traffic search — those stay PG-only
+   until someone exercises them on SQLite. PG remains the default backend.
+7. **[L] Desktop-friendly mode** — phase 1: SQLite option (item 6) + single-binary
+   image with the UI embedded + compose path for local runs. Phase 2 (a desktop
+   shell/tray) waits for real demand; no Wails port until then.
 
 Explicitly rejected: the zh-only locale model, the coordinator replacing
 planner/workers (study only), the editorial theme, wholesale skills import,

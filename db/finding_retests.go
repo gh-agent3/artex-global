@@ -91,14 +91,16 @@ func (d *DB) CreateFindingRetest(ctx context.Context, findingID int64, notes str
 		return nil, nil, false, err
 	}
 	defer tx.Rollback()
-	var title string
-	var snapshot []byte
-	err = tx.QueryRowContext(ctx, `SELECT COALESCE(NULLIF(f.name,''), NULLIF(f.vulnclass,''), 'uncategorized'),
-	jsonb_build_object('finding', to_jsonb(f),
-	 'assets', COALESCE((SELECT jsonb_agg(to_jsonb(a)) FROM assets a WHERE f.asset_ids @> to_jsonb(ARRAY[a.id])), '[]'::jsonb),
-	 'constraints', COALESCE((SELECT jsonb_agg(to_jsonb(c)) FROM task_constraints c JOIN tasks t ON t.exploration_id=c.exploration_id WHERE t.id=f.task_id), '[]'::jsonb))
-	FROM findings f WHERE f.id=$1 FOR UPDATE OF f`, findingID).Scan(&title, &snapshot)
+	title, snapshot, err := d.findingSnapshot(findingID)
 	if err != nil {
+		return nil, nil, false, err
+	}
+	lockSQL := `SELECT 1 FROM findings f WHERE f.id=$1 FOR UPDATE OF f`
+	if d.sqlite {
+		lockSQL = `SELECT 1 FROM findings WHERE id=$1`
+	}
+	var one int
+	if err := tx.QueryRowContext(ctx, lockSQL, findingID).Scan(&one); err != nil {
 		return nil, nil, false, err
 	}
 	r, err := scanRetest(tx.QueryRowContext(ctx, `SELECT `+retestCols+` FROM finding_retests WHERE finding_id=$1 AND status IN ('pending','running')`, findingID))

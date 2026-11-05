@@ -1130,15 +1130,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_finding_retests_active ON finding_retests(
 
 -- Independent verification of a finding by a separate read-only agent (P2
 -- verifier). Unlike finding_retests (operator-triggered recheck), these are
--- enqueued automatically by severity policy at recording time: critical/high
--- always, medium by sample rate, low never. The verdict feeds findings.validation.
+-- enqueued automatically by severity policy at recording time. Status is the
+-- lifecycle (pending/running/completed/failed); the verdict is separate
+-- (verified/refuted/inconclusive) and feeds findings.validation.
 CREATE TABLE IF NOT EXISTS finding_verifications (
     id BIGSERIAL PRIMARY KEY,
     finding_id BIGINT NOT NULL REFERENCES findings(id) ON DELETE CASCADE,
     conversation_id BIGINT UNIQUE REFERENCES conversations(id) ON DELETE SET NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','running','verified','refuted','inconclusive','error')),
-    reason TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','running','completed','failed','stopped')),
+    verdict TEXT NOT NULL DEFAULT '' CHECK (verdict IN ('','verified','refuted','inconclusive')),
     notes TEXT NOT NULL DEFAULT '',
+    reason TEXT NOT NULL DEFAULT '',
     snapshot JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     started_at TIMESTAMPTZ,
