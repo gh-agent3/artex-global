@@ -11,8 +11,12 @@ Adopted plan (operator decision 2026-11-05). Order is priority.
    subscription-window markers). `llm/pool` breaker, `agent.IsQuotaExhaustedMessage`
    (which `server/task_llm.go` uses) and `isHardFailure` all route through
    `llmclass.Classify` / `IsQuotaExhausted`; regression tests in pool + provider.
-2. **[M] MCP server** — port `mcpserver/` (builtin/guard/http/probe) so external
-   orchestrators (paperclip) can hand ARTEX tasks over MCP.
+2. **[M] MCP server** — DONE (scoped to the intake use case). `mcpserver` +
+   `mcpbuiltin` packages ported with their tests; our own thin wiring in
+   `server/mcp.go`: `POST /mcp` (Streamable HTTP subset), Bearer
+   `ARTEX_MCP_TOKEN` (endpoint not mounted at all without it), fixed narrow
+   surface — `task_create` (normal creation path, never raw SQL), `task_status`,
+   `task_list`. Their full L0-L3 capability registry is not ported.
 3. **[L] Finding verifier agent** — independent read-only re-verification pipeline
    (high severity mandatory, medium/low sampled) driving a validation state on
    findings; complements the report_finding verification gate.

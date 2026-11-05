@@ -1085,6 +1085,9 @@ func (s *Server) Handler() http.Handler {
 	api := cors(s.requireAuth(mux))
 	root := http.NewServeMux()
 	root.Handle("/api/", api)
+	if h := s.mcpHandler(); h != nil {
+		root.Handle("/mcp", h) // MCP ingress; mounted only when ARTEX_MCP_TOKEN is set
+	}
 	root.Handle("/", s.webuiHandler())
 	return root
 }

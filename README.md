@@ -58,6 +58,12 @@ ARTEX_IMAGE=artex-local:<short-sha>-<hash> docker compose up -d
 
 Then open `http://127.0.0.1:8787`. Health check: `GET /api/health`.
 
+### MCP ingress (task intake for external harnesses)
+
+Set `ARTEX_MCP_TOKEN` to expose `POST /mcp` (Streamable HTTP MCP, Bearer auth):
+external harnesses (e.g. paperclip) can then call `task_create`, `task_status` and
+`task_list`. Without the token the endpoint is not mounted (fail closed).
+
 ## Documentation
 
 - `docs/fork-review.md` — the standing process for reviewing third-party forks
