@@ -1718,3 +1718,15 @@ export interface ReportVersion {
   bytes: number;
   content?: string;
 }
+
+// One adopted harness lesson (extracted from a finished task by the reflector).
+export type HarnessLesson = {
+  id: number;
+  task_id: string | null;
+  domain: string;
+  cue: string;
+  lesson: string;
+  evidence: string;
+  confidence: "high" | "medium" | "low";
+  created_at: string;
+};

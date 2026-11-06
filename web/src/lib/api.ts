@@ -293,6 +293,8 @@ export const api = {
     ),
   // ---- demo mode settings (masking classes + custom regex rules) ----
   demoSettings: () => get<{ classes: string[]; rules: string[] }>("/settings/demo"),
+  harnessLessons: (limit?: number) =>
+    get<{ lessons: import("@/lib/types").HarnessLesson[] }>(`/harness/lessons?limit=${limit ?? 200}`),
   demoSettingsSave: (input: { classes: string[]; rules: string[] }) =>
     put<{ classes: string[]; rules: string[] }>("/settings/demo", input),
   // ---- report formats + versions ----

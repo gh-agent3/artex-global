@@ -1153,6 +1153,34 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_finding_verifications_active ON finding_ve
 -- Verification state mirrored onto the finding for list/report surfaces.
 ALTER TABLE findings ADD COLUMN IF NOT EXISTS validation TEXT NOT NULL DEFAULT 'unverified';
 
+-- Harnessing-level recursion (inspired by Google Harness²'s experience
+-- library): after a task finishes, a reflector agent extracts at most one
+-- durable lesson {cue, lesson, evidence, confidence}; new runs inject
+-- matching lessons into planner/worker prompts. cue = the SHAPE of situation
+-- (a pattern that can fire on a different target), not this task's facts.
+CREATE TABLE IF NOT EXISTS harness_lessons (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT REFERENCES tasks(id) ON DELETE SET NULL,
+    domain TEXT NOT NULL DEFAULT '',   -- task_scope root_domain this fired on; '' = global
+    cue TEXT NOT NULL DEFAULT '',
+    lesson TEXT NOT NULL DEFAULT '',
+    evidence TEXT NOT NULL DEFAULT '',
+    confidence TEXT NOT NULL DEFAULT 'low' CHECK (confidence IN ('high','medium','low')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_harness_lessons_domain ON harness_lessons(domain, id DESC);
+
+-- One reflection run per finished task (mirrors finding_verifications).
+CREATE TABLE IF NOT EXISTS harness_reflections (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL UNIQUE REFERENCES tasks(id) ON DELETE CASCADE,
+    conversation_id BIGINT UNIQUE REFERENCES conversations(id) ON DELETE SET NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','running','completed','no_entry','error')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    finished_at TIMESTAMPTZ
+);
+
 -- 删除会话保留复测记录，同时解除尚未结束的复测占用。
 CREATE OR REPLACE FUNCTION stop_deleted_conversation_retest() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN

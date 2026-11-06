@@ -416,6 +416,13 @@ func (w *Worker) execute(ctx context.Context, name string, taskID int64, as *db.
 	if w.wantConstraints() {
 		sysBody += constraintBlock(ts) // inject operating constraints (if any) into the system prompt; the worker obeys them
 	}
+	// Harnessing-level recursion: lessons adopted from earlier finished tasks
+	// (Harness²-style cue->lesson entries). Empty when nothing matches.
+	if LessonsProvider != nil {
+		if b := LessonsProvider(strconv.FormatInt(taskID, 10)); b != "" {
+			sysBody += b
+		}
+	}
 	// Intent block -> intent-anchored asset block -> start instruction, appended to the tail of system in that order.
 	sysBody += renderIntentTask(intent)
 	if as != nil {

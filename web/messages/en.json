@@ -146,7 +146,10 @@
     "trafficStatusCodes": "Traffic status codes",
     "verNew": "New",
     "verOld": "Old",
-    "viewTasks": "View tasks"
+    "viewTasks": "View tasks",
+    "lessons": "Lessons",
+    "noLessons": "No lessons yet — finished tasks will appear here after reflection.",
+    "lessonGlobal": "global"
   },
   "header": {
     "updateBadge": "New version {latest}",
@@ -3843,5 +3846,17 @@
     "saving": "Saving…",
     "saved": "Demo settings saved",
     "hidden": "Hidden in demo mode - click to reveal"
+  },
+  "lessonsPage": {
+    "title": "Lessons",
+    "subtitle": "Durable lessons the harness reflector adopted from finished tasks; matching tasks receive them automatically.",
+    "empty": "No lessons yet — they appear after finished tasks are reflected on.",
+    "global": "global",
+    "col.domain": "Domain",
+    "col.cue": "Cue",
+    "col.lesson": "Lesson",
+    "col.confidence": "Confidence",
+    "col.task": "Task",
+    "col.created": "Created"
   }
 }

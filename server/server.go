@@ -338,6 +338,7 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 		wireAgentAugment(m.pg, s.skillDir, s.hostTools) // assemble visible skills/MCP + traffic/orchestration host tools into the agent toolset
 		domainReg := buildDomainReg(m.Assets())
 		wireTools(m.pg, domainReg) // built-in tool table: per-agent filtering + description/schema overrides + default injection
+		agent.LessonsProvider = func(taskID string) string { return s.lessonsBlock(taskID) } // harness lessons from earlier tasks (Harness²-style recursion)
 		seedPrompts(m.pg)          // seed built-in agent default prompt bodies into agent_prompts (only when empty)
 		s.seedOrchestrationTools() // seed P2 cross-task orchestration tools into the tools table (bindable per agent)
 		if err := s.seedFindingRetester(); err != nil {
@@ -348,6 +349,12 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 		} else {
 			go s.verifyScanner(s.ctx)
 			go s.verifyReaper(s.ctx)
+		}
+		if err := s.seedHarnessReflector(); err != nil {
+			log.Printf("[reflect] seed: %v", err)
+		} else {
+			go s.reflectScanner(s.ctx)
+			go s.reflectReaper(s.ctx)
 		}
 		go s.evidenceStore().RunGC(s.ctx)
 		s.seedPythonInterpreter()     // custom script tool: detect the python interpreter at startup and store it (only when empty)
@@ -907,6 +914,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/exploration/findings/retests/active", s.listActiveFindingRetests)
 	mux.HandleFunc("POST /api/exploration/findings/{id}/retests", s.startFindingRetest)
 	mux.HandleFunc("GET /api/exploration/findings/{id}/verifications", s.listFindingVerifications)
+	mux.HandleFunc("GET /api/harness/lessons", s.listHarnessLessons)
 	mux.HandleFunc("PATCH /api/exploration/findings/{id}", s.patchFinding)
 	mux.HandleFunc("DELETE /api/exploration/findings/{id}", s.deleteFinding)
 	mux.HandleFunc("GET /api/exploration/intents", s.intents)

@@ -1739,6 +1739,28 @@ BEGIN
  SELECT RAISE(ABORT,'retention audit is append-only');
 END;
 
+-- Harness lessons + reflections (harnessing-level recursion, ADR-0002).
+CREATE TABLE IF NOT EXISTS harness_lessons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id BIGINT REFERENCES tasks(id) ON DELETE SET NULL,
+    domain TEXT NOT NULL DEFAULT '',
+    cue TEXT NOT NULL DEFAULT '',
+    lesson TEXT NOT NULL DEFAULT '',
+    evidence TEXT NOT NULL DEFAULT '',
+    confidence TEXT NOT NULL DEFAULT 'low' CHECK (confidence IN ('high','medium','low')),
+    created_at TEXT NOT NULL DEFAULT (now())
+);
+CREATE INDEX IF NOT EXISTS idx_harness_lessons_domain ON harness_lessons(domain, id DESC);
+CREATE TABLE IF NOT EXISTS harness_reflections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id BIGINT NOT NULL UNIQUE REFERENCES tasks(id) ON DELETE CASCADE,
+    conversation_id BIGINT UNIQUE REFERENCES conversations(id) ON DELETE SET NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','running','completed','no_entry','error')),
+    created_at TEXT NOT NULL DEFAULT (now()),
+    started_at TEXT,
+    finished_at TEXT
+);
+
 -- Tables added on our side of the fork (translated from schema.sql).
 CREATE TABLE IF NOT EXISTS task_provenance_cleanups (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,

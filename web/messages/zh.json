@@ -146,7 +146,10 @@
     "trafficStatusCodes": "流量状态码",
     "verNew": "新版",
     "verOld": "旧版",
-    "viewTasks": "查看任务"
+    "viewTasks": "查看任务",
+    "lessons": "经验教训",
+    "noLessons": "暂无教训——反思完成后会显示在这里。",
+    "lessonGlobal": "全局"
   },
   "header": {
     "updateBadge": "新版本 {latest}",
@@ -3843,5 +3846,17 @@
     "saving": "保存中…",
     "saved": "演示设置已保存",
     "hidden": "演示模式下已隐藏 - 点击显示"
+  },
+  "lessonsPage": {
+    "title": "经验教训",
+    "subtitle": "harness 反思器从已完成任务中提炼的持久教训；匹配的任务会自动接收它们。",
+    "empty": "暂无教训——任务完成反思后会出现。",
+    "global": "全局",
+    "col.domain": "域名",
+    "col.cue": "情境线索",
+    "col.lesson": "教训",
+    "col.confidence": "置信度",
+    "col.task": "任务",
+    "col.created": "创建时间"
   }
 }

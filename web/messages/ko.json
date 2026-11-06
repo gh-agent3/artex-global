@@ -146,7 +146,10 @@
     "trafficStatusCodes": "트래픽 상태 코드",
     "verNew": "신버전",
     "verOld": "구버전",
-    "viewTasks": "작업 보기"
+    "viewTasks": "작업 보기",
+    "lessons": "교훈",
+    "noLessons": "아직 교훈이 없습니다. 반성 완료 후 여기에 표시됩니다.",
+    "lessonGlobal": "전역"
   },
   "header": {
     "updateBadge": "새 버전 {latest}",
@@ -3843,5 +3846,17 @@
     "saving": "저장 중…",
     "saved": "데모 설정을 저장했습니다",
     "hidden": "데모 모드에서 숨김 - 클릭하면 표시"
+  },
+  "lessonsPage": {
+    "title": "학습 교훈",
+    "subtitle": "완료된 작업에서 하네스 리플렉터가 채택한 지속 가능한 교훈입니다. 해당 작업에 자동으로 적용됩니다.",
+    "empty": "아직 교훈이 없습니다. 완료된 작업 반성 후 나타납니다.",
+    "global": "전역",
+    "col.domain": "도메인",
+    "col.cue": "단서",
+    "col.lesson": "교훈",
+    "col.confidence": "신뢰도",
+    "col.task": "작업",
+    "col.created": "생성일"
   }
 }

@@ -5,6 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import {
+  LightbulbIcon,
   ActivityIcon,
   ArrowUpRightIcon,
   BugIcon,
@@ -23,8 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Progress } from "@/components/ui/progress";
 import { api } from "@/lib/api";
-import type {
-  Activity,
+import type { HarnessLesson, Activity,
   Agent,
   ConvTokenSummary,
   Finding,
@@ -38,8 +38,7 @@ import type {
   TokenTotal,
   Tool,
   TrafficExchange,
-  UsageStats,
-} from "@/lib/types";
+  UsageStats, } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -139,6 +138,7 @@ export default function DashboardPage() {
   const [settings, setSettings] = React.useState<Settings | null>(null);
   const [pending, setPending] = React.useState<InterceptPending[]>([]);
   const [activity, setActivity] = React.useState<Activity[]>([]);
+  const [lessons, setLessons] = React.useState<HarnessLesson[]>([]);
   const [tokens, setTokens] = React.useState<TokenTotal | null>(null);
   const [convTokens, setConvTokens] = React.useState<ConvTokenSummary[]>([]);
   const [usageStats, setUsageStats] = React.useState<UsageStats | null>(null);
@@ -189,7 +189,7 @@ export default function DashboardPage() {
       if (loading) return;
       loading = true;
       try {
-        const [findings, stats, settings, pending, activity, tokens, conversationTokens] = await Promise.all([
+        const [findings, stats, settings, pending, activity, tokens, conversationTokens, lessons] = await Promise.all([
           api.findings(),
           api.stats(),
           api.settings(),
@@ -197,6 +197,7 @@ export default function DashboardPage() {
           api.activity(undefined, { limit: 30 }),
           api.tokenStats(),
           api.conversationTokens(),
+          api.harnessLessons(5).catch(() => null),
         ]);
         if (!alive) return;
         setFindings(findings);
@@ -205,6 +206,7 @@ export default function DashboardPage() {
         setPending(pending);
         setActivity(activity.items);
         setTokens(tokens.total ?? null);
+        setLessons(lessons?.lessons ?? []);
         setConvTokens(conversationTokens);
       } catch {
         // Preserve stale data and retry on the next interval.
@@ -977,6 +979,44 @@ export default function DashboardPage() {
           </div>
         </Card>
       </div>
+
+      {/* ── Lessons from finished tasks (Harness²-style recursion) ── */}
+      <Card className="p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-semibold">
+            <LightbulbIcon className="size-3.5 text-muted-foreground" />
+            {t("lessons")}
+          </div>
+          <Link
+            href="/function/lessons"
+            className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground"
+          >
+            {t("all")} <ArrowUpRightIcon className="size-3" />
+          </Link>
+        </div>
+        <div className="divide-y">
+          {lessons.length === 0 ? (
+            <div className="py-4 text-center text-xs text-muted-foreground">{t("noLessons")}</div>
+          ) : (
+            lessons.map((l) => (
+              <div key={l.id} className="flex items-start gap-2 py-2">
+                <Badge variant="outline" className="mt-0.5 shrink-0 px-1.5 py-0 text-[10px] text-muted-foreground">
+                  {l.domain || t("lessonGlobal")}
+                </Badge>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[11px] font-medium" title={l.lesson}>
+                    {l.lesson}
+                  </div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted-foreground" title={l.cue}>
+                    {l.cue}
+                  </div>
+                </div>
+                <span className="shrink-0 text-[9px] text-muted-foreground">{l.confidence}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
 
       {/* ── Row 4: 任务表格 ── */}
       <Card className="overflow-hidden p-0">

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -391,6 +392,12 @@ func (p *Planner) Plan(ctx context.Context, taskID int64, as *db.AssetStore, ts 
 	taskDir := ensureRunDir(p.workDir, taskID, 0)
 	ctx = intercept.WithReviewContext(ctx, taskDir, intercept.ReviewBackground{})
 	sysBody := plannerSystem(goal, p.workDir, taskDir)
+	// Harnessing-level recursion (see worker.go): lessons from earlier tasks.
+	if LessonsProvider != nil {
+		if b := LessonsProvider(strconv.FormatInt(taskID, 10)); b != "" {
+			sysBody += b
+		}
+	}
 	if p.wantConstraints() {
 		sysBody += constraintBlock(ts) // operating constraints (if any) injected into the system prompt to bound the exploration
 	}
