@@ -2,9 +2,17 @@
 
 Things decided but not yet implemented. Newest on top within a section.
 
-## Ported from ARTEX-HYDRA (see docs/forks/artex-hydra.md)
+## Ported from external research / forks
 
-Adopted plan (operator decision 2026-11-05). Order is priority.
+1. **[L] Harness lessons** — DONE (2026-11-06, from Google Harness²'s experience
+   library, NOT their runtime — see docs/adr/0002-harness-lessons.md). Reflector
+   agent extracts at most one `{cue, lesson, evidence, confidence}` lesson per
+   finished task; new tasks inject matching lessons (global + same root_domain)
+   into planner/worker prompts. UI: `/function/lessons` page + dashboard card;
+   API `GET /api/harness/lessons`. Deliberately NOT built: task-level
+   propose–probe–compose re-execution (budget decision).
+
+## Ported from ARTEX-HYDRA (see docs/forks/artex-hydra.md)
 
 1. **[M] LLM failure classification** — DONE. `llmclass` + `llmrepair` ported
    (`llm/class`, `llm/repair`) with our additions (403-with-exhaustion override,
