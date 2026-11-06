@@ -85,6 +85,14 @@ decision 2026-11-02). Full analysis: `docs/demo-mode-arch-review.md` (in `docs/`
    bearer token) as clickable chips in the Demo mode settings card instead of free typing
    only. Ref: demo-mode-arch-review.md finding 5.
 
+## Operations
+
+- **[S] Diskguard** — DONE (2026-11-06). Disk-overflow protection: age-based auto-rotation of
+  traffic blobs (>7d) and terminal-task artifacts (>14d, audited into task_provenance_cleanups),
+  emergency pass at >=85% fs usage with a 24h age floor, `diskguard_enabled` setting,
+  `GET /api/diskguard/status`; docker json-file logs capped in docker-compose.yml (50m x 3).
+  Born from the multi-GB log/artifact incidents.
+
 ## Other known gaps
 
 - Server-side credential redaction in activity/exploration payloads was considered and
