@@ -316,3 +316,26 @@ WHERE f.task_id=$1 ORDER BY f.id DESC LIMIT 5`, taskID)
 	}
 	return &ReflectionRunContext{Task: task, Stats: stats, Refuted: refuted, LessonCount: n}, nil
 }
+
+// TerminalTasksOlderThan lists terminal tasks completed more than days ago —
+// the diskguard's rotation candidate set.
+func (d *DB) TerminalTasksOlderThan(days, limit int) ([]int64, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	rows, err := d.Query(`SELECT id FROM tasks
+WHERE status IN ('done','failed','timeout','archived')
+  AND completed_at IS NOT NULL AND completed_at < $1
+ORDER BY completed_at LIMIT $2`, cutoff, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}

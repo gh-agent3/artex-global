@@ -11,6 +11,11 @@
 services:
   postgres:
     image: postgres:16-alpine@sha256:cbf42f0edc946c0bc1b8eeed62403734e1f25dc67a3491455d07a92fdb558b28
+    logging: &jsonlog
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     environment:
       POSTGRES_USER: artex
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-artex-local-dev}
@@ -26,6 +31,7 @@ services:
 
   artex:
     image: ${ARTEX_IMAGE:?set ARTEX_IMAGE to an artex-local tag from build-image.sh}
+    logging: *jsonlog
     depends_on:
       postgres:
         condition: service_healthy

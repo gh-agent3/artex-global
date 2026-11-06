@@ -24,11 +24,11 @@ import (
 	"artex-global/config"
 	"artex-global/db"
 	"artex-global/internal/intercept"
-	"artex-global/llm/pool"
-	"artex-global/llm/rec"
 	"artex-global/internal/notify"
 	"artex-global/internal/report"
 	"artex-global/internal/traffic"
+	"artex-global/llm/pool"
+	"artex-global/llm/rec"
 	"github.com/Autumn-27/norma/llm"
 	actool "github.com/Autumn-27/norma/tool"
 	"github.com/Autumn-27/norma/transcript"
@@ -209,6 +209,10 @@ type Server struct {
 	// channel coalesces enqueue bursts; the database remains the source of truth.
 	archiveWake chan struct{}
 	archiveWG   sync.WaitGroup
+
+	// diskguard: last auto-rotation pass summary (disk-overflow protection).
+	diskguardMu *sync.Mutex
+	diskguard   diskguardStats
 	side        *sideQuestionState
 	// outputLang caches the resolved user-facing output language (string). Every
 	// writeErr, label and agent turn reads it, so it must not hit the settings
@@ -245,12 +249,13 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 			log.Fatalf("[auth] credential key: %v", err)
 		}
 	}
-	s := &Server{m: m, engine: NewEngine(m), ctx: ctx, skillDir: skillDir, jwtKey: key, chatBusy: map[string]bool{},
+	s := &Server{m: m, engine: NewEngine(m), ctx: ctx, skillDir: skillDir, jwtKey: key, diskguardMu: &sync.Mutex{}, chatBusy: map[string]bool{},
 		chatCancel: map[string]context.CancelCauseFunc{}, triggerQ: map[string][]triggeredRun{},
 		triggerActive: map[string]int{}, triggerCfg: map[string]triggerBehavior{},
 		profChatAgents: map[int64]*agent.ChatAgent{},
 		provByProfile:  map[int64]*provEntry{}, llmHealth: newLLMHealthRegistry(m.pg),
-		taskAgents: map[string]*taskAgentBundle{}, archiveWake: make(chan struct{}, 1)}
+		taskAgents: map[string]*taskAgentBundle{}, archiveWake: make(chan struct{}, 1),
+	}
 	// First-run protection: cache the password hash and, while none is set, issue
 	// the console setup token (or apply ARTEX_ADMIN_PASSWORD) before any request.
 	s.bootstrapAuth()
@@ -337,10 +342,10 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 		notify.Lang = resolveLang                       // 푸시·이메일의 심각도·상태 라벨도 같은 언어를 따른다
 		wireAgentAugment(m.pg, s.skillDir, s.hostTools) // assemble visible skills/MCP + traffic/orchestration host tools into the agent toolset
 		domainReg := buildDomainReg(m.Assets())
-		wireTools(m.pg, domainReg) // built-in tool table: per-agent filtering + description/schema overrides + default injection
+		wireTools(m.pg, domainReg)                                                           // built-in tool table: per-agent filtering + description/schema overrides + default injection
 		agent.LessonsProvider = func(taskID string) string { return s.lessonsBlock(taskID) } // harness lessons from earlier tasks (Harness²-style recursion)
-		seedPrompts(m.pg)          // seed built-in agent default prompt bodies into agent_prompts (only when empty)
-		s.seedOrchestrationTools() // seed P2 cross-task orchestration tools into the tools table (bindable per agent)
+		seedPrompts(m.pg)                                                                    // seed built-in agent default prompt bodies into agent_prompts (only when empty)
+		s.seedOrchestrationTools()                                                           // seed P2 cross-task orchestration tools into the tools table (bindable per agent)
 		if err := s.seedFindingRetester(); err != nil {
 			log.Printf("[retester] seed: %v", err)
 		}
@@ -361,6 +366,7 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 		} else {
 			go s.editorTriggerLoop(s.ctx)
 		}
+		go s.diskguardLoop(s.ctx)
 		go s.evidenceStore().RunGC(s.ctx)
 		s.seedPythonInterpreter()     // custom script tool: detect the python interpreter at startup and store it (only when empty)
 		go newScheduler(s).Run(s.ctx) // P3 trigger scheduler (interval/finding/goal events), custom agents only
@@ -923,6 +929,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/harness/proposals", s.listHarnessProposals)
 	mux.HandleFunc("POST /api/harness/proposals/{id}/apply", s.applyHarnessProposal)
 	mux.HandleFunc("POST /api/harness/proposals/{id}/reject", s.rejectHarnessProposal)
+	mux.HandleFunc("GET /api/diskguard/status", s.diskguardStatus)
 	mux.HandleFunc("PATCH /api/exploration/findings/{id}", s.patchFinding)
 	mux.HandleFunc("DELETE /api/exploration/findings/{id}", s.deleteFinding)
 	mux.HandleFunc("GET /api/exploration/intents", s.intents)
@@ -3501,6 +3508,7 @@ func (s *Server) settingsPayload() map[string]any {
 		"output_language":          outputLang, // 사용자 대면 출력 언어(en/ko/zh/es/ja)
 		"traffic_capture":          s.m.TrafficEnabled(),
 		"agent_traffic_binding":    s.m.pg.GetBool(settingAgentTrafficBinding, false),
+		"diskguard_enabled":        s.m.pg.GetBool("diskguard_enabled", true),
 		"llm_record":               s.m.LLMRecordEnabled(),
 		"web_search_enabled":       on,
 		"web_search_backend":       backend,
@@ -3575,7 +3583,8 @@ func (s *Server) putSettings(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		TrafficCapture      *bool `json:"traffic_capture"`
 		AgentTrafficBinding *bool `json:"agent_traffic_binding"`
-		LLMRecord           *bool `json:"llm_record"` // LLM recording switch (off by default); immediate, no agent rebuild
+		DiskguardEnabled    *bool `json:"diskguard_enabled"` // disk-overflow auto-rotation (on by default)
+		LLMRecord           *bool `json:"llm_record"`        // LLM recording switch (off by default); immediate, no agent rebuild
 		// Web search. WebSearchEnabled/Backend toggle the tool + backend; BraveKey/TavilyKey
 		// are optional — omit (null) to leave a stored key untouched, send "" to clear.
 		WebSearchEnabled *bool   `json:"web_search_enabled"`
@@ -3744,6 +3753,12 @@ func (s *Server) putSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.AgentTrafficBinding != nil {
 		if err := s.m.pg.SetBool(settingAgentTrafficBinding, *req.AgentTrafficBinding); err != nil {
+			writeErr(w, 500, err.Error())
+			return
+		}
+	}
+	if req.DiskguardEnabled != nil {
+		if err := s.m.pg.SetBool("diskguard_enabled", *req.DiskguardEnabled); err != nil {
 			writeErr(w, 500, err.Error())
 			return
 		}
