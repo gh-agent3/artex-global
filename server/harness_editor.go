@@ -243,7 +243,7 @@ func (s *Server) decideHarnessProposal(w http.ResponseWriter, r *http.Request, a
 		writeErr(w, 404, "target agent not found")
 		return
 	}
-	ver, err := pg.SavePrompt(ag.ID, p.Template, "harness proposal #"+strconv.FormatInt(id, 10)+": "+p.Summary, "harness-editor")
+	ver, err := pg.SavePrompt(ag.ID, p.Template, "harness proposal #"+strconv.FormatInt(id, 10)+": "+p.Summary, "harness_editor")
 	if err != nil {
 		writeErr(w, 500, err.Error())
 		return

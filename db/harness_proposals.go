@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const HarnessEditorAgentKey = "harness-editor"
+const HarnessEditorAgentKey = "harness_editor"
 
 // HarnessProposal is one proposed prompt edit.
 type HarnessProposal struct {
