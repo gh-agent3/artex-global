@@ -3857,6 +3857,19 @@
     "col.lesson": "教训",
     "col.confidence": "置信度",
     "col.task": "任务",
-    "col.created": "创建时间"
+    "col.created": "创建时间",
+    "tab.lessons": "经验教训",
+    "tab.proposals": "改进建议",
+    "col.agent": "代理",
+    "col.summary": "摘要",
+    "col.rationale": "理由",
+    "col.status": "状态",
+    "col.actions": "操作",
+    "status.pending": "待处理",
+    "status.applied": "已应用",
+    "status.rejected": "已拒绝",
+    "action.apply": "应用",
+    "action.reject": "拒绝",
+    "proposals.empty": "暂无建议——harness 编辑器会从已采纳的教训中生成。"
   }
 }

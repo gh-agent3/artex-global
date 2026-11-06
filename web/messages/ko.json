@@ -3857,6 +3857,19 @@
     "col.lesson": "교훈",
     "col.confidence": "신뢰도",
     "col.task": "작업",
-    "col.created": "생성일"
+    "col.created": "생성일",
+    "tab.lessons": "교훈",
+    "tab.proposals": "제안",
+    "col.agent": "에이전트",
+    "col.summary": "요약",
+    "col.rationale": "근거",
+    "col.status": "상태",
+    "col.actions": "작업",
+    "status.pending": "대기 중",
+    "status.applied": "적용됨",
+    "status.rejected": "거부됨",
+    "action.apply": "적용",
+    "action.reject": "거부",
+    "proposals.empty": "아직 제안이 없습니다. 하네스 편집기가 채택된 교훈으로부터 생성합니다."
   }
 }

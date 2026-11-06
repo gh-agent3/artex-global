@@ -1739,6 +1739,21 @@ BEGIN
  SELECT RAISE(ABORT,'retention audit is append-only');
 END;
 
+-- Harness edit proposals (phase 1, ADR-0002).
+CREATE TABLE IF NOT EXISTS harness_proposals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_key TEXT NOT NULL,
+    summary TEXT NOT NULL DEFAULT '',
+    rationale TEXT NOT NULL DEFAULT '',
+    template TEXT NOT NULL,
+    lesson_ids TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','applied','rejected')),
+    prompt_version INTEGER,
+    created_at TEXT NOT NULL DEFAULT (now()),
+    decided_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_harness_proposals_status ON harness_proposals(status, id DESC);
+
 -- Harness lessons + reflections (harnessing-level recursion, ADR-0002).
 CREATE TABLE IF NOT EXISTS harness_lessons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

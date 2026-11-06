@@ -3857,6 +3857,19 @@
     "col.lesson": "Урок",
     "col.confidence": "Уверенность",
     "col.task": "Задача",
-    "col.created": "Создан"
+    "col.created": "Создан",
+    "tab.lessons": "Уроки",
+    "tab.proposals": "Предложения",
+    "col.agent": "Агент",
+    "col.summary": "Суть",
+    "col.rationale": "Обоснование",
+    "col.status": "Статус",
+    "col.actions": "Действия",
+    "status.pending": "ожидает",
+    "status.applied": "применено",
+    "status.rejected": "отклонено",
+    "action.apply": "Применить",
+    "action.reject": "Отклонить",
+    "proposals.empty": "Пока нет предложений — harness-редактор создаст их из уроков."
   }
 }

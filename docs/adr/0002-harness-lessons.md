@@ -53,3 +53,26 @@ library is exactly the mechanism for that: small, evidence-bound, transferable.
 - Future option (deliberately not built): task-level propose–probe–compose —
   re-running tasks with edited harnesses is a large budget decision, not a
   default. Revisit if lesson injection alone stops paying off.
+
+## Phase 1 (2026-11-07): harness editor — proposals with operator approval
+
+A seeded "harness editor" agent (same conversation machinery as the
+reflector/verifier) periodically takes the adopted lessons that have no
+proposal yet and turns them into AT MOST ONE concrete prompt-template edit
+(`harness_proposals`: agent_key, summary, rationale, full template, lesson
+links). Validation bar = the same `validateTemplate` as a manual UI edit.
+Nothing applies automatically: the operator decides on the Lessons page →
+Proposals tab. Apply goes through `SavePrompt` (version bump +
+`current_prompt_id` switch), so roll-back is the prompt versions page; the
+applied version is recorded on the proposal. One batch at a time: the trigger
+is gated on zero pending proposals.
+
+## Phase 2 (recorded, deliberately not started)
+
+A/B probes on future tasks: assign a prompt version per task, compare
+structured signals (tool errors, refuted findings, goal-met) across versions,
+auto-adopt/revert. Deferred because at the current task volume statistical
+contrast accrues too slowly to beat the operator's judgment; also requires
+prompt-version tracking on tasks. Revisit when weekly task volume justifies it
+or when a disposable lab target exists (see the harness² discussion in
+docs/backlog.md).

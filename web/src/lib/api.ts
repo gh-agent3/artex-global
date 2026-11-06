@@ -295,6 +295,13 @@ export const api = {
   demoSettings: () => get<{ classes: string[]; rules: string[] }>("/settings/demo"),
   harnessLessons: (limit?: number) =>
     get<{ lessons: import("@/lib/types").HarnessLesson[] }>(`/harness/lessons?limit=${limit ?? 200}`),
+  harnessProposals: (status?: string) =>
+    get<{ proposals: import("@/lib/types").HarnessProposal[] }>(
+      `/harness/proposals${status ? `?status=${status}` : ""}`,
+    ),
+  harnessProposalApply: (id: number) =>
+    post<{ status: string; prompt_version?: number }>(`/harness/proposals/${id}/apply`, {}),
+  harnessProposalReject: (id: number) => post<{ status: string }>(`/harness/proposals/${id}/reject`, {}),
   demoSettingsSave: (input: { classes: string[]; rules: string[] }) =>
     put<{ classes: string[]; rules: string[] }>("/settings/demo", input),
   // ---- report formats + versions ----

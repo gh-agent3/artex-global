@@ -1730,3 +1730,17 @@ export type HarnessLesson = {
   confidence: "high" | "medium" | "low";
   created_at: string;
 };
+
+// One harness prompt-edit proposal, awaiting the operator decision.
+export type HarnessProposal = {
+  id: number;
+  agent_key: string;
+  summary: string;
+  rationale: string;
+  template: string;
+  lesson_ids: number[];
+  status: "pending" | "applied" | "rejected";
+  prompt_version: number | null;
+  created_at: string;
+  decided_at: string | null;
+};

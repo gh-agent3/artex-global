@@ -3857,6 +3857,19 @@
     "col.lesson": "Lesson",
     "col.confidence": "Confidence",
     "col.task": "Task",
-    "col.created": "Created"
+    "col.created": "Created",
+    "tab.lessons": "Lessons",
+    "tab.proposals": "Proposals",
+    "col.agent": "Agent",
+    "col.summary": "Summary",
+    "col.rationale": "Rationale",
+    "col.status": "Status",
+    "col.actions": "Actions",
+    "status.pending": "pending",
+    "status.applied": "applied",
+    "status.rejected": "rejected",
+    "action.apply": "Apply",
+    "action.reject": "Reject",
+    "proposals.empty": "No proposals yet — the harness editor creates them from adopted lessons."
   }
 }

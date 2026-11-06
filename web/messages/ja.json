@@ -3857,6 +3857,19 @@
     "col.lesson": "教訓",
     "col.confidence": "信頼度",
     "col.task": "タスク",
-    "col.created": "作成日時"
+    "col.created": "作成日時",
+    "tab.lessons": "教訓",
+    "tab.proposals": "提案",
+    "col.agent": "エージェント",
+    "col.summary": "概要",
+    "col.rationale": "根拠",
+    "col.status": "状態",
+    "col.actions": "操作",
+    "status.pending": "保留中",
+    "status.applied": "適用済み",
+    "status.rejected": "却下",
+    "action.apply": "適用",
+    "action.reject": "却下",
+    "proposals.empty": "提案はまだありません。ハーネスエディターが採用済みの教訓から作成します。"
   }
 }

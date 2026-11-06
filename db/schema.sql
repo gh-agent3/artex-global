@@ -1181,6 +1181,24 @@ CREATE TABLE IF NOT EXISTS harness_reflections (
     finished_at TIMESTAMPTZ
 );
 
+-- Harness edit proposals (phase 1 of auto harness refinement): the harness
+-- editor agent proposes a concrete prompt-template edit grounded in adopted
+-- lessons; the operator applies or rejects it in the UI. Apply bumps the
+-- agent prompt version (agent_prompts) so roll-back is the versions page.
+CREATE TABLE IF NOT EXISTS harness_proposals (
+    id BIGSERIAL PRIMARY KEY,
+    agent_key TEXT NOT NULL,             -- target agent: planner | worker | mainagent | ...
+    summary TEXT NOT NULL DEFAULT '',
+    rationale TEXT NOT NULL DEFAULT '',
+    template TEXT NOT NULL,              -- full new prompt template
+    lesson_ids JSONB NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','applied','rejected')),
+    prompt_version BIGINT,               -- set on apply (agent_prompts version)
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    decided_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_harness_proposals_status ON harness_proposals(status, id DESC);
+
 -- 删除会话保留复测记录，同时解除尚未结束的复测占用。
 CREATE OR REPLACE FUNCTION stop_deleted_conversation_retest() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN

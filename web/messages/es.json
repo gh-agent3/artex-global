@@ -3857,6 +3857,19 @@
     "col.lesson": "Lección",
     "col.confidence": "Confianza",
     "col.task": "Tarea",
-    "col.created": "Creada"
+    "col.created": "Creada",
+    "tab.lessons": "Lecciones",
+    "tab.proposals": "Propuestas",
+    "col.agent": "Agente",
+    "col.summary": "Resumen",
+    "col.rationale": "Justificación",
+    "col.status": "Estado",
+    "col.actions": "Acciones",
+    "status.pending": "pendiente",
+    "status.applied": "aplicada",
+    "status.rejected": "rechazada",
+    "action.apply": "Aplicar",
+    "action.reject": "Rechazar",
+    "proposals.empty": "Aún no hay propuestas: el editor las crea a partir de las lecciones adoptadas."
   }
 }
