@@ -339,3 +339,61 @@ ORDER BY completed_at LIMIT $2`, cutoff, limit)
 	}
 	return out, rows.Err()
 }
+
+// ── intent watchdog (worker-liveness backstop) ───────────────────────────────
+
+// StaleRunningIntents finds intents stuck in 'running' whose last activity is
+// older than maxIdleMinutes — a worker that died silently (observed in the
+// wild: a stalled stream froze the planner loop, and with it the worker
+// supervision path, leaving the intent 'running' forever). updated_at is
+// trigger-managed (always now() on touch) so it cannot age; created_at is
+// immutable and bounds false positives on freshly claimed intents.
+func (d *DB) StaleRunningIntents(maxIdleMinutes, limit int) ([]int64, error) {
+	rows, err := d.Query(`
+SELECT n.id FROM exploration_nodes n
+WHERE n.kind='intent' AND n.state='running'
+  AND n.created_at < now() - make_interval(mins => $1)
+  AND NOT EXISTS (
+    SELECT 1 FROM activity a
+    WHERE a.node_id = n.id AND a.created_at > now() - make_interval(mins => $1))
+ORDER BY n.id LIMIT $2`, maxIdleMinutes, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
+
+// ResetRunningIntentToOpen atomically returns a stale running intent to open;
+// (reset=false) when it is no longer running. The engine's worker loop
+// re-claims open intents on its next poll.
+func (d *DB) ResetRunningIntentToOpen(id int64) (bool, error) {
+	res, err := d.Exec(`UPDATE exploration_nodes SET state='open' WHERE id=$1 AND kind='intent' AND state='running'`, id)
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	return n > 0, err
+}
+
+// TaskIDByExploration resolves a task id for notifying after a reset.
+func (d *DB) TaskIDByExploration(expID int64) (string, error) {
+	var id int64
+	err := d.QueryRow(`SELECT id FROM tasks WHERE exploration_id=$1`, expID).Scan(&id)
+	return strconv.FormatInt(id, 10), err
+}
+
+// ExplorationIDByIntent resolves the exploration an intent belongs to.
+func (d *DB) ExplorationIDByIntent(id int64) (int64, error) {
+	var exp int64
+	err := d.QueryRow(`SELECT exploration_id FROM exploration_nodes WHERE id=$1`, id).Scan(&exp)
+	return exp, err
+}

@@ -47,6 +47,11 @@ func dropReason(err error) string {
 // activity records for a task. Concurrent planner + worker emits race here, so the
 // counter is an atomic behind sync.Map. The count in the log shows loss scale at a
 // glance instead of forcing a grep-and-count.
+// plannerRoundTimeout bounds one Plan() call. A stalled provider stream would
+// otherwise hang the round forever — and with it the planner loop's heartbeat,
+// which is the only supervision path for in-flight workers.
+const plannerRoundTimeout = 25 * time.Minute
+
 func (e *Engine) bumpDrop(taskID string) int64 {
 	v, _ := e.dropCnt.LoadOrStore(taskID, new(int64))
 	return atomic.AddInt64(v.(*int64), 1)
@@ -922,9 +927,19 @@ func (e *Engine) plannerLoop(ctx context.Context, t *Task) {
 		triggers := t.drainTriggers()
 		taskIDInt, _ := strconv.ParseInt(t.ID, 10, 64)
 		e.BeginLLMCall(t.ID)
-		met, reason, err := planner.Plan(ectx, taskIDInt, e.m.assets, t.Store, t.Goal, triggers, emit)
+		// Per-round deadline: a single hung Plan call (stalled provider stream)
+		// must not freeze the planner loop — the heartbeat inside the loop is
+		// also the worker-supervision path, so one stuck round silences BOTH.
+		// On timeout the task stays open and the next trigger retries.
+		planCtx, cancelPlan := context.WithTimeout(ectx, plannerRoundTimeout)
+		met, reason, err := planner.Plan(planCtx, taskIDInt, e.m.assets, t.Store, t.Goal, triggers, emit)
+		cancelPlan()
 		e.EndLLMCall(t.ID)
 		switch {
+		case planCtx.Err() != nil && ectx.Err() == nil:
+			log.Printf(logA("[planner] task %s planning round timed out after %s; task stays open, next trigger retries"), t.ID, plannerRoundTimeout)
+			e.emitActivity(t, db.Activity{Worker: "planner", Kind: "text",
+				Summary: fmt.Sprintf("planning round timed out after %s — will retry on the next trigger", plannerRoundTimeout)})
 		case err != nil && ectx.Err() == nil:
 			log.Printf(logA("[planner] task %s planning failed: %v"), t.ID, err)
 		case met:

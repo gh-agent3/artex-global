@@ -62,6 +62,18 @@ var logCatalog = map[string]map[string]string{
 	"[verify] enqueue finding %d: %v": {
 		"en": "[verify] enqueue finding %d: %v", "ru": "[verify] постановка находки %d в очередь: %v", "zh": "[verify] 正在为发现 %d 排队：%v", "es": "[verify] encolando hallazgo %d: %v", "ja": "[verify] ファインド %d をキューに追加: %v",
 	},
+	"[planner] task %s planning round timed out after %s; task stays open, next trigger retries": {
+		"en": "[planner] task %s planning round timed out after %s; task stays open, next trigger retries", "ru": "[planner] задача %s: раунд планирования превысил %s и прерван; задача открыта, повтор на следующем триггере", "zh": "[planner] 任务 %s 规划轮次超时（%s）已中断；任务保持打开，下次触发重试", "es": "[planner] tarea %s: ronda de planificación excedió %s e interrumpida; la tarea sigue abierta, reintento en el próximo disparo", "ja": "[planner] タスク %s の計画ラウンドが %s でタイムアウトし中断; タスクはオープンのまま、次のトリガーで再試行",
+	},
+	"[watchdog] intent %d was running with %d+ min of silence — reset to open for re-claim": {
+		"en": "[watchdog] intent %d was running with %d+ min of silence — reset to open for re-claim", "ru": "[watchdog] интент %d висел в running с тишиной %d+ мин — сброшен в open для повторного запуска", "zh": "[watchdog] 意图 %d 处于 running 且沉默 %d+ 分钟 — 已重置为 open 等待重新认领", "es": "[watchdog] la intención %d estuvo en running con %d+ min de silencio — restablecida a open para re-reclamar", "ja": "[watchdog] インテント %d が %d+ 分間無音のまま running — 再クレーム用に open へリセット",
+	},
+	"[watchdog] stale scan: %v": {
+		"en": "[watchguard] stale scan: %v", "ru": "[watchdog] сканирование: %v", "zh": "[watchdog] 扫描：%v", "es": "[watchdog] escaneo: %v", "ja": "[watchdog] スキャン: %v",
+	},
+	"[watchdog] reset intent %d: %v": {
+		"en": "[watchdog] reset intent %d: %v", "ru": "[watchdog] сброс интента %d: %v", "zh": "[watchdog] 重置意图 %d：%v", "es": "[watchdog] restablecer intención %d: %v", "ja": "[watchdog] インテント %d のリセット: %v",
+	},
 	"[verify] reaper: %v": {
 		"en": "[verify] reaper: %v", "ru": "[verify] сборщик: %v", "zh": "[verify] 清理：%v", "es": "[verify] limpieza: %v", "ja": "[verify] クリーナ: %v",
 	},

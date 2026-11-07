@@ -367,6 +367,7 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDi
 			go s.editorTriggerLoop(s.ctx)
 		}
 		go s.diskguardLoop(s.ctx)
+		go s.intentWatchdog(s.ctx)
 		go s.evidenceStore().RunGC(s.ctx)
 		s.seedPythonInterpreter()     // custom script tool: detect the python interpreter at startup and store it (only when empty)
 		go newScheduler(s).Run(s.ctx) // P3 trigger scheduler (interval/finding/goal events), custom agents only

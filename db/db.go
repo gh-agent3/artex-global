@@ -95,6 +95,10 @@ func DSN() (dsn, source string, err error) {
 	return config.PostgresDSN()
 }
 
+// SQLite reports whether the experimental SQLite dialect is active (a few
+// PG-only maintenance queries skip themselves there).
+func (d *DB) SQLite() bool { return d.sqlite }
+
 // DB wraps the shared *sql.DB. PG handles its own connection pool + concurrency
 // (MVCC), so unlike the old SQLite store there is no process-wide write mutex.
 // sqlite marks the experimental SQLite dialect (see sqlite.go).
