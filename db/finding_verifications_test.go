@@ -17,7 +17,13 @@ func TestFindingVerificationLifecycle(t *testing.T) {
 	defer d.Close()
 	ctx := context.Background()
 
-	fid, err := d.AddFinding(0, 0, "auth", "verify-fixture", "high", "claim", "evidence", "worker", nil)
+	// an asset on the finding, so the snapshot's asset branch is exercised too
+	// (regression: it once selected a non-existent assets.value column).
+	assetID, err := d.Assets().UpsertRootDomain(UpsertRootDomainReq{Domain: "snapshot-asset.example"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fid, err := d.AddFinding(0, 0, "auth", "verify-fixture", "high", "claim", "evidence", "worker", []int64{assetID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,6 +42,9 @@ func TestFindingVerificationLifecycle(t *testing.T) {
 	snap, err := d.VerificationSnapshot(v.ID)
 	if err != nil || !strings.Contains(string(snap), "verify-fixture") {
 		t.Fatalf("snapshot: %s err=%v", snap, err)
+	}
+	if !strings.Contains(string(snap), "snapshot-asset.example") {
+		t.Fatalf("snapshot missing assets: %s", snap)
 	}
 
 	// Second enqueue while one exists is a no-op.

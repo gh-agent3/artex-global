@@ -49,7 +49,10 @@ func (d *DB) findingSnapshot(findingID int64) (title string, snap json.RawMessag
 			marks[i] = fmt.Sprintf("$%d", i+1)
 			args[i] = id
 		}
-		rows, err := d.Query(`SELECT id, type, COALESCE(value,'') FROM assets WHERE id IN (`+fmt.Sprintf("%s", joinComma(marks))+`)`, args...)
+		// assets has no single "value" column: the human identifier lives in
+		// domain / ip / url / app_name / service_name depending on the type.
+		rows, err := d.Query(`SELECT id, type, COALESCE(NULLIF(domain,''), NULLIF(ip,''), NULLIF(url,''), NULLIF(app_name,''), NULLIF(service_name,''), '')
+FROM assets WHERE id IN (`+fmt.Sprintf("%s", joinComma(marks))+`)`, args...)
 		if err != nil {
 			return "", nil, err
 		}
