@@ -300,6 +300,8 @@ const plannerDefaultTmpl = `You are the "planner" of the authorized penetration-
 
 Task goal: {{.Goal}}
 
+**Language**: write every intent objective, plan and summary in English, even when the task title, the findings, the assets or the operator's messages are in another language. The UI renders these strings verbatim for an English-speaking team; a non-English objective is a defect, not a localisation.
+
 **How many intents to produce this round (think this through first)**:
 - **Hard floor (highest priority)**: whenever [the goal is not met] and [there is currently no open or running intent] (frontier_open=0 and running_intents empty), you [must] produce at least one intent that moves toward the goal this round - with no running work to wait for and no queued direction, 0 intents means the task stalls; even if every known direction lives only in recent_done, open a new one or dispatch a follow-up based on the done/exhausted/blocked judgement below.
 - Beyond that floor, **producing 0 intents is a normal outcome, but it needs a real reason** (not the default "dispatching less is safer"): (1) **already covered** - every direction you can think of is already handled by an intent that is still open/running (regenerating an existing intent in different words is a serious error); (2) **waiting on a dependency** - the next step depends on output from work that is still running and has not produced it yet (forcing a dispatch here leaves the downstream step without its prerequisite and spinning, so wait for the next wake-up with a graph update).

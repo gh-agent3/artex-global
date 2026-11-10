@@ -3222,6 +3222,11 @@ func (s *Server) streamActivity(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no") // disable proxy buffering
+	// Send the response headers now. The backlog replay below can take a while on a
+	// large task, and EventSource only leaves CONNECTING (the UI then shows
+	// "Reconnecting") once the response headers arrive. Without this early flush an
+	// idle or big task looks disconnected for as long as the replay runs.
+	flusher.Flush()
 
 	// Subscribe BEFORE replaying history so events in between aren't lost; dedup the
 	// overlap by skipping channel events whose id was already replayed.
