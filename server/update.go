@@ -243,6 +243,19 @@ func (s *Server) updateCheck(w http.ResponseWriter, r *http.Request) {
 		"boot_notice": boot.Detail,
 		"rolled_back": boot.RolledBack,
 	}
+	// Online self-update is compiled out in this build (selfupdate.Enabled).
+	// Report "disabled" and return before building a client or querying any
+	// release feed, so this endpoint makes no outbound request. Same call as
+	// failsafe-security/artex: an auto-update that swaps a remotely fetched
+	// binary is an RCE channel (the backdoored prebuilt tomicdd/artex image).
+	if !selfupdate.Enabled {
+		out["disabled"] = true
+		out["has_update"] = false
+		out["comparable"] = false
+		out["reason"] = "online self-update is disabled in this build: no remote check or download"
+		writeJSON(w, 200, out)
+		return
+	}
 
 	// The top-bar hint uses the cache (default); an explicit "check for updates" click passes force=1 to bypass it.
 	force := r.URL.Query().Get("force") != ""
@@ -288,6 +301,12 @@ func (s *Server) updateCheck(w http.ResponseWriter, r *http.Request) {
 // take minutes and would be cut by the reverse proxy timeout if it hung on the request. Progress is
 // streamed on /api/update/stream.
 func (s *Server) updateApply(w http.ResponseWriter, r *http.Request) {
+	// Online self-update is compiled out (selfupdate.Enabled): refuse before
+	// any download so no remote binary is ever staged.
+	if !selfupdate.Enabled {
+		writeErr(w, 403, "online self-update is disabled in this build")
+		return
+	}
 	current := BuildVersion
 
 	// Through the cache: what gets installed is exactly the version the user saw and confirmed on the page.
@@ -333,6 +352,12 @@ func (s *Server) updateApply(w http.ResponseWriter, r *http.Request) {
 
 // updateRollback actively rolls back to the previous version (artex.old, backed up before the swap).
 func (s *Server) updateRollback(w http.ResponseWriter, r *http.Request) {
+	// Part of the self-update machinery, compiled out in this build
+	// (selfupdate.Enabled). There is never a staged backup to roll back to.
+	if !selfupdate.Enabled {
+		writeErr(w, 403, "online self-update is disabled in this build")
+		return
+	}
 	if _, running := updHub.snapshot(); running {
 		writeErr(w, 409, updateErrRollbackInProgress)
 		return

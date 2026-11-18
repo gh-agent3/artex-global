@@ -40,3 +40,7 @@ record the assessment. One file per repo under `docs/forks/`.
 ## Current repos
 
 - `artex-hydra` — see [forks/artex-hydra.md](forks/artex-hydra.md)
+- `failsafe` — analyzed; self-update hardening adopted (see
+  [forks/artex-sh-top3.md](forks/artex-sh-top3.md))
+- `jaykwok-artex`, `wpsec-artex-pro`, `ruoji6-artex` — top-3 from
+  artex.sh/forks/best, see [forks/artex-sh-top3.md](forks/artex-sh-top3.md)

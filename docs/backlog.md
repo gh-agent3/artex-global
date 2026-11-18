@@ -85,6 +85,17 @@ decision 2026-11-02). Full analysis: `docs/demo-mode-arch-review.md` (in `docs/`
    bearer token) as clickable chips in the Demo mode settings card instead of free typing
    only. Ref: demo-mode-arch-review.md finding 5.
 
+## Security follow-ups
+
+- **[S] MCP ingress source allowlist** — RuoJi6's MCP server has a caller
+  source allowlist; ours is Bearer-token only. Add an optional IP/CIDR
+  allowlist to the /mcp auth path.
+- **[S] Mine wpsec/ARTEX-Pro fix(security) commits** — auth/workspace-path
+  risks, skill-upload authorization defaults; review and port as applicable.
+- **[S] Preinstall api-recon deps in the image** — failsafe-security preinstalls
+  skill deps from a locked registry at build time; we install on first use
+  (committed lockfile). Image preinstall closes the runtime-fetch gap.
+
 ## Operations
 
 - **[S] Diskguard** — DONE (2026-11-06). Disk-overflow protection: age-based auto-rotation of

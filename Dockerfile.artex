@@ -63,7 +63,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Playwright is pinned to the browser build copied below: the Chromium CDN is
 # unreliable from this network, so the browser cache comes from the upstream
 # image (same revision 1248) and only the apt system deps are installed here.
-RUN npm install -g @playwright/mcp@latest @playwright/cli@latest playwright@1.64.0 \
+RUN npm install -g @playwright/mcp@0.0.82 @playwright/cli@0.1.25 playwright@1.64.0 \
     && playwright-cli --help \
     && playwright install-deps chromium \
     && rm -rf /var/lib/apt/lists/*

@@ -3,12 +3,32 @@ package selfupdate
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 )
+
+// Enabled reports whether online self-update is compiled into this build.
+//
+// Forced OFF in this fork (same call as failsafe-security/artex): no config
+// key, env var, or admin session can turn it on without editing and rebuilding
+// the source. Every online entry point (FetchLatest, Stage) checks it and
+// refuses before touching the network, so this binary never reaches a remote
+// release feed. Rationale: an auto-update that downloads and swaps a remote
+// binary is a remote-code-execution channel — exactly the class of attack
+// behind the backdoored prebuilt `tomicdd/artex` image (Nov 2026). We deploy
+// by image (build-image.sh); nothing in the runtime should ever replace its
+// own binary from the network. Re-enabling means flipping this to true,
+// re-pointing Repo at a reviewed release source, and re-auditing the
+// download/verify path.
+const Enabled = false
+
+// ErrDisabled is returned by every online-update entry point while Enabled
+// is false.
+var ErrDisabled = errors.New("online self-update is disabled in this build: no remote version check or download")
 
 // Repo is the release source. Hardcoded instead of configurable: a configurable
 // update source would hand a remote-code-execution channel to anyone who can edit the
@@ -90,7 +110,12 @@ func checkURL(u *url.URL) error {
 }
 
 // FetchLatest queries the latest stable release.
+// FetchLatest queries the latest stable release. Disabled in this fork:
+// returns ErrDisabled without any network request while Enabled is false.
 func FetchLatest(ctx context.Context, c *http.Client) (*Release, error) {
+	if !Enabled {
+		return nil, ErrDisabled
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, latestURL, nil)
 	if err != nil {
 		return nil, err

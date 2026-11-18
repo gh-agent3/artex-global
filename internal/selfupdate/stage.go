@@ -51,6 +51,11 @@ type Progress func(ph Phase, pct int, msg string)
 // Returning from the function means staging is complete; the caller then shuts down
 // gracefully and exits with ExitRestart.
 func Stage(ctx context.Context, c *http.Client, rel *Release, currentVersion string, prog Progress) error {
+	// Disabled in this fork (see Enabled in github.go): refuse before any
+	// download so this binary never stages a remotely fetched replacement.
+	if !Enabled {
+		return ErrDisabled
+	}
 	if prog == nil {
 		prog = func(Phase, int, string) {}
 	}

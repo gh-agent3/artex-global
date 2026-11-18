@@ -156,8 +156,8 @@ JWT/OIDC failures often enable token forgery, token confusion, cross-service acc
 - `jwt_tool -t <url> -rh "Authorization: Bearer <token>" -M at` runs the
   full attack matrix (alg=none, RS→HS confusion, kid injection, claim
   edits) and reports which mutations the server still accepts.
-- `jwt_tool <token> -C -d <wordlist>` brute-forces HMAC secrets when an
-  HS-family signature is in use.
+- Do not brute-force HMAC secrets. One request that shows an HS-family
+  signature is the finding. `jwt_tool -C -d` and a wordlist are out of scope.
 - Use `jwt_tool` to mint a token under a key you control once you find an
   acceptance path (kid/jku/x5u/jwk), then replay the request by hand with
   `curl` / `httpx` via `Bash` — there is no replay tool in this system.

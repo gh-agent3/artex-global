@@ -44,3 +44,29 @@ func TestDeleteEndpointPathPattern(t *testing.T) {
 		}
 	}
 }
+
+func TestDictionaryAttackPattern(t *testing.T) {
+	re := regexp.MustCompile(dictionaryAttackPattern)
+	hit := []string{
+		`{"command":"hydra -l admin -P rockyou.txt -t 4 tgt http-post-form"}`,
+		`{"command":"medusa -h tgt -U users.txt -P rockyou.txt -M http"}`,
+		`{"command":"ncrack -U users.txt -P rockyou.txt tgt:22"}`,
+		`{"command":"patator http_fuzz url=http://tgt/login password=FILE0 0=rockyou.txt"}`,
+		`{"command":"python spray.py --password-spray users.txt"}`,
+	}
+	for _, s := range hit {
+		if !re.MatchString(s) {
+			t.Errorf("should deny: %s", s)
+		}
+	}
+	miss := []string{
+		`{"command":"curl -s https://antarcticwallet.com/en"}`,
+		`{"body":"{\"user\":\"admin\",\"pass\":\"123456\"}"}`,
+		`{"command":"rg -n login /src/backend"}`,
+	}
+	for _, s := range miss {
+		if re.MatchString(s) {
+			t.Errorf("should allow: %s", s)
+		}
+	}
+}

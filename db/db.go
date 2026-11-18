@@ -280,12 +280,26 @@ ON CONFLICT (agent_id, var_name) DO UPDATE
 	// the recording proxy + CA at runtime (server.Manager.syncBrowserMCPProxy).
 	// Insert only if absent so we never clobber user edits (args/env/enabled/
 	// visibility) on restart.
+	// The image preinstalls @playwright/mcp at a pinned version, so the server
+	// launches the LOCAL binary — not `npx @playwright/mcp`, which would fetch
+	// and run whatever the registry returns at enable time (supply-chain risk;
+	// same fix as failsafe-security/artex).
 	if _, err := d.Exec(`
 INSERT INTO mcp_servers(name, transport, command, args, env, enabled)
-VALUES ('browser', 'stdio', 'npx', $1, '{}', false)
+VALUES ('browser', 'stdio', '/usr/bin/playwright-mcp', $1, '{}', false)
 ON CONFLICT (name) DO NOTHING`,
-		`["@playwright/mcp","--headless"]`); err != nil {
+		`["--headless"]`); err != nil {
 		return fmt.Errorf("seed browser mcp: %w", err)
+	}
+	// One-time migration for databases seeded with the old `npx @playwright/mcp`
+	// command: rewrite ONLY the exact old seed (user edits to args/env/enabled
+	// are preserved, and a user who pointed the row at something else is left
+	// alone).
+	if _, err := d.Exec(`
+UPDATE mcp_servers SET command='/usr/bin/playwright-mcp', args='["--headless"]'
+WHERE name='browser' AND transport='stdio' AND command='npx'
+  AND args IS NOT NULL AND args::text LIKE '%@playwright/mcp%'`); err != nil {
+		return fmt.Errorf("migrate browser mcp seed: %w", err)
 	}
 	// NOTE: the placeholder ScopeSentry data-source MCP (empty URL + empty X-API-Key,
 	// disabled) is seeded directly in schema.sql §F so a raw `psql < schema.sql` init
@@ -304,6 +318,9 @@ ON CONFLICT (name) DO NOTHING`,
 	}
 	if err := d.seedDefaultInterceptRulesV3(); err != nil {
 		return fmt.Errorf("seed intercept rules v3: %w", err)
+	}
+	if err := d.seedDefaultInterceptRulesV4(); err != nil {
+		return fmt.Errorf("seed intercept rules v4: %w", err)
 	}
 	if err := d.seedDefaultAssetInterceptRules(); err != nil {
 		return fmt.Errorf("seed asset intercept rules: %w", err)
@@ -640,6 +657,29 @@ WHERE NOT EXISTS (SELECT 1 FROM intercept_rules WHERE name = $1)`,
 		return fmt.Errorf("rule %q: %w", name, err)
 	}
 	return d.SetSetting("intercept_default_rules_v3", "done")
+}
+
+// dictionaryAttackPattern denies online password guessing tools. A single login
+// POST does not match. The judge prompt used to ALLOW hydra with a wordlist;
+// this rule blocks that call before the model is asked.
+const dictionaryAttackPattern = `(?i)(\bhydra\b|\bmedusa\b|\bncrack\b|\bpatator\b|rockyou\.txt|password[\s_-]*spray)`
+
+func (d *DB) seedDefaultInterceptRulesV4() error {
+	if v, _, _ := d.GetSetting("intercept_default_rules_v4"); v == "done" {
+		return nil
+	}
+	const name = "[Built-in] Online password guessing"
+	if _, err := d.Exec(`
+INSERT INTO intercept_rules(name, enabled, priority, match_target, match_type, pattern, action, message, timeout_enabled, timeout_seconds, timeout_action)
+SELECT $1, true, 90, 'tool_input', 'regex', $2, 'deny', $3, false, 60, 'deny'
+WHERE NOT EXISTS (SELECT 1 FROM intercept_rules WHERE name = $1)`,
+		name,
+		dictionaryAttackPattern,
+		"Refusing online password guessing (hydra, medusa, ncrack, patator, a wordlist, or a spray). One login guess is not this rule.",
+	); err != nil {
+		return fmt.Errorf("rule %q: %w", name, err)
+	}
+	return d.SetSetting("intercept_default_rules_v4", "done")
 }
 
 // seedDefaultReportProfile inserts the built-in report format once. Its instructions

@@ -201,7 +201,7 @@ Gateway may enforce auth; subgraph resolvers may not. Look for cross-subgraph ID
 
 - APQ hashes leaked from client bundles
 - Replay privileged operations with attacker variables
-- Hash bruteforce for common operations
+- Do not brute-force APQ hashes. Record hashes already leaked from the client bundle only.
 - Validate hash→operation mapping enforces principal and operation allowlists
 
 ### CORS & CSRF
