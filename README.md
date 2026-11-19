@@ -68,6 +68,18 @@ October 2026; the framework lives on through community forks ranked at
 **https://www.artex.sh/forks/best** — that leaderboard is our watchlist
 source, and each tracked fork is a git remote in this repo.
 
+Tracked forks (git remotes, reviews in `docs/forks/`):
+
+- failsafe-security/artex — self-update compiled out, pinned browser MCP
+- BaaRai/ARTEX — task run budgets, prompt-injection framing
+- RuoJi6/ARTEX — MCP ingress source allowlist
+- wpsec/ARTEX-Pro — security hardening (CSRF, os.Root workspace, skill
+  visibility, dependency bumps)
+- AntiFox-AI/antifox — kill-chain finding steps
+- cskwork/scopeweaver, Ernket/CodeScan-Artex, Hinln/ARTEX, jaykwok/ARTEX,
+  j5tv9nfzhn-hue/ARTEX-HYDRA — reviewed, nothing ported so far
+- google-research/harness2 — harness lessons (ADR-0002)
+
 - What we took from whom, commit by commit: `CHANGELOG.md`.
 - The recurring process (cadence, triage classes, port discipline): `docs/adr/0003-fork-harvest-process.md`.
 - Per-fork review notes: `docs/forks/`.

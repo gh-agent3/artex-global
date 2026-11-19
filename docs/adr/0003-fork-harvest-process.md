@@ -27,7 +27,11 @@ ports only (no merges):
 1. **Watchlist** — the tracked forks live as git remotes in this repo and in
    `docs/forks/`. The canonical ranking source is
    https://www.artex.sh/forks/best (community leaderboard); new entries there
-   get added to the watchlist.
+   get added to the watchlist. Current watchlist: failsafe-security/artex,
+   BaaRai/ARTEX, RuoJi6/ARTEX, wpsec/ARTEX-Pro, AntiFox-AI/antifox,
+   cskwork/scopeweaver, Ernket/CodeScan-Artex, Hinln/ARTEX, jaykwok/ARTEX,
+   j5tv9nfzhn-hue/ARTEX-HYDRA, plus google-research/harness2 as a
+   non-fork inspiration source.
 2. **Cadence** — each cycle: fetch all watchlist remotes, diff against the
    previous fetch, skim new commits (subjects + fix/security labels first).
 3. **Triage** — every candidate is classified: PORT (spot port now), BACKLOG
