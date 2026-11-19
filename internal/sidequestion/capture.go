@@ -167,7 +167,12 @@ func (p *boundProvider) Stream(ctx context.Context, req llm.CompletionRequest) i
 				failed = true
 			} else {
 				acc.Add(ev)
-				if ev.Type == llm.SEMessageStop {
+				// Completion signal: the canonical MessageStop event, or a delta
+				// already carrying a stop reason (some providers signal the end
+				// of the stream only through the last delta — wpsec/ARTEX-Pro
+				// feat(security) d3a678be: without this the capture never marks
+				// the turn complete and the side-question context capture stalls).
+				if ev.Type == llm.SEMessageStop || (ev.Type == llm.SEMessageDelta && strings.TrimSpace(ev.StopReason) != "") {
 					complete = true
 				}
 			}

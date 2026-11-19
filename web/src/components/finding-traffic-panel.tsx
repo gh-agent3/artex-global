@@ -133,7 +133,12 @@ export function FindingTrafficPanel({
               </EmptyHeader>
             </Empty>
           ) : (
-            data.bindings.map((b, index) => (
+            <>
+            <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2">
+              <div className="text-xs font-semibold">{t("traffic.stepsTitle")}</div>
+              <div className="text-muted-foreground text-[11px]">{t("traffic.stepsHint")}</div>
+            </div>
+            {data.bindings.map((b, index) => (
               <div key={b.id} className="flex min-w-0 flex-col gap-2 rounded-md border p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">
@@ -207,7 +212,8 @@ export function FindingTrafficPanel({
                   </div>
                 </div>
               </div>
-            ))
+            ))}
+            </>
           )}
         </CardContent>
       </Card>

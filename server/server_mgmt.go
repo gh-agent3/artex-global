@@ -1505,6 +1505,15 @@ func (s *Server) fsUploadSkill(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 500, errMgmtSkillInstallFail+err.Error())
 		return
 	}
+	// Default-authorize the new skill for the built-in runtime agents, so an
+	// uploaded skill is usable immediately instead of invisible to everyone
+	// (wpsec/ARTEX-Pro feat(security) 50af614b). Insert-if-absent: a user's
+	// explicit per-agent opt-out is never overwritten.
+	if s.m != nil && s.m.pg != nil {
+		if err := s.m.pg.SeedDefaultSkillVisibility(name); err != nil {
+			log.Printf(logT("[skills] 업로드된 스킬의 기본 권한 부여에 실패했습니다 %s: %v"), name, err)
+		}
+	}
 	writeJSON(w, 201, map[string]any{"name": name, "files": entries})
 }
 

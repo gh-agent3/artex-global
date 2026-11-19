@@ -32,6 +32,15 @@ var cfgCatalog = map[string]map[string]string{
 // diagnostics). Keyed by the Korean source template; format verbs are preserved in
 // the same positional order so fmt.Printf/log.Printf arguments still line up.
 var logCatalog = map[string]map[string]string{
+	"[workspace] 작업 공간 루트를 닫지 못했습니다: %v": {
+		"en": "[workspace] failed to close the workspace root: %v", "zh": "[workspace] 关闭工作区根目录失败: %v", "es": "[workspace] no se pudo cerrar la raíz del espacio de trabajo: %v", "ja": "[workspace] ワークスペースのルートを閉じられませんでした: %v",
+	},
+	"[skills] 업로드된 스킬의 기본 권한 부여에 실패했습니다 %s: %v": {
+		"en": "[skills] failed to grant default visibility to the uploaded skill %s: %v", "zh": "[skills] 为已上传的技能 %s 授予默认权限失败: %v", "es": "[skills] no se pudieron conceder permisos predeterminados a la skill subida %s: %v", "ja": "[skills] アップロードしたスキル %s の既定権限付与に失敗しました: %v",
+	},
+	"[workspace] 작업 공간 파일을 닫지 못했습니다: %v": {
+		"en": "[workspace] failed to close the workspace file: %v", "zh": "[workspace] 关闭工作区文件失败: %v", "es": "[workspace] no se pudo cerrar el archivo del espacio de trabajo: %v", "ja": "[workspace] ワークスペースのファイルを閉じられませんでした: %v",
+	},
 	"[config] 설정 파일: %s": {
 		"en": "[config] config file: %s", "zh": "[config] 配置文件: %s", "es": "[config] archivo de configuración: %s", "ja": "[config] 設定ファイル: %s",
 	},

@@ -360,26 +360,57 @@ ON CONFLICT DO NOTHING`, r.kind, r.pattern, r.note); err != nil {
 // builtinSkillVisibility maps a shipped skill's directory name → the built-in
 // agent keys that should see it by default. The skill FILES themselves live on the
 // filesystem (SkillDir, loaded by norma at runtime); DB only carries this visibility
-// binding. Skills omitted here (e.g. playwright-cli, scopesentry) ship invisible by
+// binding. Skills omitted here (playwright-cli, scopesentry) ship invisible by
 // default — the user turns them on per-agent when needed. scopesentry additionally
 // declares `mcps: ScopeSentry`, which only takes effect once it's made visible and
 // that MCP is enabled/configured.
 var builtinSkillVisibility = map[string][]string{
 	"api-recon": {"auto", "pentest", "worker"},
+	// Shipped pentest skills get the same default visibility as api-recon
+	// (wpsec/ARTEX-Pro feat(security) d3a678be: the built-in pentest skill set
+	// is authorized for the default runtime agents, not left invisible).
+	"authentication-jwt":     {"auto", "pentest", "worker"},
+	"browser":                {"auto", "pentest", "worker"},
+	"graphql":                {"auto", "pentest", "worker"},
+	"idor":                   {"auto", "pentest", "worker"},
+	"oauth":                  {"auto", "pentest", "worker"},
+	"path-traversal-lfi-rfi": {"auto", "pentest", "worker"},
+	"sql-injection":          {"auto", "pentest", "worker"},
+	"ssrf":                   {"auto", "pentest", "worker"},
+	"xss":                    {"auto", "pentest", "worker"},
 }
+
+// defaultSkillAgentKeys are the built-in runtime agents that receive a newly
+// installed skill by default (wpsec/ARTEX-Pro feat(security) 50af614b: an
+// uploaded skill was invisible to every agent until the operator toggled
+// visibility per agent). Explicit per-agent opt-outs stay in effect.
+var defaultSkillAgentKeys = []string{"auto", "pentest", "worker"}
 
 // seedBuiltinSkillVisibility binds the shipped built-in skills to their default
 // agents. Insert-if-absent (ON CONFLICT DO NOTHING) so a user's later toggle-off is
 // never resurrected on restart — matches the browser-MCP / intercept-rule seed policy.
 func (d *DB) seedBuiltinSkillVisibility() error {
 	for skillName, agentKeys := range builtinSkillVisibility {
-		for _, key := range agentKeys {
-			if _, err := d.Exec(`
+		if err := d.seedSkillVisibility(skillName, agentKeys); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SeedDefaultSkillVisibility adds default visibility for a newly installed skill.
+// Existing rows are preserved so an explicit per-agent opt-out stays in effect.
+func (d *DB) SeedDefaultSkillVisibility(skillName string) error {
+	return d.seedSkillVisibility(skillName, defaultSkillAgentKeys)
+}
+
+func (d *DB) seedSkillVisibility(skillName string, agentKeys []string) error {
+	for _, key := range agentKeys {
+		if _, err := d.Exec(`
 INSERT INTO agent_skill_visibility(agent_id, skill_name, enabled)
 SELECT id, $2, true FROM agents WHERE key=$1
 ON CONFLICT (agent_id, skill_name) DO NOTHING`, key, skillName); err != nil {
-				return fmt.Errorf("skill %s → agent %s: %w", skillName, key, err)
-			}
+			return fmt.Errorf("skill %s → agent %s: %w", skillName, key, err)
 		}
 	}
 	return nil

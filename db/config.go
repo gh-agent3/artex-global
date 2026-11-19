@@ -1006,14 +1006,17 @@ func (d *DB) SkillAgents(skillName string) ([]int64, error) {
 	return out, rows.Err()
 }
 
-// SetAgentSkillVisibility replaces all skill visibility for an agent.
+// SetAgentSkillVisibility replaces effective visibility for an agent while
+// keeping explicit disabled rows as opt-outs from builtin seeding
+// (wpsec/ARTEX-Pro feat(security) dea19481: a DELETE would let the startup
+// seed resurrect a skill the user turned off).
 func (d *DB) SetAgentSkillVisibility(agentID int64, names []string) error {
 	tx, err := d.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	if _, err := tx.Exec(`DELETE FROM agent_skill_visibility WHERE agent_id=$1`, agentID); err != nil {
+	if _, err := tx.Exec(`UPDATE agent_skill_visibility SET enabled=false WHERE agent_id=$1`, agentID); err != nil {
 		return err
 	}
 	for _, name := range names {
@@ -1025,14 +1028,16 @@ ON CONFLICT (agent_id,skill_name) DO UPDATE SET enabled=true`, agentID, name); e
 	return tx.Commit()
 }
 
-// ToggleSkillVisibility sets one (agent, skill_name) visibility on/off.
+// ToggleSkillVisibility sets one (agent, skill_name) visibility on/off. The
+// off state is stored as an enabled=false row (not a DELETE), so a later
+// ON CONFLICT DO NOTHING seed never resurrects an explicit opt-out.
 func (d *DB) ToggleSkillVisibility(agentID int64, skillName string, on bool) error {
+	enabled := "false"
 	if on {
-		_, err := d.Exec(`INSERT INTO agent_skill_visibility(agent_id,skill_name,enabled) VALUES ($1,$2,true)
-ON CONFLICT (agent_id,skill_name) DO UPDATE SET enabled=true`, agentID, skillName)
-		return err
+		enabled = "true"
 	}
-	_, err := d.Exec(`DELETE FROM agent_skill_visibility WHERE agent_id=$1 AND skill_name=$2`, agentID, skillName)
+	_, err := d.Exec(`INSERT INTO agent_skill_visibility(agent_id,skill_name,enabled) VALUES ($1,$2,$3)
+ON CONFLICT (agent_id,skill_name) DO UPDATE SET enabled=$3`, agentID, skillName, enabled)
 	return err
 }
 

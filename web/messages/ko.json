@@ -1524,7 +1524,9 @@
         "verification": "보충 검증",
         "supporting": "보조 증거"
       }
-    }
+    },
+    "stepsTitle": "재현 단계",
+    "stepsHint": "실행 순서대로 번호가 매겨진 체인입니다. 드래그로 순서를 바꾸고 각 단계는 실제 캡처된 트래픽에 연결됩니다."
   },
   "copyButton": {
     "label": "복사",

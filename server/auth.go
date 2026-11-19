@@ -440,16 +440,38 @@ func (s *Server) WarnIfExposed(addr string) {
 	log.Printf(logT("[auth] 경고: 관리자 비밀번호가 아직 설정되지 않았는데 서버가 %q 에 바인딩되어 다른 호스트에서도 접속할 수 있습니다. 설정 토큰 없이는 초기화할 수 없지만, 초기 설정을 마칠 때까지 이 포트를 외부 네트워크에 노출하지 마십시오(기본값 127.0.0.1:8787)"), addr)
 }
 
-// extractToken reads the JWT from Authorization: Bearer header,
-// artex_token cookie, or ?token= query param (for SSE connections).
+// extractToken reads the JWT from the Authorization: Bearer header for all
+// requests; the artex_token cookie and the ?token= query param additionally
+// provide auth, but only for safe methods (CSRF hardening, ported from
+// wpsec/ARTEX-Pro fix(security) 844dfffd: browser-attached cookies must never
+// authorize state-changing calls). The query param is additionally restricted
+// to the SSE routes, which cannot send headers cross-origin.
 func extractToken(r *http.Request) string {
 	if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") {
 		return strings.TrimPrefix(h, "Bearer ")
 	}
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return ""
+	}
 	if c, err := r.Cookie("artex_token"); err == nil && c.Value != "" {
 		return c.Value
 	}
-	return r.URL.Query().Get("token")
+	if sseQueryTokenPath(r.URL.Path) {
+		return r.URL.Query().Get("token")
+	}
+	return ""
+}
+
+// sseQueryTokenPath lists the GET-stream routes that legitimately authenticate
+// via ?token= (EventSource cannot carry the Authorization header cross-origin;
+// every other route must use the header).
+func sseQueryTokenPath(path string) bool {
+	switch path {
+	case "/api/logs/stream", "/api/update/stream", "/api/exploration/activity/stream":
+		return true
+	default:
+		return strings.HasPrefix(path, "/api/side-questions/") && strings.HasSuffix(path, "/events")
+	}
 }
 
 // requireAuth wraps h with JWT validation.

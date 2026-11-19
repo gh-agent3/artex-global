@@ -1524,7 +1524,9 @@
         "verification": "Supplementary verification",
         "supporting": "Supporting evidence"
       }
-    }
+    },
+    "stepsTitle": "Reproduction steps",
+    "stepsHint": "The numbered chain in execution order - entry probe to exploit proof. Drag to reorder; each step links to its real captured traffic."
   },
   "copyButton": {
     "label": "Copy",

@@ -1524,7 +1524,9 @@
         "verification": "补充验证",
         "supporting": "辅助证据"
       }
-    }
+    },
+    "stepsTitle": "复现步骤",
+    "stepsHint": "按执行顺序编号的链路 - 从入口探测到利用证明。可拖动排序；每个步骤都关联真实抓取的流量。"
   },
   "copyButton": {
     "label": "复制",

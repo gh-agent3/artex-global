@@ -106,11 +106,41 @@ decision 2026-11-02). Full analysis: `docs/demo-mode-arch-review.md` (in `docs/`
   dedicated step schema (entry point / precondition / step request+expected /
   conclusion) vs rendering bindings as numbered steps. Deliberate feature,
   not a spot port — design first.
-- **[S] Mine wpsec/ARTEX-Pro fix(security) commits** — auth/workspace-path
-  risks, skill-upload authorization defaults; review and port as applicable.
-- **[S] Preinstall api-recon deps in the image** — failsafe-security preinstalls
-  skill deps from a locked registry at build time; we install on first use
-  (committed lockfile). Image preinstall closes the runtime-fetch gap.
+- **[S] Mine wpsec/ARTEX-Pro fix(security) commits** — DONE (844dfffd,
+  e1e41e8a, d3a678be, dea19481, 50af614b):
+  - CSRF write-path hardening: cookie + ?token= query auth only for safe
+    methods; the query param additionally restricted to the four SSE routes
+    (server/auth.go extractToken/sseQueryTokenPath). Our UI already sends
+    Bearer on every mutation, so this is free.
+  - Workspace os.Root confinement (server/workspace.go): all real I/O goes
+    through os.OpenRoot, so a symlink planted inside the work dir cannot
+    escape it (read/download followed symlinks before). Proven by
+    TestWorkspaceSymlinkConfined.
+  - JWT rotation on password change: NOT ported — N/A by design. Our signing
+    key is HMAC(jwt.key, password_hash), so every password change already
+    invalidates all previously issued tokens without a separate rotation.
+  - Skill upload default authorization (50af614b): SeedDefaultSkillVisibility
+    binds an uploaded skill to the default runtime agents (auto/pentest/
+    worker), insert-if-absent so explicit opt-outs stand.
+  - Visibility opt-out durability (dea19481): ToggleSkillVisibility stores
+    off as enabled=false instead of DELETE, and SetAgentSkillVisibility
+    updates-in-place — an explicit opt-out can no longer be resurrected by
+    the startup seed (ON CONFLICT DO NOTHING).
+  - Side-question capture completion (d3a678be): a delta carrying a
+    StopReason also marks the captured turn complete (providers that signal
+    the end of stream only in the last delta previously stalled the capture).
+  - Shipped-skill visibility catalog (d3a678be): all shipped pentest skills
+    (authentication-jwt, browser, graphql, idor, oauth, path-traversal-lfi-rfi,
+    sql-injection, ssrf, xss) seeded for the default agents; playwright-cli and
+    scopesentry stay invisible by design.
+  - Dep bumps: pgx v5.10.0 -> v5.12.0, klauspost/compress 1.18.7 -> 1.20.2,
+    next ^16.2.9 -> ^16.4.5 + sharp ^0.35.5 pinned. x/crypto, x/net, x/text
+    already at or above wpsec's pins.
+- **[S] Preinstall api-recon deps in the image** — RESOLVED by vendoring: the
+  deps are committed under skills/api-recon/scripts/node_modules, baked into
+  the image by `COPY skills/ /app/skills/`, and the droplet host's mounted
+  skills dir carries the same node_modules — no runtime npm ci happens on
+  first use.
 
 ## Operations
 

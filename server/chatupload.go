@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -111,7 +113,7 @@ func (s *Server) chatUpload(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		dest := uniqueUploadPath(dir, name)
-		if err := saveUpload(hdr, dest); err != nil {
+		if err := saveChatUpload(hdr, dest); err != nil {
 			writeErr(w, 500, errChatUploadSaveFailed+err.Error())
 			return
 		}
@@ -181,4 +183,22 @@ func humanBytes(n int64) string {
 	default:
 		return fmt.Sprintf("%d B", n)
 	}
+}
+
+// saveChatUpload streams one multipart attachment into the chat uploads dir.
+// Chat attachments live outside the workspace root, so this path keeps plain
+// filesystem ops; the workspace saveUpload stays os.Root-confined.
+func saveChatUpload(hdr *multipart.FileHeader, dest string) error {
+	src, err := hdr.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	out, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, src)
+	return err
 }
