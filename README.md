@@ -17,6 +17,8 @@ Go backend + Next.js frontend, built from source as a single container image.
 > infrastructure you own or are explicitly authorized to test, and only to build
 > defensive and detection capabilities.**
 
+![ARTEX ACP Edition — architecture](docs/scheme.jpg)
+
 ![ARTEX ACP Edition — the tasks console](docs/screenshots/console.png)
 
 ## What ARTEX ACP Edition is
@@ -57,6 +59,26 @@ Key capabilities:
   (both persisted), a Reading Size preference for dense text surfaces, and a
   header toggle for demo mode. Authenticated UI screenshots for docs and
   reviews: `./scripts/ui-shot.sh /dashboard/ out.png [--demo]`.
+
+## Fork harvest — our standing process
+
+This distribution's edge: we continuously collect the best improvements from
+the ARTEX fork ecosystem. The original Autumn-27/ARTEX was taken down in
+October 2026; the framework lives on through community forks ranked at
+**https://www.artex.sh/forks/best** — that leaderboard is our watchlist
+source, and each tracked fork is a git remote in this repo.
+
+- What we took from whom, commit by commit: `CHANGELOG.md`.
+- The recurring process (cadence, triage classes, port discipline): `docs/adr/0003-fork-harvest-process.md`.
+- Per-fork review notes: `docs/forks/`.
+- Live triage state between cycles: `docs/backlog.md`.
+
+Threat-intel context we track: Google Threat Intelligence Group,
+[ARTEX and Friends: Enter Agentic Offensive Frameworks](https://cloud.google.com/blog/topics/threat-intelligence/artex-and-friends-enter-agentic-offensive-frameworks)
+(2026-10-31) — wild abuse of ARTEX and sibling frameworks (PentAGI, CAIRN,
+Hexstrike), the fork proliferation, and the defensive layers this platform is
+built to exercise. Read; no new ports came from it — it is detection-and-
+defense guidance, not code.
 
 ## Quick start
 
@@ -121,11 +143,12 @@ fully supported backend remains PostgreSQL.
 
 ## Documentation
 
+- `CHANGELOG.md` — release notes with per-fork attribution (repo + commit)
+- `docs/adr/` — architecture decision records (0003 is the fork-harvest process)
 - `docs/demo-mode.md` — demo mode design and decisions
 - `docs/fork-review.md` — the standing process for reviewing third-party forks
 - `docs/forks/` — per-fork reviews (ARTEX-HYDRA and successors)
 - `docs/backlog.md` — known gaps, SQLite coverage notes, pending improvements
-- `docs/adr/` — architecture decision records
 
 ## Branches and releases
 
