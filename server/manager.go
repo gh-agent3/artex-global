@@ -894,6 +894,10 @@ func (m *Manager) UpdateTaskMetadata(taskID string, patch pgdb.TaskPatch) (*Task
 		state.Name = updated.Name
 		state.PinnedAt = unixOrZero(updated.PinnedAt)
 	})
+	// Budget fields live on the Task itself (not the lifecycle snapshot) —
+	// refresh them so the next DTO reflects the patch.
+	task.BudgetTokens = updated.BudgetTokens
+	task.BudgetTurns = updated.BudgetTurns
 	return task, nil
 }
 
