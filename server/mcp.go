@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -29,6 +30,39 @@ import (
 // mcpToken returns the bearer token that unlocks /mcp, or empty = disabled.
 func mcpToken() string {
 	return strings.TrimSpace(os.Getenv("ARTEX_MCP_TOKEN"))
+}
+
+// mcpSourceAllowed enforces the optional caller allowlist (RuoJi6-style,
+// recorded as a backlog follow-up of the fork review): the mcp_allowed_sources
+// setting holds comma-separated IPs/CIDRs; empty = any caller with the token.
+// Defense in depth on top of the bearer token — a leaked token alone is not
+// enough from an untrusted network position.
+func (s *Server) mcpSourceAllowed(r *http.Request) bool {
+	raw, ok, err := s.m.pg.GetSetting("mcp_allowed_sources")
+	if err != nil || !ok || strings.TrimSpace(raw) == "" {
+		return true
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return false
+	}
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		if _, cidr, err := net.ParseCIDR(part); err == nil && cidr.Contains(ip) {
+			return true
+		}
+		if part == host {
+			return true
+		}
+	}
+	return false
 }
 
 // mcpHandler mounts the MCP ingress. Token empty -> returns nil (caller skips
@@ -51,6 +85,9 @@ func (s *Server) mcpHandler() http.Handler {
 			if got == "" || got != tok {
 				return errMCPUnauthorized
 			}
+			if !s.mcpSourceAllowed(r) {
+				return errMCPSourceForbidden
+			}
 			return nil
 		},
 		// Browser origins are never allowed: DNS-rebinding protection, and this
@@ -59,7 +96,10 @@ func (s *Server) mcpHandler() http.Handler {
 	})
 }
 
-var errMCPUnauthorized = jsonError("unauthorized")
+var (
+	errMCPUnauthorized    = jsonError("unauthorized")
+	errMCPSourceForbidden = jsonError("source not allowed")
+)
 
 type jsonError string
 

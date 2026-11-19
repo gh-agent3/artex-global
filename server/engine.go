@@ -160,11 +160,12 @@ type Engine struct {
 	plannerRound sync.Map // taskID -> int, planner round counter (for UI round separators)
 
 	// Task-level timeout (see docs/task-timeout-and-settlement-design.md):
-	settling     sync.Map // taskID -> bool, the task has entered settlement (no new intents dispatched or claimed)
-	deadline     sync.Map // taskID -> int64 unix, the absolute deadline (stamped on the first run; 0/absent = unlimited)
-	stamped      sync.Map // taskID -> bool, whether first_run_at has been stamped (only once per process)
-	inflight     sync.Map // taskID -> *int64, count of running planner.Plan + worker.Execute (used for drain)
-	coordStarted sync.Map // taskID -> bool, whether the deadline coordinator has started (deduplicated across Run/reload)
+	settling           sync.Map // taskID -> bool, the task has entered settlement (no new intents dispatched or claimed)
+	deadline           sync.Map // taskID -> int64 unix, the absolute deadline (stamped on the first run; 0/absent = unlimited)
+	stamped            sync.Map // taskID -> bool, whether first_run_at has been stamped (only once per process)
+	inflight           sync.Map // taskID -> *int64, count of running planner.Plan + worker.Execute (used for drain)
+	coordStarted       sync.Map // taskID -> bool, whether the deadline coordinator has started (deduplicated across Run/reload)
+	budgetCoordStarted sync.Map // taskID -> bool, whether the budget coordinator has started
 
 	// resolve returns a task's dedicated planner/worker (wired by the server as the
 	// authoritative task-router). nil,nil means this task is deliberately unavailable
@@ -308,6 +309,7 @@ func (e *Engine) StopTask(taskID string) {
 	e.stamped.Delete(taskID)
 	e.inflight.Delete(taskID)
 	e.coordStarted.Delete(taskID)
+	e.budgetCoordStarted.Delete(taskID)
 	e.deleteMu.Lock()
 	e.deleting.Delete(taskID)
 	e.deleteMu.Unlock()
@@ -810,7 +812,8 @@ func (e *Engine) Run(ctx context.Context, t *Task) {
 		name := fmt.Sprintf("work#%d", i+1)
 		runTaskRoutine(rt, func(loopCtx context.Context) { e.workerLoop(loopCtx, t, name) })
 	}
-	e.startDeadlineCoordinator(ctx, t) // task-level timeout timer (only when timeout>0; deduplicated)
+	e.startDeadlineCoordinator(ctx, t)
+	e.startBudgetCoordinator(ctx, t) // task-level timeout timer (only when timeout>0; deduplicated)
 	// Kick the first planning round only when there is NO active intent at all (open+running). A task
 	// with seed intents already has work: the seed is open, or the worker started above already claimed
 	// it into running - both count as "there is work", so the first planner round is skipped and the
@@ -886,6 +889,9 @@ func (e *Engine) plannerLoop(ctx context.Context, t *Task) {
 		// directly by the coordinator (settleTask) and does not come through here.
 		if e.isSettling(t.ID) {
 			return
+		}
+		if e.budgetExhausted(t) {
+			return // run budget exhausted: the budget coordinator is settling the task
 		}
 		// goalless (manual direct injection) branch: with no open goal the planner does not run - if it
 		// ran it would re-judge met->cancelExec and kill intents the user injected through the main agent.
@@ -1001,6 +1007,12 @@ func (e *Engine) workerLoop(ctx context.Context, t *Task, name string) {
 				return
 			}
 			continue // the task is settling on its timeout: claim no new intents (running ones settle themselves and the coordinator waits for the drain)
+		}
+		if e.budgetExhausted(t) {
+			if sleepCtx(ctx, 1000*time.Millisecond) {
+				return
+			}
+			continue // run budget exhausted: claim no new intents; the budget coordinator settles the task
 		}
 		if isTerminalStatus(e.m.TaskStatus(t.ID)) {
 			if sleepCtx(ctx, 1000*time.Millisecond) {

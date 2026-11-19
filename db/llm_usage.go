@@ -3,6 +3,7 @@ package db
 import (
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -372,4 +373,20 @@ func ParseExpID(s string) int64 {
 		return 0
 	}
 	return n
+}
+
+// TaskSpend returns the metered spend of one task in tokens (input+output,
+// cache buckets folded into input by norma's Usage) and turns (one row per
+// metered call) — the counting contract of the run-budget port.
+func (d *DB) TaskSpend(taskID int64) (tokens int64, turns int64, err error) {
+	err = d.QueryRow(`SELECT COALESCE(sum(input_tokens+output_tokens),0), count(*)
+FROM llm_usage WHERE task_id=$1`, strconv.FormatInt(taskID, 10)).Scan(&tokens, &turns)
+	if err != nil && strings.Contains(err.Error(), "llm_usage") {
+		// Fresh install: the metering table is created lazily at server
+		// startup; the budget coordinator polls before any call is metered.
+		if e := d.EnsureLLMUsageTable(); e == nil {
+			return 0, 0, nil
+		}
+	}
+	return tokens, turns, err
 }

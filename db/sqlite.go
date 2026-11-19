@@ -65,7 +65,29 @@ func openSQLite(dsn string) (*DB, error) {
 			return nil, fmt.Errorf("apply sqlite schema: statement %d: %w\n  > %s", i+1, err, head)
 		}
 	}
+	// SQLite has no ADD COLUMN IF NOT EXISTS and the schema replays on every
+	// startup, so replayed ALTERs for existing files fail above is not an
+	// option: the ALTERs live here, applied only when the column is missing
+	// (idempotent ADD COLUMN, SQLite-native).
+	if err := ensureSQLiteColumn(context.Background(), conn, "tasks", "budget_tokens", "INTEGER NOT NULL DEFAULT 0"); err != nil {
+		return nil, err
+	}
+	if err := ensureSQLiteColumn(context.Background(), conn, "tasks", "budget_turns", "INTEGER NOT NULL DEFAULT 0"); err != nil {
+		return nil, err
+	}
 	return d, nil
+}
+
+func ensureSQLiteColumn(ctx context.Context, conn *sql.Conn, table, column, ddl string) error {
+	var n int
+	if err := conn.QueryRowContext(ctx, `SELECT count(*) FROM pragma_table_info($1) WHERE name=$2`, table, column).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err := conn.ExecContext(ctx, `ALTER TABLE `+table+` ADD COLUMN `+column+` `+ddl)
+	return err
 }
 
 // sqliteStatements splits the schema script into individual statements,
@@ -103,9 +125,9 @@ func sqliteStatements(script string) []string {
 }
 
 var (
-	reSQLiteCast   = regexp.MustCompile(`::[a-zA-Z_]+(\[\])?`)
-	reSQLiteForUpd = regexp.MustCompile(`(?i)\s+FOR UPDATE(\s+OF\s+[a-z_ ,]+)?(\s+SKIP LOCKED|\s+NOWAIT)?`)
-	reSQLiteILike  = regexp.MustCompile(`(?i)\bILIKE\b`)
+	reSQLiteCast    = regexp.MustCompile(`::[a-zA-Z_]+(\[\])?`)
+	reSQLiteForUpd  = regexp.MustCompile(`(?i)\s+FOR UPDATE(\s+OF\s+[a-z_ ,]+)?(\s+SKIP LOCKED|\s+NOWAIT)?`)
+	reSQLiteILike   = regexp.MustCompile(`(?i)\bILIKE\b`)
 	reSQLiteAdvLock = regexp.MustCompile(`(?i)^\s*SELECT\s+pg_advisory_xact_lock\([^)]*\)\s*;?\s*$`)
 )
 

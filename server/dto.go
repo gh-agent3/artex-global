@@ -37,6 +37,8 @@ type TaskDTO struct {
 	CategoryName       string             `json:"category_name,omitempty"`
 	Pinned             bool               `json:"pinned"`
 	PinnedAt           string             `json:"pinned_at,omitempty"`
+	BudgetTokens       int64              `json:"budget_tokens,omitempty"`
+	BudgetTurns        int64              `json:"budget_turns,omitempty"`
 	Description        string             `json:"description"`
 	Goal               string             `json:"goal"`
 	Status             string             `json:"status"` // created | running | paused | done | failed
@@ -117,6 +119,8 @@ func taskDTO(t *Task, status string) TaskDTO {
 		CategoryName:       lifecycle.CategoryName,
 		Pinned:             lifecycle.PinnedAt > 0,
 		PinnedAt:           completedRFC(lifecycle.PinnedAt),
+		BudgetTokens:       t.BudgetTokens,
+		BudgetTurns:        t.BudgetTurns,
 		Description:        t.Description,
 		Goal:               t.Goal,
 		Status:             status,

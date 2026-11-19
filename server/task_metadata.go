@@ -35,8 +35,10 @@ func (s *Server) updateTaskMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, maxTaskMetadataRequestSize)
 	var request struct {
-		Name   *string `json:"name"`
-		Pinned *bool   `json:"pinned"`
+		Name         *string `json:"name"`
+		Pinned       *bool   `json:"pinned"`
+		BudgetTokens *int64  `json:"budget_tokens"` // <=0 = unlimited
+		BudgetTurns  *int64  `json:"budget_turns"`
 	}
 	if err := decode(r, &request); err != nil {
 		var tooLarge *http.MaxBytesError
@@ -47,9 +49,15 @@ func (s *Server) updateTaskMetadata(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	if request.Name == nil && request.Pinned == nil {
+	if request.Name == nil && request.Pinned == nil && request.BudgetTokens == nil && request.BudgetTurns == nil {
 		writeErr(w, http.StatusBadRequest, errTaskMetaNoFields)
 		return
+	}
+	if request.BudgetTokens != nil && *request.BudgetTokens < 0 {
+		*request.BudgetTokens = 0
+	}
+	if request.BudgetTurns != nil && *request.BudgetTurns < 0 {
+		*request.BudgetTurns = 0
 	}
 	if request.Name != nil {
 		name := strings.TrimSpace(*request.Name)
@@ -63,7 +71,7 @@ func (s *Server) updateTaskMetadata(w http.ResponseWriter, r *http.Request) {
 		}
 		request.Name = &name
 	}
-	task, err := s.m.UpdateTaskMetadata(taskID, db.TaskPatch{Name: request.Name, Pinned: request.Pinned})
+	task, err := s.m.UpdateTaskMetadata(taskID, db.TaskPatch{Name: request.Name, Pinned: request.Pinned, BudgetTokens: request.BudgetTokens, BudgetTurns: request.BudgetTurns})
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return

@@ -181,10 +181,18 @@ func (e *Engine) deadlineCoordinator(ctx context.Context, t *Task) {
 
 // settleTask runs the ordered settle sequence once (§4 steps ①–⑥).
 func (e *Engine) settleTask(ctx context.Context, t *Task) {
+	e.settleTaskAs(ctx, t, "timeout", "deadline")
+}
+
+// settleTaskAs is the shared ordered settle sequence (drain, one final planner
+// round, guarded terminal status). tag selects the log prefix and status is the
+// terminal state when the final round does not judge the goal met ("timeout"
+// for the wall-clock deadline, "failed" for the run budget).
+func (e *Engine) settleTaskAs(ctx context.Context, t *Task, status, tag string) {
 	if !e.markSettling(t.ID) {
 		return
 	}
-	log.Printf(logA("[deadline] task %s timeout reached, starting settle sequence"), t.ID)
+	log.Printf(logA("[%s] task %s settle trigger (%s), starting settle sequence"), tag, t.ID, status)
 
 	// 4. wait for the running worker/planner to drain (a running run settles itself because of the clamped
 	// MaxDuration); if it still has not drained after the grace -> hard-cancel the task exec ctx (the
@@ -209,21 +217,20 @@ func (e *Engine) settleTask(ctx context.Context, t *Task) {
 	}
 	defer e.decInflight(t.ID)
 
-	// 6. set the terminal state (guarded): met -> done(completed); otherwise timeout. If the normal path
-	// already settled done first, the guard (SetTaskStatusGuarded) refuses to overwrite and keeps the
-	// completed semantics.
-	status := "timeout"
+	// 6. set the terminal state (guarded): met -> done(completed); otherwise the
+	// caller's status. If the normal path already settled done first, the guard
+	// (SetTaskStatusGuarded) refuses to overwrite and keeps the completed semantics.
 	if met {
 		status = "done"
 	}
 	won, err := e.m.SetTaskStatusGuarded(t.ID, status)
 	switch {
 	case err != nil:
-		log.Printf(logA("[deadline] task %s failed to persist terminal state: %v"), t.ID, err)
+		log.Printf(logA("[%s] task %s failed to persist terminal state: %v"), tag, t.ID, err)
 	case won:
-		log.Printf(logA("[deadline] task %s settle complete, terminal status=%s"), t.ID, status)
+		log.Printf(logA("[%s] task %s settle complete, terminal status=%s"), tag, t.ID, status)
 	default:
-		log.Printf(logA("[deadline] task %s already terminal during settle, keeping status"), t.ID)
+		log.Printf(logA("[%s] task %s already terminal during settle, keeping status"), tag, t.ID)
 	}
 }
 

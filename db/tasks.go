@@ -40,6 +40,8 @@ type Task struct {
 	CompletedAt        *time.Time `json:"completed_at,omitempty"` // when it entered the terminal state (done/failed/timeout); nil while running
 	// Task-level timeout (see docs/task-timeout-and-settlement-design.md).
 	TimeoutSeconds int        `json:"timeout_seconds"`        // 0 = unlimited
+	BudgetTokens   int64      `json:"budget_tokens"`          // 0 = unlimited (llm_usage input+output)
+	BudgetTurns    int64      `json:"budget_turns"`           // 0 = unlimited (metered LLM calls)
 	FirstRunAt     *time.Time `json:"first_run_at,omitempty"` // when it first actually started running (not created_at); nil = not yet run
 	DeadlineAt     *time.Time `json:"deadline_at,omitempty"`  // = first_run_at + timeout_seconds; nil = unlimited or not yet run
 	// Planner heartbeat interval (seconds): a planning round fires when this much time has passed since the
@@ -154,6 +156,11 @@ type TaskCreateOptions struct {
 	LLMProfileIDs        []int64
 	TimeoutSeconds       int
 	PlanHeartbeatSeconds int
+	// BudgetTokens/BudgetTurns cap the task's metered LLM spend (0 = unlimited).
+	// Ported from BaaRai/ARTEX: when a capped dimension hits the wrap-up reserve
+	// the engine stops dispatching and settles through one final planner round.
+	BudgetTokens int64
+	BudgetTurns  int64
 	// CoverageEnabled is the "asset coverage" switch; nil = on by default (true), so creation paths that do not
 	// care about the switch (orchestration spawn, the old API) keep the original behaviour. Only the web task
 	// creation can pass false explicitly to turn it off.
@@ -227,12 +234,13 @@ VALUES ($1, 'fact', $2, 0, 'origin', 'system')`, expID, string(originPayload)); 
 		SourceTaskIDs:  append([]int64(nil), opts.SourceTaskIDs...),
 		CompanyIDs:     append([]int64(nil), opts.CompanyIDs...),
 		TimeoutSeconds: opts.TimeoutSeconds, PlanHeartbeatSeconds: opts.PlanHeartbeatSeconds,
+		BudgetTokens: opts.BudgetTokens, BudgetTurns: opts.BudgetTurns,
 		CoverageEnabled: coverageEnabled,
 	}
 	if err := tx.QueryRow(`
-INSERT INTO tasks(name, category_id, description, goal, exploration_id, llm_profile_id, active_llm_profile_id, timeout_seconds, plan_heartbeat_seconds, coverage_enabled)
-VALUES ($1,$2,$3,$4,$5,$6,$6,$7,$8,$9)
-RETURNING id, status, paused, created_at`, opts.Name, opts.CategoryID, description, goal, expID, active, opts.TimeoutSeconds, opts.PlanHeartbeatSeconds, coverageEnabled).Scan(&t.ID, &t.Status, &t.Paused, &t.CreatedAt); err != nil {
+INSERT INTO tasks(name, category_id, description, goal, exploration_id, llm_profile_id, active_llm_profile_id, timeout_seconds, plan_heartbeat_seconds, coverage_enabled, budget_tokens, budget_turns)
+VALUES ($1,$2,$3,$4,$5,$6,$6,$7,$8,$9,$10,$11)
+RETURNING id, status, paused, created_at`, opts.Name, opts.CategoryID, description, goal, expID, active, opts.TimeoutSeconds, opts.PlanHeartbeatSeconds, coverageEnabled, opts.BudgetTokens, opts.BudgetTurns).Scan(&t.ID, &t.Status, &t.Paused, &t.CreatedAt); err != nil {
 		return nil, err
 	}
 	if err := insertTaskRelations(tx, t.ID, opts.SourceTaskIDs); err != nil {
@@ -348,11 +356,11 @@ func insertTaskLLMProfiles(tx *sql.Tx, taskID int64, profileIDs []int64) error {
 
 const taskCols = `id, COALESCE(name,''), category_id,
 COALESCE((SELECT category.name FROM task_categories category WHERE category.id=tasks.category_id),''),
-description, goal, exploration_id, status, paused, queued, queued_at, COALESCE(queue_mode,''), llm_profile_id, active_llm_profile_id, COALESCE(parent_ref,''), pinned_at, created_at, completed_at, COALESCE(timeout_seconds,0), COALESCE(plan_heartbeat_seconds,300), COALESCE(coverage_enabled,true), first_run_at, deadline_at`
+description, goal, exploration_id, status, paused, queued, queued_at, COALESCE(queue_mode,''), llm_profile_id, active_llm_profile_id, COALESCE(parent_ref,''), pinned_at, created_at, completed_at, COALESCE(timeout_seconds,0), COALESCE(plan_heartbeat_seconds,300), COALESCE(coverage_enabled,true), first_run_at, deadline_at, COALESCE(budget_tokens,0), COALESCE(budget_turns,0)`
 
 func scanTask(sc interface{ Scan(...any) error }) (*Task, error) {
 	var t Task
-	if err := sc.Scan(&t.ID, &t.Name, &t.CategoryID, &t.CategoryName, &t.Description, &t.Goal, &t.ExplorationID, &t.Status, &t.Paused, &t.Queued, &t.QueuedAt, &t.QueueMode, &t.LLMProfileID, &t.ActiveLLMProfileID, &t.ParentRef, &t.PinnedAt, &t.CreatedAt, &t.CompletedAt, &t.TimeoutSeconds, &t.PlanHeartbeatSeconds, &t.CoverageEnabled, &t.FirstRunAt, &t.DeadlineAt); err != nil {
+	if err := sc.Scan(&t.ID, &t.Name, &t.CategoryID, &t.CategoryName, &t.Description, &t.Goal, &t.ExplorationID, &t.Status, &t.Paused, &t.Queued, &t.QueuedAt, &t.QueueMode, &t.LLMProfileID, &t.ActiveLLMProfileID, &t.ParentRef, &t.PinnedAt, &t.CreatedAt, &t.CompletedAt, &t.TimeoutSeconds, &t.PlanHeartbeatSeconds, &t.CoverageEnabled, &t.FirstRunAt, &t.DeadlineAt, &t.BudgetTokens, &t.BudgetTurns); err != nil {
 		return nil, err
 	}
 	t.Pinned = t.PinnedAt != nil
@@ -394,8 +402,10 @@ ORDER BY (pinned_at IS NOT NULL) DESC, pinned_at DESC NULLS LAST, id DESC`)
 
 // TaskPatch updates task list metadata without changing execution state.
 type TaskPatch struct {
-	Name   *string
-	Pinned *bool
+	Name         *string
+	Pinned       *bool
+	BudgetTokens *int64 // nil = leave; <=0 = unlimited
+	BudgetTurns  *int64
 }
 
 // UpdateTask applies a partial task name/pin mutation and returns the updated row.
@@ -407,9 +417,12 @@ func (d *DB) UpdateTask(id int64, patch TaskPatch) (*Task, error) {
 		WHEN $4::boolean IS NULL THEN pinned_at
 		WHEN $4::boolean THEN COALESCE(pinned_at, now())
 		ELSE NULL
-	END
+	END,
+	budget_tokens = CASE WHEN $5::boolean THEN $6 ELSE budget_tokens END,
+	budget_turns = CASE WHEN $7::boolean THEN $8 ELSE budget_turns END
 WHERE id=$1 AND deleted_at IS NULL
-RETURNING `+taskCols, id, patch.Name != nil, patch.Name, patch.Pinned))
+RETURNING `+taskCols, id, patch.Name != nil, patch.Name, patch.Pinned,
+		patch.BudgetTokens != nil, patch.BudgetTokens, patch.BudgetTurns != nil, patch.BudgetTurns))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

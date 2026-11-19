@@ -1656,6 +1656,8 @@ type createTaskReq struct {
 	SourceTaskIDs        []string `json:"source_task_ids,omitempty"`   // source tasks inherited directly and read-only
 	CompanyIDs           []int64  `json:"company_ids,omitempty"`       // link a company scope and snapshot its current assets; assets are not copied and no intent is forced
 	TimeoutSeconds       int      `json:"timeout_seconds"`             // task-level timeout in seconds; 0/omitted = unlimited
+	BudgetTokens         int64    `json:"budget_tokens"`               // metered LLM token cap (input+output); 0/omitted = unlimited
+	BudgetTurns          int64    `json:"budget_turns"`                // metered LLM call cap; 0/omitted = unlimited
 	PlanHeartbeatSeconds int      `json:"plan_heartbeat_seconds"`      // planner heartbeat interval in seconds; 0/omitted = default 600 (10min); values below 600 are raised to 600
 	SeedFirstIntent      *bool    `json:"seed_first_intent,omitempty"` // issue one seed intent at creation (content = description + goal) so a worker starts immediately instead of waiting for the first planner round; omitted/null = off, i.e. the standard plan-then-execute flow. Only an explicit true enables it (in CTF, where one work item often solves the task, this skips the planner round before the run).
 	CoverageEnabled      *bool    `json:"coverage_enabled,omitempty"`  // asset coverage feature; omitted/null = on (true). false = disable coverage computation/display/automatic scope accumulation and hide add_task_scope/list_untested_assets. Company linking is unaffected.
@@ -1681,6 +1683,12 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.TimeoutSeconds < 0 {
 		req.TimeoutSeconds = 0
+	}
+	if req.BudgetTokens < 0 {
+		req.BudgetTokens = 0
+	}
+	if req.BudgetTurns < 0 {
+		req.BudgetTurns = 0
 	}
 	if len(req.SourceTaskIDs) > db.MaxTaskSourceCount {
 		writeErr(w, 400, fmt.Sprintf(trMsg(errCreateTaskSourceLimit), db.MaxTaskSourceCount))
@@ -1716,6 +1724,7 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		Name: strings.TrimSpace(req.Name), CategoryID: req.CategoryID,
 		SourceTaskIDs: sourceIDs, CompanyIDs: req.CompanyIDs, LLMProfileIDs: req.LLMProfileIDs,
 		TimeoutSeconds: req.TimeoutSeconds, PlanHeartbeatSeconds: req.PlanHeartbeatSeconds,
+		BudgetTokens: req.BudgetTokens, BudgetTurns: req.BudgetTurns,
 		CoverageEnabled: req.CoverageEnabled,
 		InterceptRules:  interceptRules,
 	})

@@ -1153,6 +1153,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_finding_verifications_active ON finding_ve
 -- Verification state mirrored onto the finding for list/report surfaces.
 ALTER TABLE findings ADD COLUMN IF NOT EXISTS validation TEXT NOT NULL DEFAULT 'unverified';
 
+-- Operator-set run budgets per task (0 = unlimited): tokens and LLM turns.
+-- When a capped dimension drops to the wrap-up reserve, the engine stops
+-- dispatching and settles the task through one final planner round — the same
+-- endgame as the wall-clock timeout (ported from BaaRai/ARTEX agent/budget.go).
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS budget_tokens BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS budget_turns BIGINT NOT NULL DEFAULT 0;
+
 -- Harnessing-level recursion (inspired by Google Harness²'s experience
 -- library): after a task finishes, a reflector agent extracts at most one
 -- durable lesson {cue, lesson, evidence, confidence}; new runs inject

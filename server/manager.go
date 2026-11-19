@@ -56,6 +56,8 @@ type Task struct {
 	Status             string  `json:"status"` // persisted lifecycle status (done/failed/timeout are terminal; empty/other is derived from the run state)
 	// Task-level timeout (see docs/task-timeout-and-settlement-design.md). DeadlineAt/FirstRunAt are unix seconds, 0 = unset/not running.
 	TimeoutSeconds       int                    `json:"timeout_seconds"`
+	BudgetTokens         int64                  `json:"budget_tokens"`          // 0 = unlimited
+	BudgetTurns          int64                  `json:"budget_turns"`           // 0 = unlimited
 	PlanHeartbeatSeconds int                    `json:"plan_heartbeat_seconds"` // planner heartbeat interval (seconds)
 	CoverageEnabled      bool                   `json:"coverage_enabled"`       // asset-coverage switch (fixed at creation, on by default)
 	FirstRunAt           int64                  `json:"first_run_at,omitempty"`
@@ -862,6 +864,7 @@ func taskFromPG(pt *pgdb.Task, store *pgdb.ExplorationStore, ic *intercept.Inter
 		SourceTaskIDs:  append([]int64(nil), pt.SourceTaskIDs...),
 		CompanyIDs:     append([]int64(nil), pt.CompanyIDs...),
 		TimeoutSeconds: pt.TimeoutSeconds, PlanHeartbeatSeconds: pt.PlanHeartbeatSeconds,
+		BudgetTokens: pt.BudgetTokens, BudgetTurns: pt.BudgetTurns,
 		CoverageEnabled: pt.CoverageEnabled,
 		FirstRunAt:      unixOrZero(pt.FirstRunAt), DeadlineAt: unixOrZero(pt.DeadlineAt),
 		Store: store, Guard: guard.NewWithInterceptor(ic), notify: make(chan struct{}, 1),

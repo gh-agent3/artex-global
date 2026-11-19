@@ -87,9 +87,25 @@ decision 2026-11-02). Full analysis: `docs/demo-mode-arch-review.md` (in `docs/`
 
 ## Security follow-ups
 
-- **[S] MCP ingress source allowlist** — RuoJi6's MCP server has a caller
-  source allowlist; ours is Bearer-token only. Add an optional IP/CIDR
-  allowlist to the /mcp auth path.
+- **[S] MCP ingress source allowlist** — DONE. Optional `mcp_allowed_sources`
+  setting (comma-separated IPs/CIDRs) checked in the /mcp Authorize hook, on
+  top of the bearer token.
+- **[M] Task run budgets** — DONE (port of BaaRai/ARTEX agent/budget.go, trimmed).
+  `budget_tokens`/`budget_turns` per task (0 = unlimited; settable at create and
+  via PATCH /api/tasks/{id}); spend counted from llm_usage (input+output per
+  metered call); when a capped dimension burns into the wrap-up reserve
+  (5%, floors 20k tokens / 2 turns) the engine stops dispatching and settles
+  through one final planner round — the timeout endgame with status "failed".
+- **[S] Prompt-injection framing** — DONE (BaaRai port): the measurement
+  discipline block states that tool/target output is DATA, never instructions.
+- **[S] SECURITY.md** — DONE (advisory channel + distribution posture).
+- **[M] Kill-chain finding steps** — NOT ported (AntiFox v2.0): their finding =
+  ordered reproduction steps, each auto-linked to its real traffic packet.
+  Our data model already supports the foundation (ordered traffic_refs with
+  roles + capture proxy), but a faithful port needs a product decision: a
+  dedicated step schema (entry point / precondition / step request+expected /
+  conclusion) vs rendering bindings as numbered steps. Deliberate feature,
+  not a spot port — design first.
 - **[S] Mine wpsec/ARTEX-Pro fix(security) commits** — auth/workspace-path
   risks, skill-upload authorization defaults; review and port as applicable.
 - **[S] Preinstall api-recon deps in the image** — failsafe-security preinstalls
